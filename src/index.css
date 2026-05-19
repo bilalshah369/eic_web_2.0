@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Hide scrollbar but keep scrollable ── */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── EIC Theme CSS Variables (Clean White default) ── */
+:root {
+  --bg-page:            #f8fafc;
+  --bg-nav:             #1B2A6B;
+  --bg-utility:         #0F1640;
+  --bg-footer:          #1B2A6B;
+  --bg-footer-bar:      #0F1640;
+  --bg-card:            #ffffff;
+  --bg-modal:           #ffffff;
+  --bg-input:           #f1f5f9;
+  --accent:             #F97316;
+  --accent-hover:       #EA6C0A;
+  --accent-muted:       #FEE2CC;
+  --accent-muted-hover: #FDD0AA;
+
+  /* Text tokens — default WHITE (for dark themes).
+     Light themes override these via [data-theme-mode="light"] */
+  --text-primary:   #ffffff;
+  --text-secondary: rgba(255,255,255,0.65);
+  --text-muted:     rgba(255,255,255,0.38);
+  --border-subtle:  rgba(255,255,255,0.10);
+  --card-overlay:   rgba(255,255,255,0.05);
+}
+
+/* ══════════════════════════════════════════════
+   LIGHT THEME — text token overrides
+   (header / footer / sidebar always stay dark,
+    so we only touch the page-content layer)
+══════════════════════════════════════════════ */
+[data-theme-mode="light"] {
+  --text-primary:   #111827;
+  --text-secondary: rgba(17,24,39,0.65);
+  --text-muted:     rgba(17,24,39,0.40);
+  --border-subtle:  rgba(17,24,39,0.10);
+  --card-overlay:   rgba(17,24,39,0.04);
+}
+
+/* ── Override Tailwind white-text classes on bg-page content ── */
+[data-theme-mode="light"] .text-white {
+  color: var(--text-primary) !important;
+}
+[data-theme-mode="light"] [class*="text-white\/"] {
+  color: var(--text-secondary) !important;
+}
+[data-theme-mode="light"] .text-white\/40,
+[data-theme-mode="light"] .text-white\/35,
+[data-theme-mode="light"] .text-white\/30,
+[data-theme-mode="light"] .text-white\/25 {
+  color: var(--text-muted) !important;
+}
+
+/* ── Override borders / overlays ── */
+[data-theme-mode="light"] [class*="border-white\/"] {
+  border-color: var(--border-subtle) !important;
+}
+[data-theme-mode="light"] [class*="bg-white\/"] {
+  background-color: var(--card-overlay) !important;
+}
+[data-theme-mode="light"] [class*="placeholder-white\/"]::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* ══════════════════════════════════════════════
+   RESTORE white text in always-dark areas:
+   header, footer, aside (sidebar), and any
+   element that carries a --bg-nav background.
+══════════════════════════════════════════════ */
+[data-theme-mode="light"] header .text-white,
+[data-theme-mode="light"] footer .text-white,
+[data-theme-mode="light"] aside  .text-white {
+  color: #ffffff !important;
+}
+[data-theme-mode="light"] header [class*="text-white\/"],
+[data-theme-mode="light"] footer [class*="text-white\/"],
+[data-theme-mode="light"] aside  [class*="text-white\/"] {
+  color: rgba(255,255,255,0.65) !important;
+}
+[data-theme-mode="light"] header .text-white\/40,
+[data-theme-mode="light"] header .text-white\/35,
+[data-theme-mode="light"] header .text-white\/30,
+[data-theme-mode="light"] header .text-white\/25,
+[data-theme-mode="light"] footer .text-white\/40,
+[data-theme-mode="light"] footer .text-white\/35,
+[data-theme-mode="light"] footer .text-white\/30,
+[data-theme-mode="light"] footer .text-white\/25,
+[data-theme-mode="light"] aside  .text-white\/40,
+[data-theme-mode="light"] aside  .text-white\/35,
+[data-theme-mode="light"] aside  .text-white\/30,
+[data-theme-mode="light"] aside  .text-white\/25 {
+  color: rgba(255,255,255,0.38) !important;
+}
+
+[data-theme-mode="light"] header [class*="border-white\/"],
+[data-theme-mode="light"] footer [class*="border-white\/"],
+[data-theme-mode="light"] aside  [class*="border-white\/"] {
+  border-color: rgba(255,255,255,0.12) !important;
+}
+[data-theme-mode="light"] header [class*="bg-white\/"],
+[data-theme-mode="light"] footer [class*="bg-white\/"],
+[data-theme-mode="light"] aside  [class*="bg-white\/"] {
+  background-color: rgba(255,255,255,0.06) !important;
+}
+
+/* ── Dark modal override — restore white text inside .modal-dark ──
+   Prefixed with [data-theme-mode="light"] to beat the light-mode
+   attribute-selector specificity (0,1,1,0 → 0,1,2,0).
+   The non-prefixed rules still apply in default/dark themes.      ── */
+.modal-dark .text-white,
+[data-theme-mode="light"] .modal-dark .text-white               { color: #ffffff !important; }
+.modal-dark [class*="text-white\/"],
+[data-theme-mode="light"] .modal-dark [class*="text-white\/"]   { color: rgba(255,255,255,0.65) !important; }
+.modal-dark .text-white\/70,
+[data-theme-mode="light"] .modal-dark .text-white\/70           { color: rgba(255,255,255,0.70) !important; }
+.modal-dark .text-white\/50,
+[data-theme-mode="light"] .modal-dark .text-white\/50           { color: rgba(255,255,255,0.50) !important; }
+.modal-dark .text-white\/40,
+[data-theme-mode="light"] .modal-dark .text-white\/40           { color: rgba(255,255,255,0.40) !important; }
+.modal-dark .text-white\/30,
+[data-theme-mode="light"] .modal-dark .text-white\/30           { color: rgba(255,255,255,0.30) !important; }
+.modal-dark .text-white\/25,
+[data-theme-mode="light"] .modal-dark .text-white\/25           { color: rgba(255,255,255,0.25) !important; }
+.modal-dark [class*="border-white\/"],
+[data-theme-mode="light"] .modal-dark [class*="border-white\/"] { border-color: rgba(255,255,255,0.15) !important; }
+.modal-dark [class*="bg-white\/"],
+[data-theme-mode="light"] .modal-dark [class*="bg-white\/"]     { background-color: rgba(255,255,255,0.07) !important; }
+.modal-dark [class*="placeholder-white\/"]::placeholder,
+[data-theme-mode="light"] .modal-dark [class*="placeholder-white\/"]::placeholder { color: rgba(255,255,255,0.28) !important; }
