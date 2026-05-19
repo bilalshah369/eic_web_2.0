@@ -229,9 +229,10 @@ interface Props {
   applicationId: string;
   onBack: () => void;
   onSaved?: (app: PIAApplicationFull) => void;
+  onProceedToPartII?: () => void;
 }
 
-export default function PIAApplicationForm({ applicationId, onBack, onSaved }: Props) {
+export default function PIAApplicationForm({ applicationId, onBack, onSaved, onProceedToPartII }: Props) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [appNo, setAppNo] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -281,6 +282,33 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
       setIsSaving(false);
     }
   }, [applicationId, form, isSaving]);
+
+  const handleProceedToPartII = useCallback(async () => {
+    const errs: Partial<Record<keyof FormState, string>> = {};
+    if (!form.agencyName?.trim())          errs.agencyName = 'Required';
+    if (!form.headOfficeAddress?.trim())   errs.headOfficeAddress = 'Required';
+    if (!form.headOfficeState)             errs.headOfficeState = 'Required';
+    if (!form.headOfficeCity?.trim())      errs.headOfficeCity = 'Required';
+    if (!form.headOfficePincode?.trim())   errs.headOfficePincode = 'Required';
+    if (!form.headOfficePhone?.trim())     errs.headOfficePhone = 'Required';
+    if (!form.headOfficeEmail?.trim())     errs.headOfficeEmail = 'Required';
+    if (!form.headOfOrgName?.trim())       errs.headOfOrgName = 'Required';
+    if (!form.headOfOrgDesignation?.trim())errs.headOfOrgDesignation = 'Required';
+    if (!form.headOfOrgContact?.trim())    errs.headOfOrgContact = 'Required';
+    if (!form.legalStatus)                 errs.legalStatus = 'Required';
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+    if (isSaving) return;
+    setIsSaving(true); setSaveError('');
+    try {
+      const saved = await piaApi.savePartI(applicationId, form);
+      setIsDirty(false); setLastSaved(new Date());
+      onSaved?.(saved);
+      onProceedToPartII?.();
+    } catch (err: any) {
+      setSaveError(err?.response?.data?.message ?? 'Save failed. Please try again.');
+    } finally { setIsSaving(false); }
+  }, [applicationId, form, isSaving, onProceedToPartII]);
 
   const validate = (): boolean => {
     const errs: Partial<Record<keyof FormState, string>> = {};
@@ -389,12 +417,13 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
           </button>
 
           <button
-            onClick={() => { if (validate()) handleSave(true); }}
+            onClick={handleProceedToPartII}
+            disabled={isSaving}
             style={{
               display: 'flex', alignItems: 'center', gap: '6px',
               padding: '7px 16px', borderRadius: '7px',
               backgroundColor: '#8B5CF6', border: 'none',
-              color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
+              color: '#fff', fontSize: '12px', fontWeight: 600, cursor: isSaving ? 'wait' : 'pointer',
             }}
           >
             Proceed to Part II
@@ -701,12 +730,13 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
               {isSaving ? 'Saving…' : 'Save Draft'}
             </button>
             <button
-              onClick={() => { if (validate()) handleSave(true); }}
+              onClick={handleProceedToPartII}
+              disabled={isSaving}
               style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
                 padding: '9px 20px', borderRadius: '7px',
                 backgroundColor: '#8B5CF6', border: 'none',
-                color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+                color: '#fff', fontSize: '13px', fontWeight: 600, cursor: isSaving ? 'wait' : 'pointer',
               }}
             >
               Save &amp; Proceed to Part II

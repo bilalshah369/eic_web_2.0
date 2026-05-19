@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import PIAApplicationForm from './pia/PIAApplicationForm';
+import PIAPartIIForm from './pia/PIAPartIIForm';
 import { piaApi, PIAApplicationSummary } from '../services/pia.service';
 
 type NavKey = 'home' | 'establishment' | 'pia-applications' | 'pia-fees' | 'pia-nc' | 'pia-alerts';
@@ -106,10 +107,15 @@ export default function Dashboard() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-page)' }}>
-      <Header user={user} onLogout={handleLogout} />
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-page)', overflow: 'hidden' }}>
+      <Header
+        user={user}
+        onLogout={handleLogout}
+        pageTitle={NAV_LABELS[activeNav]}
+        sidebarCollapsed={sidebarCollapsed}
+      />
 
-      <div style={{ flex: 1, display: 'flex' }}>
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
 
         {/* Sidebar */}
         <aside style={{
@@ -120,6 +126,7 @@ export default function Dashboard() {
           flexShrink: 0,
           transition: 'width 0.2s ease',
           position: 'relative',
+          height: '100%', overflow: 'hidden',
           borderRight: '1px solid rgba(255,255,255,0.07)',
         }}>
 
@@ -313,12 +320,12 @@ export default function Dashboard() {
             </button>
           )}
 
-          {/* Bottom actions */}
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', padding: '8px 0' }}>
+          {/* Bottom actions — always visible */}
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', padding: '6px 0', flexShrink: 0 }}>
             <button
               style={{
                 display: 'flex', alignItems: 'center', gap: '10px',
-                width: '100%', padding: sidebarCollapsed ? '11px 0' : '11px 20px',
+                width: '100%', padding: sidebarCollapsed ? '10px 0' : '10px 20px',
                 justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
                 background: 'none', border: 'none', cursor: 'pointer',
                 color: 'rgba(255,255,255,0.5)', fontSize: '13px', textAlign: 'left',
@@ -326,7 +333,7 @@ export default function Dashboard() {
               }}
               onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.85)')}
               onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}
-              title={sidebarCollapsed ? 'Change Password' : undefined}
+              title="Change Password"
             >
               <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -338,7 +345,7 @@ export default function Dashboard() {
               onClick={handleLogout}
               style={{
                 display: 'flex', alignItems: 'center', gap: '10px',
-                width: '100%', padding: sidebarCollapsed ? '11px 0' : '11px 20px',
+                width: '100%', padding: sidebarCollapsed ? '10px 0' : '10px 20px',
                 justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
                 background: 'none', border: 'none', cursor: 'pointer',
                 color: 'rgba(239,68,68,0.7)', fontSize: '13px', textAlign: 'left',
@@ -346,7 +353,7 @@ export default function Dashboard() {
               }}
               onMouseEnter={e => (e.currentTarget.style.color = '#EF4444')}
               onMouseLeave={e => (e.currentTarget.style.color = 'rgba(239,68,68,0.7)')}
-              title={sidebarCollapsed ? 'Logout' : undefined}
+              title="Logout"
             >
               <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -355,38 +362,14 @@ export default function Dashboard() {
               {!sidebarCollapsed && 'Logout'}
             </button>
           </div>
+
         </aside>
 
         {/* Main content */}
-        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-
-          {/* Breadcrumb bar */}
-          <div style={{
-            padding: '7px 24px',
-            borderBottom: '1px solid rgba(255,255,255,0.06)',
-            display: 'flex', alignItems: 'center', gap: '8px',
-            backgroundColor: 'rgba(255,255,255,0.02)',
-          }}>
-            <button
-              onClick={() => setActiveNav('home')}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: activeNav === 'home' ? 'var(--text-secondary)' : 'var(--text-muted)', fontSize: '11px' }}
-              onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-secondary)')}
-              onMouseLeave={e => (e.currentTarget.style.color = activeNav === 'home' ? 'var(--text-secondary)' : 'var(--text-muted)')}
-            >
-              Dashboard
-            </button>
-            {activeNav !== 'home' && (
-              <>
-                <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>›</span>
-                <span style={{ color: 'var(--text-secondary)', fontSize: '11px' }}>
-                  {NAV_LABELS[activeNav]}
-                </span>
-              </>
-            )}
-          </div>
+        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', minHeight: 0 }}>
 
           {/* Content */}
-          <div style={{ padding: '16px 24px', flex: 1, minHeight: 'calc(100vh - 340px)' }}>
+          <div style={{ padding: '16px 24px', flex: 1 }}>
             {activeNav === 'home' ? (
               <DashboardHome onNavigate={handleSetNav} />
             ) : (
@@ -405,10 +388,9 @@ export default function Dashboard() {
               </div>
             )}
           </div>
+          <Footer />
         </main>
       </div>
-
-      <Footer />
     </div>
   );
 }
@@ -672,6 +654,8 @@ function PIAApplicationsSection() {
   const [tab, setTab] = useState('all');
   const [view, setView] = useState<'list' | 'form'>('list');
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingAppNo, setEditingAppNo] = useState('');
+  const [formPart, setFormPart] = useState<'I' | 'II'>('I');
   const [apps, setApps] = useState<PIAApplicationSummary[]>([]);
   const [loadingList, setLoadingList] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -705,6 +689,8 @@ function PIAApplicationsSection() {
       setCreateModal(false);
       setNewAgencyName('');
       setEditingId(app.id);
+      setEditingAppNo(app.appNo);
+      setFormPart('I');
       setView('form');
     } catch (err: any) {
       setCreateError(err?.response?.data?.message ?? 'Could not create application. Try again.');
@@ -715,11 +701,23 @@ function PIAApplicationsSection() {
 
   // ── Form view ──
   if (view === 'form' && editingId) {
+    const backToList = () => { setView('list'); setEditingId(null); setEditingAppNo(''); setFormPart('I'); loadApps(); };
+    if (formPart === 'II') {
+      return (
+        <PIAPartIIForm
+          applicationId={editingId}
+          appNo={editingAppNo}
+          onBack={backToList}
+          onBackToPartI={() => setFormPart('I')}
+        />
+      );
+    }
     return (
       <PIAApplicationForm
         applicationId={editingId}
-        onBack={() => { setView('list'); setEditingId(null); loadApps(); }}
+        onBack={backToList}
         onSaved={() => {}}
+        onProceedToPartII={() => setFormPart('II')}
       />
     );
   }
@@ -816,7 +814,7 @@ function PIAApplicationsSection() {
               <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
                 {app.status === 'DRAFT' && (
                   <button
-                    onClick={() => { setEditingId(app.id); setView('form'); }}
+                    onClick={() => { setEditingId(app.id); setEditingAppNo(app.appNo); setFormPart('I'); setView('form'); }}
                     style={{
                       padding: '6px 14px', borderRadius: '6px',
                       border: '1px solid #8B5CF6',
@@ -827,7 +825,7 @@ function PIAApplicationsSection() {
                   </button>
                 )}
                 <button
-                  onClick={() => { setEditingId(app.id); setView('form'); }}
+                  onClick={() => { setEditingId(app.id); setEditingAppNo(app.appNo); setFormPart('I'); setView('form'); }}
                   style={{
                     padding: '6px 14px', borderRadius: '6px',
                     border: '1px solid var(--border-subtle)',
