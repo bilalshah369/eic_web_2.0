@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { authApi } from '../services/auth.service';
+import { authApi, RegisterPayload } from '../services/auth.service';
 import { User } from '../types';
 
 export const useAuth = () => {
@@ -24,8 +24,8 @@ export const useAuth = () => {
     return data.data;
   };
 
-  const register = async (name: string, email: string, password: string) => {
-    const { data } = await authApi.register({ name, email, password });
+  const register = async (payload: RegisterPayload) => {
+    const { data } = await authApi.register(payload);
     localStorage.setItem('accessToken', data.data.accessToken);
     localStorage.setItem('refreshToken', data.data.refreshToken);
     setUser(data.data.user);

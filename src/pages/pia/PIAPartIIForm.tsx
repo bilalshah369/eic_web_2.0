@@ -247,7 +247,7 @@ export default function PIAPartIIForm({ applicationId, appNo, onBack, onBackToPa
   const buildPayload = () => ({
     seniorMgmtCount:      form.seniorMgmtCount      ? parseInt(form.seniorMgmtCount)      : null,
     inspectingStaffCount: form.inspectingStaffCount  ? parseInt(form.inspectingStaffCount)  : null,
-    qmsImplemented: form.qmsImplemented, qmsType: form.qmsType || null,
+    qmsImplemented: form.qmsImplemented, qmsType: form.qmsType || undefined,
     isAccredited: form.isAccredited, accreditationScope: form.accreditationScope, accreditationBody: form.accreditationBody,
     consultancyDetails: form.consultancyDetails,
     hasDomesticExperience: form.hasDomesticExperience, hasExportExperience: form.hasExportExperience,
@@ -266,7 +266,7 @@ export default function PIAPartIIForm({ applicationId, appNo, onBack, onBackToPa
     labProducts: form.labProducts,
   });
 
-  const handleSave = useCallback(async (showFeedback = true) => {
+  const handleSave = useCallback(async (_showFeedback = true) => {
     if (isSaving) return;
     setIsSaving(true); setSaveError('');
     try {
@@ -491,7 +491,7 @@ export default function PIAPartIIForm({ applicationId, appNo, onBack, onBackToPa
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '8px' }}>
-              {ports.map((port, idx) => {
+              {ports.map((port, _idx) => {
                 const selected = form.selectedPortIds.includes(port.id);
                 const isDefault = selected && form.selectedPortIds[0] === port.id;
                 return (

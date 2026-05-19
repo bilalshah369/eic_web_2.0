@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../hooks/useAuth';
 import { adminApi } from '../services/admin.service';
 import Header from '../components/Header';
-import Footer from '../components/Footer';
 import OfficesSection from './admin/OfficesSection';
 import OfficersSection from './admin/OfficersSection';
 import ProductsSection from './admin/ProductsSection';
@@ -513,7 +512,7 @@ function AdminHome(_props: { user: { name?: string; email?: string; role: string
                       onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
                     >
                       <td style={{ padding: '10px 16px' }}>
-                        <UserCell name={row.userName} email={row.userEmail} />
+                        <UserCell name={row.userName ?? undefined} email={row.userEmail ?? undefined} />
                       </td>
                       <td style={{ padding: '10px 16px' }}>
                         <ActionBadge action={row.action} />
@@ -524,7 +523,7 @@ function AdminHome(_props: { user: { name?: string; email?: string; role: string
                         </div>
                       </td>
                       <td style={{ padding: '10px 16px' }}>
-                        <IpBadge ip={row.ipAddress} />
+                        <IpBadge ip={row.ipAddress ?? undefined} />
                       </td>
                       <td style={{ padding: '10px 16px' }}>
                         <RelativeTime dateStr={row.createdAt} />
@@ -643,7 +642,7 @@ function AuditLogsSection() {
                     onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
                   >
                     <td style={{ padding: '10px 16px' }}>
-                      <UserCell name={row.userName} email={row.userEmail} />
+                      <UserCell name={row.userName ?? undefined} email={row.userEmail ?? undefined} />
                     </td>
                     <td style={{ padding: '10px 16px' }}>
                       <ActionBadge action={row.action} />
@@ -654,7 +653,7 @@ function AuditLogsSection() {
                       </div>
                     </td>
                     <td style={{ padding: '10px 16px' }}>
-                      <IpBadge ip={row.ipAddress} />
+                      <IpBadge ip={row.ipAddress ?? undefined} />
                     </td>
                     <td style={{ padding: '10px 16px' }}>
                       <RelativeTime dateStr={row.createdAt} />

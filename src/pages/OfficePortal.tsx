@@ -157,18 +157,6 @@ function SidebarBtn({ item, active, collapsed, onClick }: { item: typeof NAV_ALL
   );
 }
 
-/* ─── coming soon ────────────────────────────────────────────────────────── */
-function ComingSoon({ title }: { title: string }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', textAlign: 'center' }}>
-      <div style={{ width: 64, height: 64, borderRadius: '50%', backgroundColor: '#EEF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
-        <svg width="28" height="28" fill="none" stroke="#1B2A6B" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-      </div>
-      <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>{title}</h3>
-      <p style={{ margin: '8px 0 0', color: 'var(--text-muted)', fontSize: 14 }}>This section is coming soon.</p>
-    </div>
-  );
-}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    SUB-OFFICE MANAGEMENT

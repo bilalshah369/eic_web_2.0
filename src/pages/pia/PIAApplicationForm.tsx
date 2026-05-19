@@ -310,22 +310,6 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved, onP
     } finally { setIsSaving(false); }
   }, [applicationId, form, isSaving, onProceedToPartII]);
 
-  const validate = (): boolean => {
-    const errs: Partial<Record<keyof FormState, string>> = {};
-    if (!form.agencyName?.trim())          errs.agencyName = 'Required';
-    if (!form.headOfficeAddress?.trim())   errs.headOfficeAddress = 'Required';
-    if (!form.headOfficeState)             errs.headOfficeState = 'Required';
-    if (!form.headOfficeCity?.trim())      errs.headOfficeCity = 'Required';
-    if (!form.headOfficePincode?.trim())   errs.headOfficePincode = 'Required';
-    if (!form.headOfficePhone?.trim())     errs.headOfficePhone = 'Required';
-    if (!form.headOfficeEmail?.trim())     errs.headOfficeEmail = 'Required';
-    if (!form.headOfOrgName?.trim())       errs.headOfOrgName = 'Required';
-    if (!form.headOfOrgDesignation?.trim())errs.headOfOrgDesignation = 'Required';
-    if (!form.headOfOrgContact?.trim())    errs.headOfOrgContact = 'Required';
-    if (!form.legalStatus)                 errs.legalStatus = 'Required';
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
 
   const completion = calcCompletion(form);
 
