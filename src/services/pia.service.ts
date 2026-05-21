@@ -16,6 +16,7 @@ export type QMSType = 'ISO_17020' | 'ISO_9001' | 'BOTH' | 'NONE';
 
 export interface PIAPortMaster    { id: string; name: string; code: string | null; state: string | null; isActive: boolean }
 export interface PIAMineralMaster { id: string; name: string; code: string | null; hsCode: string | null; isActive: boolean }
+export interface PIAEIAOffice     { id: string; name: string; code: string | null; state: string | null; city: string | null }
 
 // ─── Part I ───────────────────────────────────────────────────────────────────
 
@@ -25,6 +26,7 @@ export interface PIABranchPayload {
 }
 
 export interface PIAPartIPayload {
+  officeId?: string | null;
   agencyName?: string; agencyNameHindi?: string;
   headOfficeAddress?: string; headOfficeState?: string; headOfficeDistrict?: string;
   headOfficeCity?: string; headOfficePincode?: string; headOfficeCountry?: string;
@@ -91,6 +93,7 @@ export interface PIAPartIIPayload {
 
 export interface PIAApplicationSummary {
   id: string; appNo: string; status: string; organisation: string;
+  officeId: string | null;
   updatedAt: string; createdAt: string;
   piaApplication: { id: string; subType: PIASubType; piaStatus: PIAStatus; updatedAt: string } | null;
 }
@@ -156,6 +159,10 @@ export const piaApi = {
   savePartII: async (id: string, payload: PIAPartIIPayload) => {
     const { data } = await api.put(`/pia/applications/${id}/part-ii`, payload);
     return data.data as PIAApplicationFull;
+  },
+  getMasterEIAOffices: async () => {
+    const { data } = await api.get('/pia/masters/eia-offices');
+    return data.data as PIAEIAOffice[];
   },
   getMasterPorts: async () => {
     const { data } = await api.get('/pia/masters/ports');

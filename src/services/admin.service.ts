@@ -236,6 +236,14 @@ export const adminApi = {
   updateDocumentChecklist: (id: string, data: { documentLabel?: string; description?: string; isMandatory?: boolean; sortOrder?: number; isActive?: boolean }) =>
     api.put<{ success: boolean; data: PIADocumentChecklist }>(`/admin/pia/document-checklist/${id}`, data),
   deleteDocumentChecklist: (id: string) => api.delete(`/admin/pia/document-checklist/${id}`),
+
+  getStatusMaster: () =>
+    api.get<{ success: boolean; data: PIAStatusMaster[] }>('/admin/pia/status-master'),
+  createStatusMaster: (data: { code: string; label: string; description?: string; phase: string; sortOrder?: number; isActive?: boolean }) =>
+    api.post<{ success: boolean; data: PIAStatusMaster }>('/admin/pia/status-master', data),
+  updateStatusMaster: (id: string, data: { label?: string; description?: string; isActive?: boolean; sortOrder?: number }) =>
+    api.put<{ success: boolean; data: PIAStatusMaster }>(`/admin/pia/status-master/${id}`, data),
+  deleteStatusMaster: (id: string) => api.delete(`/admin/pia/status-master/${id}`),
 };
 
 // ── PIA Master types ─────────────────────────────────────────────────────────
@@ -275,4 +283,16 @@ export interface PIADocumentChecklist {
   isMandatory: boolean;
   sortOrder: number;
   isActive: boolean;
+}
+
+export interface PIAStatusMaster {
+  id: string;
+  code: string;
+  label: string;
+  description: string | null;
+  phase: string;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   piaApi, PIABranchPayload, PIASubType, PIAApplicationFull,
-  PIAPortMaster, PIAMineralMaster,
+  PIAPortMaster, PIAMineralMaster, PIAEIAOffice,
   ManpowerRow, LabManpowerRow, MineralScopeRow, LabEquipmentRow, LabProductRow,
 } from '../../services/pia.service';
 
@@ -13,7 +13,6 @@ const STEPS = [
   { key: 'laboratory',  label: 'Laboratory Capabilities'  },
   { key: 'manpower',    label: 'Manpower'                 },
   { key: 'additional',  label: 'Additional Information'   },
-  { key: 'scope',       label: 'Scope'                    },
   { key: 'ports',       label: 'Ports / Crushing Sheds'   },
   { key: 'documents',   label: 'Documents'                },
   { key: 'declaration', label: 'Declaration'              },
@@ -69,6 +68,7 @@ const EMPTY_LAB_PRODUCT: LabProductRow   = { productName: '', testParameters: ''
 
 interface CombinedFormState {
   subType: PIASubType;
+  submittingOfficeId: string;
   agencyName: string;
   // Part I
   agencyNameHindi: string;
@@ -104,7 +104,7 @@ interface CombinedFormState {
 }
 
 const EMPTY: CombinedFormState = {
-  subType: 'NEW_RECOGNITION', agencyName: '', agencyNameHindi: '',
+  subType: 'NEW_RECOGNITION', submittingOfficeId: '', agencyName: '', agencyNameHindi: '',
   headOfficeAddress: '', headOfficeState: '', headOfficeDistrict: '',
   headOfficeCity: '', headOfficePincode: '', headOfficeCountry: 'India',
   headOfficePhone: '', headOfficeFax: '', headOfficeEmail: '',
@@ -133,7 +133,7 @@ const EMPTY: CombinedFormState = {
 function formFromApp(app: PIAApplicationFull): CombinedFormState {
   const p = app.piaApplication!;
   return {
-    subType: p.subType, agencyName: app.organisation,
+    subType: p.subType, submittingOfficeId: app.officeId ?? '', agencyName: app.organisation,
     agencyNameHindi: p.agencyNameHindi ?? '',
     headOfficeAddress: p.headOfficeAddress ?? '', headOfficeState: p.headOfficeState ?? '',
     headOfficeDistrict: p.headOfficeDistrict ?? '', headOfficeCity: p.headOfficeCity ?? '',
@@ -297,8 +297,9 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
   const [form, setForm]         = useState<CombinedFormState>(EMPTY);
   const [appNo, setAppNo]       = useState('');
   const [step, setStep]         = useState(0);
-  const [ports, setPorts]       = useState<PIAPortMaster[]>([]);
-  const [minerals, setMinerals] = useState<PIAMineralMaster[]>([]);
+  const [ports, setPorts]           = useState<PIAPortMaster[]>([]);
+  const [minerals, setMinerals]     = useState<PIAMineralMaster[]>([]);
+  const [eiaOffices, setEiaOffices] = useState<PIAEIAOffice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving]   = useState(false);
   const [isDirty, setIsDirty]     = useState(false);
@@ -311,11 +312,13 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
       piaApi.getById(applicationId),
       piaApi.getMasterPorts(),
       piaApi.getMasterMinerals(),
-    ]).then(([app, pts, mins]) => {
+      piaApi.getMasterEIAOffices(),
+    ]).then(([app, pts, mins, offices]) => {
       setForm(formFromApp(app));
       setAppNo(app.appNo);
       setPorts(pts.filter(p => p.isActive));
       setMinerals(mins.filter(m => m.isActive));
+      setEiaOffices(offices);
       setIsLoading(false);
     }).catch(() => setIsLoading(false));
   }, [applicationId]);
@@ -358,6 +361,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
     try {
       await Promise.all([
         piaApi.savePartI(applicationId, {
+          officeId: form.submittingOfficeId || null,
           agencyName: form.agencyName, agencyNameHindi: form.agencyNameHindi,
           headOfficeAddress: form.headOfficeAddress, headOfficeState: form.headOfficeState,
           headOfficeDistrict: form.headOfficeDistrict, headOfficeCity: form.headOfficeCity,
@@ -387,7 +391,8 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
           isAccredited: form.isAccredited, accreditationScope: form.accreditationScope,
           accreditationBody: form.accreditationBody, consultancyDetails: form.consultancyDetails,
           hasDomesticExperience: form.hasDomesticExperience, hasExportExperience: form.hasExportExperience,
-          hasLaboratory: form.hasLaboratory, hasLabAccreditation: form.hasLabAccreditation,
+          hasLaboratory: form.hasLabAccreditation || !!form.labConsultancyDetails || form.labEquipment.length > 0 || form.labProducts.length > 0 || form.labManpower.length > 0,
+          hasLabAccreditation: form.hasLabAccreditation,
           labAccreditationType: form.labAccreditationType, labAccreditationScope: form.labAccreditationScope,
           labConsultancyDetails: form.labConsultancyDetails,
           hasOtherActivities: form.hasOtherActivities, otherActivitiesDetails: form.otherActivitiesDetails,
@@ -445,7 +450,6 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
 
       {/* ── Sticky top bar ── */}
       <div style={{
-        position: 'sticky', top: 0, zIndex: 20,
         backgroundColor: 'var(--bg-card)', borderBottom: '1px solid var(--border-subtle)',
         padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         borderRadius: '8px 8px 0 0',
@@ -549,6 +553,43 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
 
         {/* ═══ STEP 1: General Information ═══ */}
         {step === 0 && <>
+          <div>
+            <SecHead num="0" title="Submission Office" subtitle="Select the EIA office to which this application will be submitted" />
+            {eiaOffices.length === 0 ? (
+              <div style={{ padding: '16px', borderRadius: '8px', border: '1px dashed var(--border-subtle)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+                No EIA offices configured. Contact administrator.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <Field label="Submit Application To" required>
+                  <select
+                    value={form.submittingOfficeId}
+                    onChange={e => set('submittingOfficeId', e.target.value)}
+                    style={{ ...inp, cursor: 'pointer' }}
+                  >
+                    <option value="">— Select EIA Office —</option>
+                    {eiaOffices.map(o => (
+                      <option key={o.id} value={o.id}>
+                        {o.name}{o.code ? ` (${o.code})` : ''}{o.state ? ` — ${o.state}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                {form.submittingOfficeId && (() => {
+                  const office = eiaOffices.find(o => o.id === form.submittingOfficeId);
+                  return office ? (
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 14px', borderRadius: '8px', backgroundColor: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)' }}>
+                      <svg width="14" height="14" fill="none" stroke="#8B5CF6" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                      <span style={{ fontSize: '12px', fontWeight: 600, color: '#8B5CF6' }}>{office.name}</span>
+                      {office.city && <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{office.city}{office.state ? `, ${office.state}` : ''}</span>}
+                    </div>
+                  ) : null;
+                })()}
+              </div>
+            )}
+          </div>
           <div>
             <SecHead num="1" title="Name of the Applicant / Inspection Agency" subtitle="As registered — English and Hindi" />
             <Grid>
@@ -701,6 +742,41 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
             </Grid>
           </div>
           <div>
+            <SecHead num="6" title="Scope for which Recognition is Sought" subtitle="Product / product group, minerals / ores, corresponding specifications / standards and Annexure-8 details" />
+            {minerals.length === 0
+              ? <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', border: '1px dashed var(--border-subtle)', borderRadius: '8px' }}>No minerals configured. Contact admin.</div>
+              : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {minerals.map(mineral => {
+                    const scope = form.mineralScopes.find(s => s.mineralOreId === mineral.id);
+                    const selected = !!scope;
+                    return (
+                      <div key={mineral.id} style={{ borderRadius: '8px', border: `1px solid ${selected ? '#8B5CF6' : 'var(--border-subtle)'}`, backgroundColor: selected ? 'rgba(139,92,246,0.05)' : 'transparent', overflow: 'hidden', transition: 'all 0.15s' }}>
+                        <button type="button" onClick={() => toggleMineral(mineral.id)} style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+                          <div style={{ width: 16, height: 16, borderRadius: '4px', flexShrink: 0, border: `2px solid ${selected ? '#8B5CF6' : 'var(--border-subtle)'}`, backgroundColor: selected ? '#8B5CF6' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {selected && <svg width="10" height="10" fill="none" stroke="#fff" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <span style={{ fontSize: '12px', fontWeight: 600, color: selected ? '#8B5CF6' : 'var(--text-primary)' }}>{mineral.name}</span>
+                            {mineral.code && <span style={{ marginLeft: '8px', fontSize: '10px', color: 'var(--text-muted)', backgroundColor: 'var(--border-subtle)', padding: '1px 6px', borderRadius: '4px' }}>Code: {mineral.code}</span>}
+                            {mineral.hsCode && <span style={{ marginLeft: '6px', fontSize: '10px', color: 'var(--text-muted)', backgroundColor: 'var(--border-subtle)', padding: '1px 6px', borderRadius: '4px' }}>HS: {mineral.hsCode}</span>}
+                          </div>
+                        </button>
+                        {selected && (
+                          <div style={{ padding: '0 14px 12px' }}>
+                            <input type="text" value={scope!.specifications} onChange={e => updMineralSpec(mineral.id, e.target.value)} placeholder="Specifications / grade / standards (e.g. IS 1493, BIS, ASTM) — Annexure-8 details" style={{ ...inp, fontSize: '12px' }} />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            {form.mineralScopes.length > 0 && (
+              <InfoBadge text={`${form.mineralScopes.length} mineral/ore${form.mineralScopes.length > 1 ? 's' : ''} selected — Annexure-8 details shall be attached with documents`} color="#2563EB" bg="#EFF6FF" border="#BFDBFE" />
+            )}
+          </div>
+          <div>
             <SecHead num="7 / 8" title="Recognition Details" subtitle="Validity date and period for which recognition is sought" />
             <Grid cols={2}>
               {(form.subType === 'RENEWAL' || form.subType === 'MODIFICATION') && <>
@@ -732,6 +808,66 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
                 <TI value={form.inspectingStaffCount} onChange={v => set('inspectingStaffCount', v)} type="number" placeholder="e.g. 10" />
               </Field>
             </Grid>
+          </div>
+          {/* 10.1 — Professionally qualified inspection staff */}
+          <div>
+            <SecHead num="10.1" title="Professionally Qualified Inspection Staff" subtitle="Qualification and experience details — Annexure-4 format" />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {/* 10.1.1 — Senior Management */}
+              <div>
+                <p style={{ margin: '0 0 10px', fontSize: '11px', fontWeight: 700, color: '#8B5CF6' }}>10.1.1 — Senior Management - Inspection Division</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {form.manpower.filter(m => m.isSeniorMgmt).length === 0 && (
+                    <div style={{ padding: '14px', borderRadius: '8px', border: '1px dashed var(--border-subtle)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>No senior management added.</div>
+                  )}
+                  {form.manpower.map((row, idx) => !row.isSeniorMgmt ? null : (
+                    <div key={idx} style={{ padding: '14px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Sr. Mgmt #{form.manpower.slice(0, idx + 1).filter(m => m.isSeniorMgmt).length}</span>
+                        <button type="button" onClick={() => set('manpower', form.manpower.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', fontSize: '11px' }}>Remove</button>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                        <Field label="Full Name" required><TI value={row.name} onChange={v => set('manpower', form.manpower.map((r, i) => i === idx ? { ...r, name: v } : r))} placeholder="Name" /></Field>
+                        <Field label="Designation"><TI value={row.designation} onChange={v => set('manpower', form.manpower.map((r, i) => i === idx ? { ...r, designation: v } : r))} placeholder="e.g. General Manager" /></Field>
+                        <Field label="Qualification"><TI value={row.qualification} onChange={v => set('manpower', form.manpower.map((r, i) => i === idx ? { ...r, qualification: v } : r))} placeholder="e.g. B.Sc." /></Field>
+                        <Field label="Experience (years)"><TI value={row.experienceYears} onChange={v => set('manpower', form.manpower.map((r, i) => i === idx ? { ...r, experienceYears: v } : r))} type="number" placeholder="Years" /></Field>
+                        <Field label="Specialization"><TI value={row.specialization} onChange={v => set('manpower', form.manpower.map((r, i) => i === idx ? { ...r, specialization: v } : r))} placeholder="Area of specialization" /></Field>
+                      </div>
+                    </div>
+                  ))}
+                  <button type="button" onClick={() => set('manpower', [...form.manpower, { ...EMPTY_MANPOWER, isSeniorMgmt: true }])} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '7px', border: '1px dashed #8B5CF6', backgroundColor: 'rgba(139,92,246,0.05)', color: '#8B5CF6', fontSize: '12px', fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
+                    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>Add Senior Management
+                  </button>
+                </div>
+              </div>
+              {/* 10.1.2 — Technical Inspecting Staff */}
+              <div>
+                <p style={{ margin: '0 0 10px', fontSize: '11px', fontWeight: 700, color: '#8B5CF6' }}>10.1.2 — Inspecting Staff</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {form.manpower.filter(m => !m.isSeniorMgmt).length === 0 && (
+                    <div style={{ padding: '14px', borderRadius: '8px', border: '1px dashed var(--border-subtle)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>No inspecting staff added.</div>
+                  )}
+                  {form.manpower.map((row, idx) => row.isSeniorMgmt ? null : (
+                    <div key={idx} style={{ padding: '14px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Staff #{form.manpower.slice(0, idx + 1).filter(m => !m.isSeniorMgmt).length}</span>
+                        <button type="button" onClick={() => set('manpower', form.manpower.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', fontSize: '11px' }}>Remove</button>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                        <Field label="Full Name" required><TI value={row.name} onChange={v => set('manpower', form.manpower.map((r, i) => i === idx ? { ...r, name: v } : r))} placeholder="Name" /></Field>
+                        <Field label="Designation"><TI value={row.designation} onChange={v => set('manpower', form.manpower.map((r, i) => i === idx ? { ...r, designation: v } : r))} placeholder="e.g. Inspector" /></Field>
+                        <Field label="Qualification"><TI value={row.qualification} onChange={v => set('manpower', form.manpower.map((r, i) => i === idx ? { ...r, qualification: v } : r))} placeholder="e.g. B.Sc." /></Field>
+                        <Field label="Experience (years)"><TI value={row.experienceYears} onChange={v => set('manpower', form.manpower.map((r, i) => i === idx ? { ...r, experienceYears: v } : r))} type="number" placeholder="Years" /></Field>
+                        <Field label="Specialization"><TI value={row.specialization} onChange={v => set('manpower', form.manpower.map((r, i) => i === idx ? { ...r, specialization: v } : r))} placeholder="Area of specialization" /></Field>
+                      </div>
+                    </div>
+                  ))}
+                  <button type="button" onClick={() => set('manpower', [...form.manpower, { ...EMPTY_MANPOWER, isSeniorMgmt: false }])} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '7px', border: '1px dashed #8B5CF6', backgroundColor: 'rgba(139,92,246,0.05)', color: '#8B5CF6', fontSize: '12px', fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
+                    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>Add Inspecting Staff
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
           <div>
             <SecHead num="11" title="Implemented Quality Management System (QMS)" subtitle="ISO/IEC 17020 and quality certifications" />
@@ -789,124 +925,129 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
 
         {/* ═══ STEP 3: Laboratory Capabilities ═══ */}
         {step === 2 && <>
+
+          {/* 9.1 — Laboratory Accreditation / Recognition */}
           <div>
-            <SecHead num="9.1" title="In-House Laboratory" subtitle="Testing facilities, accreditation, equipment list (Annexure-3) and products tested" />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <Field label="Does the agency have an in-house laboratory?"><Toggle value={form.hasLaboratory} onChange={v => set('hasLaboratory', v)} /></Field>
-              {form.hasLaboratory && <>
-                <div style={{ padding: '16px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
-                  <p style={{ margin: '0 0 14px', fontSize: '12px', fontWeight: 700, color: '#8B5CF6' }}>9.1.1 — Lab Accreditation (NABL / ISO 17025)</p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    <Field label="Is the laboratory accredited (NABL / ISO 17025)?"><Toggle value={form.hasLabAccreditation} onChange={v => set('hasLabAccreditation', v)} /></Field>
-                    {form.hasLabAccreditation && <>
-                      <Field label="Accreditation Type">
-                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                          {LAB_ACCREDITATION_OPTIONS.map(opt => (
-                            <button key={opt.value} type="button" onClick={() => set('labAccreditationType', opt.value)} style={{
-                              padding: '7px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
-                              border: `1px solid ${form.labAccreditationType === opt.value ? '#8B5CF6' : 'var(--border-subtle)'}`,
-                              backgroundColor: form.labAccreditationType === opt.value ? 'rgba(139,92,246,0.12)' : 'transparent',
-                              color: form.labAccreditationType === opt.value ? '#8B5CF6' : 'var(--text-secondary)',
-                            }}>{opt.label}</button>
-                          ))}
-                        </div>
-                      </Field>
-                      <Field label="Scope of Lab Accreditation">
-                        <TI value={form.labAccreditationScope} onChange={v => set('labAccreditationScope', v)} placeholder="Parameters / commodities covered" />
-                      </Field>
-                    </>}
+            <SecHead num="9.1" title="Laboratory Accreditation / Recognition" subtitle="Whether accredited as per ISO/IEC 17025 or recognized by EIC / other equivalent standard" />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <Field label="Is the laboratory accredited or recognized (ISO/IEC 17025 / EIC)?">
+                <Toggle value={form.hasLabAccreditation} onChange={v => set('hasLabAccreditation', v)} />
+              </Field>
+              {form.hasLabAccreditation && (
+                <Field label="Accreditation / Recognition Type">
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {LAB_ACCREDITATION_OPTIONS.map(opt => (
+                      <button key={opt.value} type="button" onClick={() => set('labAccreditationType', opt.value)} style={{
+                        padding: '7px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
+                        border: `1px solid ${form.labAccreditationType === opt.value ? '#8B5CF6' : 'var(--border-subtle)'}`,
+                        backgroundColor: form.labAccreditationType === opt.value ? 'rgba(139,92,246,0.12)' : 'transparent',
+                        color: form.labAccreditationType === opt.value ? '#8B5CF6' : 'var(--text-secondary)',
+                      }}>{opt.label}</button>
+                    ))}
                   </div>
-                </div>
-                <div>
-                  <p style={{ margin: '0 0 10px', fontSize: '12px', fontWeight: 700, color: '#8B5CF6' }}>9.2 — Lab Consultancy / Advisory Details</p>
-                  <Field label="Lab Consultancy / Advisory involvement" hint="Leave blank if none">
-                    <TA value={form.labConsultancyDetails} onChange={v => set('labConsultancyDetails', v)} rows={2} placeholder="Describe or leave blank" />
-                  </Field>
-                </div>
-                {/* 9.3 Products */}
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                    <div>
-                      <p style={{ fontSize: '12px', fontWeight: 700, color: '#8B5CF6', margin: 0 }}>9.3 — Products / Commodities Tested</p>
-                      <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '2px 0 0' }}>Products tested with parameters and test methods</p>
-                    </div>
-                    <button type="button" onClick={() => set('labProducts', [...form.labProducts, { ...EMPTY_LAB_PRODUCT }])} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 12px', borderRadius: '6px', border: '1px dashed #8B5CF6', backgroundColor: 'rgba(139,92,246,0.05)', color: '#8B5CF6', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>
-                      <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>Add Product
-                    </button>
-                  </div>
-                  {form.labProducts.length === 0
-                    ? <div style={{ padding: '20px', borderRadius: '8px', border: '1px dashed var(--border-subtle)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>No products added.</div>
-                    : (
-                      <div style={{ border: '1px solid var(--border-subtle)', borderRadius: '8px', overflow: 'hidden' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 2fr 36px', backgroundColor: 'rgba(139,92,246,0.08)', borderBottom: '1px solid var(--border-subtle)' }}>
-                          {['Product / Commodity', 'Test Parameters', 'Test Methods / Standards', ''].map((h, i) => (
-                            <div key={i} style={{ padding: '8px 10px', fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>{h}</div>
-                          ))}
-                        </div>
-                        {form.labProducts.map((row, idx) => (
-                          <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 2fr 36px', borderBottom: idx < form.labProducts.length - 1 ? '1px solid var(--border-subtle)' : 'none', alignItems: 'center' }}>
-                            {(['productName','testParameters','testMethods'] as const).map(k => (
-                              <div key={k} style={{ padding: '5px 8px' }}>
-                                <input type="text" value={row[k]} onChange={e => set('labProducts', form.labProducts.map((r, i) => i === idx ? { ...r, [k]: e.target.value } : r))} style={{ ...inp, fontSize: '12px' }} />
-                              </div>
-                            ))}
-                            <div style={{ padding: '5px 4px', display: 'flex', justifyContent: 'center' }}>
-                              <button type="button" onClick={() => set('labProducts', form.labProducts.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', padding: '4px' }}>
-                                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                </div>
-                {/* 9.4 Equipment */}
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                    <div>
-                      <p style={{ fontSize: '12px', fontWeight: 700, color: '#8B5CF6', margin: 0 }}>9.4 — Equipment List (Annexure-3)</p>
-                      <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '2px 0 0' }}>List all laboratory instruments and equipment</p>
-                    </div>
-                    <button type="button" onClick={() => set('labEquipment', [...form.labEquipment, { ...EMPTY_EQUIPMENT }])} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 12px', borderRadius: '6px', border: '1px dashed #8B5CF6', backgroundColor: 'rgba(139,92,246,0.05)', color: '#8B5CF6', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>
-                      <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>Add Equipment
-                    </button>
-                  </div>
-                  {form.labEquipment.length === 0
-                    ? <div style={{ padding: '20px', borderRadius: '8px', border: '1px dashed var(--border-subtle)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>No equipment added.</div>
-                    : (
-                      <div style={{ border: '1px solid var(--border-subtle)', borderRadius: '8px', overflow: 'hidden' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1.4fr 36px', backgroundColor: 'rgba(139,92,246,0.08)', borderBottom: '1px solid var(--border-subtle)' }}>
-                          {['Equipment', 'Make', 'Model', 'Serial No.', 'Range', 'Calib. Due', ''].map((h, i) => (
-                            <div key={i} style={{ padding: '8px 10px', fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>{h}</div>
-                          ))}
-                        </div>
-                        {form.labEquipment.map((row, idx) => (
-                          <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1.4fr 36px', borderBottom: idx < form.labEquipment.length - 1 ? '1px solid var(--border-subtle)' : 'none', alignItems: 'center' }}>
-                            {(['name','make','model','serialNo','rangeCapacity','calibrationDueDate'] as const).map(k => (
-                              <div key={k} style={{ padding: '5px 8px' }}>
-                                <input type="text" value={row[k]} onChange={e => set('labEquipment', form.labEquipment.map((r, i) => i === idx ? { ...r, [k]: e.target.value } : r))} style={{ ...inp, fontSize: '12px' }} />
-                              </div>
-                            ))}
-                            <div style={{ padding: '5px 4px', display: 'flex', justifyContent: 'center' }}>
-                              <button type="button" onClick={() => set('labEquipment', form.labEquipment.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', padding: '4px' }}>
-                                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                </div>
-              </>}
+                </Field>
+              )}
             </div>
           </div>
+
+          {/* 9.1.1 — Scope of Laboratory Accreditation / Recognition */}
+          {form.hasLabAccreditation && (
+            <div>
+              <SecHead num="9.1.1" title="Scope of Laboratory Accreditation / Recognition" subtitle="Scope details and certificate attachment" />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <Field label="Scope of Accreditation / Recognition" required>
+                  <TA value={form.labAccreditationScope} onChange={v => set('labAccreditationScope', v)} rows={3} placeholder="Describe parameters, commodities and test methods covered under the accreditation / recognition" />
+                </Field>
+              </div>
+            </div>
+          )}
+
+          {/* 9.2 — Laboratory Consultancy Details */}
+          <div>
+            <SecHead num="9.2" title="Laboratory Consultancy Details" subtitle="Information regarding consultancy used for accreditation / recognition" />
+            <Field label="Consultancy / Advisory involvement" hint="Leave blank if not applicable">
+              <TA value={form.labConsultancyDetails} onChange={v => set('labConsultancyDetails', v)} rows={3} placeholder="Name of consultant, scope of consultancy, duration, etc." />
+            </Field>
+          </div>
+
+          {/* 9.3 — List of Products Tested */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <SecHead num="9.3" title="List of Products Tested in Laboratory" subtitle="Products / product groups tested — Annexure-2 format" />
+              <button type="button" onClick={() => set('labProducts', [...form.labProducts, { ...EMPTY_LAB_PRODUCT }])} style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 13px', borderRadius: '7px', border: '1px dashed #8B5CF6', backgroundColor: 'rgba(139,92,246,0.05)', color: '#8B5CF6', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>Add Product
+              </button>
+            </div>
+            {form.labProducts.length === 0
+              ? <div style={{ padding: '20px', borderRadius: '8px', border: '1px dashed var(--border-subtle)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>No products added yet.</div>
+              : (
+                <div style={{ border: '1px solid var(--border-subtle)', borderRadius: '8px', overflow: 'hidden' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 2fr 36px', backgroundColor: 'rgba(139,92,246,0.08)', borderBottom: '1px solid var(--border-subtle)' }}>
+                    {['Product / Commodity', 'Test Parameters', 'Test Methods / Standards', ''].map((h, i) => (
+                      <div key={i} style={{ padding: '8px 10px', fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>{h}</div>
+                    ))}
+                  </div>
+                  {form.labProducts.map((row, idx) => (
+                    <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 2fr 36px', borderBottom: idx < form.labProducts.length - 1 ? '1px solid var(--border-subtle)' : 'none', alignItems: 'center' }}>
+                      {(['productName','testParameters','testMethods'] as const).map(k => (
+                        <div key={k} style={{ padding: '5px 8px' }}>
+                          <input type="text" value={row[k]} onChange={e => set('labProducts', form.labProducts.map((r, i) => i === idx ? { ...r, [k]: e.target.value } : r))} style={{ ...inp, fontSize: '12px' }} />
+                        </div>
+                      ))}
+                      <div style={{ padding: '5px 4px', display: 'flex', justifyContent: 'center' }}>
+                        <button type="button" onClick={() => set('labProducts', form.labProducts.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', padding: '4px' }}>
+                          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+          </div>
+
+          {/* 9.4 — List of Equipment */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <SecHead num="9.4" title="List of Equipment Available in Laboratory" subtitle="Equipment, model, date of purchase, calibration status — Annexure-3 format" />
+              <button type="button" onClick={() => set('labEquipment', [...form.labEquipment, { ...EMPTY_EQUIPMENT }])} style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 13px', borderRadius: '7px', border: '1px dashed #8B5CF6', backgroundColor: 'rgba(139,92,246,0.05)', color: '#8B5CF6', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>Add Equipment
+              </button>
+            </div>
+            {form.labEquipment.length === 0
+              ? <div style={{ padding: '20px', borderRadius: '8px', border: '1px dashed var(--border-subtle)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>No equipment added yet.</div>
+              : (
+                <div style={{ border: '1px solid var(--border-subtle)', borderRadius: '8px', overflow: 'hidden' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1.4fr 36px', backgroundColor: 'rgba(139,92,246,0.08)', borderBottom: '1px solid var(--border-subtle)' }}>
+                    {['Equipment Name', 'Make', 'Model', 'Serial No.', 'Range / Capacity', 'Calib. Due Date', ''].map((h, i) => (
+                      <div key={i} style={{ padding: '8px 10px', fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>{h}</div>
+                    ))}
+                  </div>
+                  {form.labEquipment.map((row, idx) => (
+                    <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1.4fr 36px', borderBottom: idx < form.labEquipment.length - 1 ? '1px solid var(--border-subtle)' : 'none', alignItems: 'center' }}>
+                      {(['name','make','model','serialNo','rangeCapacity','calibrationDueDate'] as const).map(k => (
+                        <div key={k} style={{ padding: '5px 8px' }}>
+                          <input type="text" value={row[k]} onChange={e => set('labEquipment', form.labEquipment.map((r, i) => i === idx ? { ...r, [k]: e.target.value } : r))} style={{ ...inp, fontSize: '12px' }} />
+                        </div>
+                      ))}
+                      <div style={{ padding: '5px 4px', display: 'flex', justifyContent: 'center' }}>
+                        <button type="button" onClick={() => set('labEquipment', form.labEquipment.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', padding: '4px' }}>
+                          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+          </div>
+
         </>}
 
         {/* ═══ STEP 4: Manpower ═══ */}
         {step === 3 && <>
-          {/* 10.1.1 — Senior Management, Inspection Division */}
+
+          {/* 10.1.1 — Senior Management - Inspection Division */}
           <div>
-            <SecHead num="10.1.1" title="Senior Management — Inspection Division" subtitle="Senior management personnel involved in inspection activities — Annexure-4" />
+            <SecHead num="10.1.1" title="Senior Management - Inspection Division" subtitle="Name, designation, qualification, experience, specialization, and document evidence" />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {form.manpower.filter(m => m.isSeniorMgmt).length === 0 && (
                 <div style={{ padding: '16px', borderRadius: '8px', border: '1px dashed var(--border-subtle)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>No senior management added.</div>
@@ -931,9 +1072,10 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
               </button>
             </div>
           </div>
-          {/* 10.1.2 — Technical Inspecting Staff */}
+
+          {/* 10.1.2 — Inspecting Staff */}
           <div>
-            <SecHead num="10.1.2" title="Technical Inspecting Staff" subtitle="All inspection personnel — Annexure-4" />
+            <SecHead num="10.1.2" title="Inspecting Staff" subtitle="Professionally qualified staff with qualification and experience" />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {form.manpower.filter(m => !m.isSeniorMgmt).length === 0 && (
                 <div style={{ padding: '16px', borderRadius: '8px', border: '1px dashed var(--border-subtle)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>No inspecting staff added.</div>
@@ -958,10 +1100,10 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
               </button>
             </div>
           </div>
-          {form.hasLaboratory && (<>
-            {/* 10.2.1 — Senior Management, Lab Division */}
-            <div>
-              <SecHead num="10.2.1" title="Senior Management — Testing / Laboratory Division" subtitle="Senior management personnel in the laboratory division" />
+
+          {/* 10.2.1 — Senior Management - Testing Staff */}
+          <div>
+            <SecHead num="10.2.1" title="Senior Management - Testing Staff" subtitle="Laboratory senior management details" />
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {form.labManpower.filter(m => m.isSeniorMgmt).length === 0 && (
                   <div style={{ padding: '16px', borderRadius: '8px', border: '1px dashed var(--border-subtle)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>No senior management added.</div>
@@ -985,33 +1127,34 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
                 </button>
               </div>
             </div>
-            {/* 10.2.2 — Technical Testing Staff */}
-            <div>
-              <SecHead num="10.2.2" title="Technical Testing / Laboratory Staff" subtitle="All testing and laboratory personnel" />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {form.labManpower.filter(m => !m.isSeniorMgmt).length === 0 && (
-                  <div style={{ padding: '16px', borderRadius: '8px', border: '1px dashed var(--border-subtle)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>No lab staff added.</div>
-                )}
-                {form.labManpower.map((row, idx) => row.isSeniorMgmt ? null : (
-                  <div key={idx} style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Lab Staff #{form.labManpower.slice(0, idx + 1).filter(m => !m.isSeniorMgmt).length}</span>
-                      <button type="button" onClick={() => set('labManpower', form.labManpower.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', fontSize: '11px' }}>Remove</button>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
-                      <Field label="Name"><TI value={row.name} onChange={v => set('labManpower', form.labManpower.map((r, i) => i === idx ? { ...r, name: v } : r))} placeholder="Name" /></Field>
-                      <Field label="Designation"><TI value={row.designation} onChange={v => set('labManpower', form.labManpower.map((r, i) => i === idx ? { ...r, designation: v } : r))} placeholder="Designation" /></Field>
-                      <Field label="Qualification"><TI value={row.qualification} onChange={v => set('labManpower', form.labManpower.map((r, i) => i === idx ? { ...r, qualification: v } : r))} placeholder="e.g. M.Sc." /></Field>
-                      <Field label="Experience (yrs)"><TI value={row.experienceYears} onChange={v => set('labManpower', form.labManpower.map((r, i) => i === idx ? { ...r, experienceYears: v } : r))} type="number" placeholder="Years" /></Field>
-                    </div>
+
+          {/* 10.2.2 — Testing Staff */}
+          <div>
+            <SecHead num="10.2.2" title="Testing Staff" subtitle="Professionally qualified laboratory staff details" />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {form.labManpower.filter(m => !m.isSeniorMgmt).length === 0 && (
+                <div style={{ padding: '16px', borderRadius: '8px', border: '1px dashed var(--border-subtle)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>No testing staff added.</div>
+              )}
+              {form.labManpower.map((row, idx) => row.isSeniorMgmt ? null : (
+                <div key={idx} style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Testing Staff #{form.labManpower.slice(0, idx + 1).filter(m => !m.isSeniorMgmt).length}</span>
+                    <button type="button" onClick={() => set('labManpower', form.labManpower.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', fontSize: '11px' }}>Remove</button>
                   </div>
-                ))}
-                <button type="button" onClick={() => set('labManpower', [...form.labManpower, { ...EMPTY_LAB_MP, isSeniorMgmt: false }])} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '7px', border: '1px dashed #8B5CF6', backgroundColor: 'rgba(139,92,246,0.05)', color: '#8B5CF6', fontSize: '12px', fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
-                  <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>Add Lab Staff
-                </button>
-              </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                    <Field label="Name"><TI value={row.name} onChange={v => set('labManpower', form.labManpower.map((r, i) => i === idx ? { ...r, name: v } : r))} placeholder="Name" /></Field>
+                    <Field label="Designation"><TI value={row.designation} onChange={v => set('labManpower', form.labManpower.map((r, i) => i === idx ? { ...r, designation: v } : r))} placeholder="Designation" /></Field>
+                    <Field label="Qualification"><TI value={row.qualification} onChange={v => set('labManpower', form.labManpower.map((r, i) => i === idx ? { ...r, qualification: v } : r))} placeholder="e.g. M.Sc." /></Field>
+                    <Field label="Experience (yrs)"><TI value={row.experienceYears} onChange={v => set('labManpower', form.labManpower.map((r, i) => i === idx ? { ...r, experienceYears: v } : r))} type="number" placeholder="Years" /></Field>
+                  </div>
+                </div>
+              ))}
+              <button type="button" onClick={() => set('labManpower', [...form.labManpower, { ...EMPTY_LAB_MP, isSeniorMgmt: false }])} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '7px', border: '1px dashed #8B5CF6', backgroundColor: 'rgba(139,92,246,0.05)', color: '#8B5CF6', fontSize: '12px', fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
+                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>Add Testing Staff
+              </button>
             </div>
-          </>)}
+          </div>
+
         </>}
 
         {/* ═══ STEP 5: Additional Information ═══ */}
@@ -1044,45 +1187,8 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
           </div>
         </>}
 
-        {/* ═══ STEP 6: Scope ═══ */}
+        {/* ═══ STEP 6: Ports / Crushing Sheds ═══ */}
         {step === 5 && <>
-          <SecHead num="6" title="Scope for which Recognition is Sought" subtitle="Product / product group, minerals / ores, corresponding specifications / standards and Annexure-8 details" />
-          {minerals.length === 0
-            ? <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', border: '1px dashed var(--border-subtle)', borderRadius: '8px' }}>No minerals configured. Contact admin.</div>
-            : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {minerals.map(mineral => {
-                  const scope = form.mineralScopes.find(s => s.mineralOreId === mineral.id);
-                  const selected = !!scope;
-                  return (
-                    <div key={mineral.id} style={{ borderRadius: '8px', border: `1px solid ${selected ? '#8B5CF6' : 'var(--border-subtle)'}`, backgroundColor: selected ? 'rgba(139,92,246,0.05)' : 'transparent', overflow: 'hidden', transition: 'all 0.15s' }}>
-                      <button type="button" onClick={() => toggleMineral(mineral.id)} style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
-                        <div style={{ width: 16, height: 16, borderRadius: '4px', flexShrink: 0, border: `2px solid ${selected ? '#8B5CF6' : 'var(--border-subtle)'}`, backgroundColor: selected ? '#8B5CF6' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          {selected && <svg width="10" height="10" fill="none" stroke="#fff" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <span style={{ fontSize: '12px', fontWeight: 600, color: selected ? '#8B5CF6' : 'var(--text-primary)' }}>{mineral.name}</span>
-                          {mineral.code && <span style={{ marginLeft: '8px', fontSize: '10px', color: 'var(--text-muted)', backgroundColor: 'var(--border-subtle)', padding: '1px 6px', borderRadius: '4px' }}>Code: {mineral.code}</span>}
-                          {mineral.hsCode && <span style={{ marginLeft: '6px', fontSize: '10px', color: 'var(--text-muted)', backgroundColor: 'var(--border-subtle)', padding: '1px 6px', borderRadius: '4px' }}>HS: {mineral.hsCode}</span>}
-                        </div>
-                      </button>
-                      {selected && (
-                        <div style={{ padding: '0 14px 12px' }}>
-                          <input type="text" value={scope!.specifications} onChange={e => updMineralSpec(mineral.id, e.target.value)} placeholder="Specifications / grade / standards (e.g. IS 1493, BIS, ASTM) — Annexure-8 details" style={{ ...inp, fontSize: '12px' }} />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          {form.mineralScopes.length > 0 && (
-            <InfoBadge text={`${form.mineralScopes.length} mineral/ore${form.mineralScopes.length > 1 ? 's' : ''} selected — Annexure-8 details shall be attached with documents`} color="#2563EB" bg="#EFF6FF" border="#BFDBFE" />
-          )}
-        </>}
-
-        {/* ═══ STEP 7: Ports / Crushing Sheds ═══ */}
-        {step === 6 && <>
           <SecHead num="13" title="Port(s) of Operation / Crushing Sheds" subtitle="Select ports where the agency intends to conduct inspections" />
           <div style={{ padding: '10px 0 8px', fontSize: '11px', color: 'var(--text-muted)' }}>
             <span style={{ color: '#F59E0B', fontWeight: 600 }}>Note:</span> First selected port is included in the base fee (BR-001). Each additional port attracts an extra fee (BR-002).
@@ -1124,8 +1230,8 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
           )}
         </>}
 
-        {/* ═══ STEP 8: Documents ═══ */}
-        {step === 7 && <>
+        {/* ═══ STEP 7: Documents ═══ */}
+        {step === 6 && <>
           <SecHead num="Encl." title="Upload Checklist — Required Enclosures" subtitle="All documents must be self-attested. Upload PDF, JPG or PNG." />
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {([
@@ -1171,8 +1277,8 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
           <InfoBadge text="Document upload coming soon — complete other sections and save your draft." color="#2563EB" bg="#EFF6FF" border="#BFDBFE" />
         </>}
 
-        {/* ═══ STEP 9: Declaration ═══ */}
-        {step === 8 && <>
+        {/* ═══ STEP 8: Declaration ═══ */}
+        {step === 7 && <>
           <div>
             <SecHead num="9" title="Details of Criminal / Civil Proceedings Initiated" subtitle="Details during at least last 10 years — Affidavit or equivalent document shall be uploaded" />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -1222,8 +1328,8 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
           </div>
         </>}
 
-        {/* ═══ STEP 10: Fee Summary ═══ */}
-        {step === 9 && <>
+        {/* ═══ STEP 9: Fee Summary ═══ */}
+        {step === 8 && <>
           <SecHead num="Fee" title="Fee Summary" subtitle="Applicable fees based on selected application type, ports and scope" />
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {[
@@ -1249,10 +1355,10 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
         </>}
 
         {/* ── Step navigation ── */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '20px', borderTop: '1px solid var(--border-subtle)', marginTop: '8px' }}>
+        <div style={{ position: 'sticky', bottom: 0, zIndex: 20, backgroundColor: 'var(--bg-card)', borderTop: '1px solid var(--border-subtle)', marginTop: '8px', padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '0 0 8px 8px' }}>
           <button type="button" onClick={() => step > 0 ? setStep(s => s - 1) : onBack()} style={{
             display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 18px', borderRadius: '7px',
-            border: '1px solid var(--border-subtle)', background: 'none', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer',
+            border: '1px solid var(--border-subtle)', background: 'none', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', margin: 0,
           }}>
             <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
             {step === 0 ? 'Cancel' : 'Previous'}

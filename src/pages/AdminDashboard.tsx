@@ -12,9 +12,10 @@ import MineralsSection from './admin/MineralsSection';
 import PortsSection from './admin/PortsSection';
 import FeeConfigSection from './admin/FeeConfigSection';
 import DocumentChecklistSection from './admin/DocumentChecklistSection';
+import PIAStatusMasterSection from './admin/PIAStatusMasterSection';
 
 // ── Sidebar nav items ──────────────────────────────────────────
-type NavKey = 'home' | 'offices' | 'officers' | 'products' | 'audit-logs' | 'workflow-inbox' | 'pia-minerals' | 'pia-ports' | 'pia-fee-config' | 'pia-doc-checklist';
+type NavKey = 'home' | 'offices' | 'officers' | 'products' | 'audit-logs' | 'workflow-inbox' | 'pia-minerals' | 'pia-ports' | 'pia-fee-config' | 'pia-doc-checklist' | 'pia-status-master';
 
 const NAV_ITEMS: { key: NavKey; label: string; icon: React.ReactNode }[] = [
   {
@@ -118,6 +119,16 @@ const PIA_SUB_ITEMS: { key: NavKey; label: string; icon: React.ReactNode }[] = [
       <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
           d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+      </svg>
+    ),
+  },
+  {
+    key: 'pia-status-master',
+    label: 'Status Master',
+    icon: (
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
       </svg>
     ),
   },
@@ -716,7 +727,8 @@ const SECTION_META: Record<NavKey, { title: string; desc: string }> = {
   'pia-minerals':      { title: 'Mineral / Ore Master',   desc: 'Manage minerals and ores available for PIA recognition scope' },
   'pia-ports':         { title: 'Port & Location Master', desc: 'Manage ports and crushing sheds available for PIA scope' },
   'pia-fee-config':    { title: 'PIA Fee Configuration',  desc: 'Configure application, inspection, and annual fee amounts' },
-  'pia-doc-checklist': { title: 'Document Checklist',     desc: 'Configure required documents per PIA application type' },
+  'pia-doc-checklist':  { title: 'Document Checklist',      desc: 'Configure required documents per PIA application type' },
+  'pia-status-master':  { title: 'Application Status Master', desc: 'SRS §13 — all 36 system-defined PIA application statuses' },
 };
 
 // ══════════════════════════════════════════════════════════════
@@ -780,6 +792,7 @@ export default function AdminDashboard() {
     if (activeNav === 'pia-ports') return <PortsSection />;
     if (activeNav === 'pia-fee-config') return <FeeConfigSection />;
     if (activeNav === 'pia-doc-checklist') return <DocumentChecklistSection />;
+    if (activeNav === 'pia-status-master') return <PIAStatusMasterSection />;
     return <ComingSoon title={meta.title} desc={meta.desc} />;
   }
 
