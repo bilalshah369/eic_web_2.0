@@ -1,9 +1,10 @@
-import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../hooks/useAuth';
 import { adminApi } from '../services/admin.service';
-import Header from '../components/Header';
+import Header, { UserMenu } from '../components/Header';
+import ChangePasswordModal from '../components/ChangePasswordModal';
 import OfficesSection from './admin/OfficesSection';
 import OfficersSection from './admin/OfficersSection';
 import ProductsSection from './admin/ProductsSection';
@@ -138,22 +139,22 @@ function SidebarBtn({
       style={{
         display: 'flex', alignItems: 'center', gap: '10px',
         width: '100%',
-        padding: collapsed ? '12px 0' : '11px 20px',
+        padding: collapsed ? '12px 0' : '10px 20px',
         justifyContent: collapsed ? 'center' : 'flex-start',
-        background: active ? 'rgba(255,255,255,0.12)' : 'none',
+        background: active ? 'rgba(255,255,255,0.15)' : 'none',
         border: 'none',
-        borderLeft: active ? '3px solid var(--accent)' : '3px solid transparent',
+        borderLeft: active ? '3px solid #60A5FA' : '3px solid transparent',
         cursor: 'pointer',
-        color: active ? '#fff' : 'rgba(255,255,255,0.55)',
-        fontSize: '13px', fontWeight: active ? 600 : 400,
+        color: active ? '#fff' : 'rgba(255,255,255,0.78)',
+        fontSize: '13px', fontWeight: active ? 700 : 500,
         textAlign: 'left',
         transition: 'background 0.15s, color 0.15s',
         whiteSpace: 'nowrap', overflow: 'hidden',
       }}
-      onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
-      onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'none'; }}
+      onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.10)'; (e.currentTarget as HTMLElement).style.color = '#fff'; } }}
+      onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'none'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.78)'; } }}
     >
-      <span style={{ flexShrink: 0 }}>{item.icon}</span>
+      <span style={{ flexShrink: 0, color: active ? '#60A5FA' : 'rgba(255,255,255,0.65)' }}>{item.icon}</span>
       {!collapsed && <span>{item.label}</span>}
     </button>
   );
@@ -724,17 +725,39 @@ const SECTION_META: Record<NavKey, { title: string; desc: string }> = {
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeNav, setActiveNav] = useState<NavKey>('home');
+  const { section } = useParams<{ section: string }>();
+
+  const ALL_NAV_KEYS: NavKey[] = [
+    ...NAV_ITEMS.map(i => i.key),
+    ...(PIA_SUB_ITEMS as { key: NavKey }[]).map(i => i.key),
+  ];
+  const resolvedNav = (ALL_NAV_KEYS.includes(section as NavKey) ? section : 'home') as NavKey;
+
+  const [activeNav, setActiveNav] = useState<NavKey>(resolvedNav);
+  const [sectionKey, setSectionKey] = useState(0);
   const [collapsed, setCollapsed] = useState(false);
-  const [piaExpanded, setPiaExpanded] = useState(false);
+  const [showChangePwd, setShowChangePwd] = useState(false);
+  const [piaExpanded, setPiaExpanded] = useState(() =>
+    (PIA_SUB_ITEMS as { key: NavKey }[]).some(i => i.key === resolvedNav));
   const navRef = useRef<HTMLElement>(null);
   const scroll = (dir: 'up' | 'down') => navRef.current?.scrollBy({ top: dir === 'down' ? 80 : -80, behavior: 'smooth' });
 
+  // Sync state when the URL param changes (browser back/forward)
+  useEffect(() => {
+    const key = (ALL_NAV_KEYS.includes(section as NavKey) ? section : 'home') as NavKey;
+    setActiveNav(key);
+    setSectionKey(k => k + 1);
+    if ((PIA_SUB_ITEMS as { key: NavKey }[]).some(i => i.key === key)) setPiaExpanded(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [section]);
+
   const isPiaActive = (PIA_SUB_ITEMS as { key: NavKey }[]).some(i => i.key === activeNav);
 
-  // Auto-expand PIA group when a PIA sub-item is selected
   const handleSetActiveNav = (key: NavKey) => {
+    navigate(`/admin/${key}`);
+    if (key === activeNav) { setSectionKey(k => k + 1); return; }
     setActiveNav(key);
+    setSectionKey(k => k + 1);
     if ((PIA_SUB_ITEMS as { key: NavKey }[]).some(i => i.key === key)) {
       setPiaExpanded(true);
     }
@@ -762,7 +785,7 @@ export default function AdminDashboard() {
 
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-page)', overflow: 'hidden' }}>
-      <Header user={user} onLogout={handleLogout} />
+      <Header user={user} onLogout={handleLogout} hideNav />
 
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
 
@@ -773,7 +796,7 @@ export default function AdminDashboard() {
           display: 'flex', flexDirection: 'column', flexShrink: 0,
           transition: 'width 0.2s ease',
           position: 'relative',
-          height: '100%', overflow: 'hidden',
+          height: '100%', overflow: 'visible',
           borderRight: '1px solid rgba(255,255,255,0.07)',
         }}>
 
@@ -787,7 +810,7 @@ export default function AdminDashboard() {
               border: '1px solid rgba(255,255,255,0.15)',
               color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              zIndex: 10, fontSize: '10px',
+              zIndex: 50, fontSize: '10px',
             }}
           >
             {collapsed ? '›' : '‹'}
@@ -829,14 +852,14 @@ export default function AdminDashboard() {
           </button>
 
           {/* Nav items */}
-          <nav ref={navRef} className="scrollbar-none" style={{ flex: 1, padding: '10px 0', overflowY: 'auto' }}>
+          <nav ref={navRef} className="scrollbar-none" style={{ flex: 1, padding: '10px 0', overflowY: 'auto', overflowX: 'hidden' }}>
             {NAV_ITEMS.map(item => (
               <SidebarBtn
                 key={item.key}
                 item={item}
                 active={activeNav === item.key}
                 collapsed={collapsed}
-                onClick={() => setActiveNav(item.key)}
+                onClick={() => handleSetActiveNav(item.key)}
               />
             ))}
 
@@ -850,17 +873,17 @@ export default function AdminDashboard() {
                   style={{
                     display: 'flex', alignItems: 'center', gap: 10,
                     width: '100%', padding: '11px 20px',
-                    background: isPiaActive ? 'rgba(255,255,255,0.12)' : 'none',
+                    background: isPiaActive ? 'rgba(255,255,255,0.15)' : 'none',
                     border: 'none',
-                    borderLeft: isPiaActive ? '3px solid var(--accent)' : '3px solid transparent',
+                    borderLeft: isPiaActive ? '3px solid #60A5FA' : '3px solid transparent',
                     cursor: 'pointer',
-                    color: isPiaActive ? '#fff' : 'rgba(255,255,255,0.55)',
-                    fontSize: '13px', fontWeight: isPiaActive ? 600 : 400,
+                    color: isPiaActive ? '#fff' : 'rgba(255,255,255,0.78)',
+                    fontSize: '13px', fontWeight: isPiaActive ? 700 : 500,
                     textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden',
                     transition: 'background 0.15s, color 0.15s',
                   }}
-                  onMouseEnter={e => { if (!isPiaActive) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
-                  onMouseLeave={e => { if (!isPiaActive) (e.currentTarget as HTMLElement).style.background = 'none'; }}
+                  onMouseEnter={e => { if (!isPiaActive) { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.10)'; (e.currentTarget as HTMLElement).style.color = '#fff'; } }}
+                  onMouseLeave={e => { if (!isPiaActive) { (e.currentTarget as HTMLElement).style.background = 'none'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.78)'; } }}
                 >
                   {/* PIA icon */}
                   <span style={{ flexShrink: 0 }}>
@@ -888,19 +911,19 @@ export default function AdminDashboard() {
                         style={{
                           display: 'flex', alignItems: 'center', gap: 8,
                           width: '100%', padding: '9px 16px',
-                          background: activeNav === item.key ? 'rgba(255,255,255,0.12)' : 'none',
+                          background: activeNav === item.key ? 'rgba(255,255,255,0.15)' : 'none',
                           border: 'none',
-                          borderLeft: activeNav === item.key ? '2px solid var(--accent)' : '2px solid transparent',
+                          borderLeft: activeNav === item.key ? '2px solid #60A5FA' : '2px solid transparent',
                           cursor: 'pointer',
-                          color: activeNav === item.key ? '#fff' : 'rgba(255,255,255,0.5)',
-                          fontSize: '12px', fontWeight: activeNav === item.key ? 600 : 400,
+                          color: activeNav === item.key ? '#fff' : 'rgba(255,255,255,0.75)',
+                          fontSize: '12px', fontWeight: activeNav === item.key ? 700 : 500,
                           textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden',
                           transition: 'background 0.15s, color 0.15s',
                         }}
-                        onMouseEnter={e => { if (activeNav !== item.key) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
-                        onMouseLeave={e => { if (activeNav !== item.key) (e.currentTarget as HTMLElement).style.background = 'none'; }}
+                        onMouseEnter={e => { if (activeNav !== item.key) { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.10)'; (e.currentTarget as HTMLElement).style.color = '#fff'; } }}
+                        onMouseLeave={e => { if (activeNav !== item.key) { (e.currentTarget as HTMLElement).style.background = 'none'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.75)'; } }}
                       >
-                        <span style={{ flexShrink: 0, opacity: 0.7 }}>{item.icon}</span>
+                        <span style={{ flexShrink: 0, color: activeNav === item.key ? '#60A5FA' : 'rgba(255,255,255,0.6)' }}>{item.icon}</span>
                         <span>{item.label}</span>
                       </button>
                     ))}
@@ -950,12 +973,13 @@ export default function AdminDashboard() {
                 width: '100%', padding: collapsed ? '11px 0' : '11px 20px',
                 justifyContent: collapsed ? 'center' : 'flex-start',
                 background: 'none', border: 'none', cursor: 'pointer',
-                color: 'rgba(255,255,255,0.5)', fontSize: '13px',
-                whiteSpace: 'nowrap', overflow: 'hidden', transition: 'color 0.15s',
+                color: 'rgba(255,255,255,0.75)', fontSize: '13px', fontWeight: 500,
+                whiteSpace: 'nowrap', overflow: 'hidden', transition: 'color 0.15s, background 0.15s',
               }}
               title={collapsed ? 'Change Password' : undefined}
-              onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.85)')}
-              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}
+              onClick={() => setShowChangePwd(true)}
+              onMouseEnter={e => { (e.currentTarget.style.color = '#fff'); (e.currentTarget.style.background = 'rgba(255,255,255,0.10)'); }}
+              onMouseLeave={e => { (e.currentTarget.style.color = 'rgba(255,255,255,0.75)'); (e.currentTarget.style.background = 'none'); }}
             >
               <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -970,12 +994,12 @@ export default function AdminDashboard() {
                 width: '100%', padding: collapsed ? '11px 0' : '11px 20px',
                 justifyContent: collapsed ? 'center' : 'flex-start',
                 background: 'none', border: 'none', cursor: 'pointer',
-                color: 'rgba(239,68,68,0.7)', fontSize: '13px',
-                whiteSpace: 'nowrap', overflow: 'hidden', transition: 'color 0.15s',
+                color: '#FCA5A5', fontSize: '13px', fontWeight: 500,
+                whiteSpace: 'nowrap', overflow: 'hidden', transition: 'color 0.15s, background 0.15s',
               }}
               title={collapsed ? 'Logout' : undefined}
-              onMouseEnter={e => (e.currentTarget.style.color = '#EF4444')}
-              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(239,68,68,0.7)')}
+              onMouseEnter={e => { (e.currentTarget.style.color = '#FEE2E2'); (e.currentTarget.style.background = 'rgba(239,68,68,0.15)'); }}
+              onMouseLeave={e => { (e.currentTarget.style.color = '#FCA5A5'); (e.currentTarget.style.background = 'none'); }}
             >
               <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -991,40 +1015,79 @@ export default function AdminDashboard() {
 
           {/* Breadcrumb bar */}
           <div style={{
-            padding: '7px 24px',
-            borderBottom: '1px solid var(--border-subtle)',
-            display: 'flex', alignItems: 'center', gap: '8px',
-            backgroundColor: 'var(--card-overlay)',
+            padding: '6px 24px',
+            borderBottom: '1px solid #d1d5db',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            backgroundColor: '#f8fafc',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
           }}>
-            <button
-              onClick={() => setActiveNav('home')}
-              style={{
-                background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                color: activeNav === 'home' ? 'var(--text-secondary)' : 'var(--text-muted)',
-                fontSize: '11px',
+            {/* Crumbs */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button
+                onClick={() => handleSetActiveNav('home')}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                  color: '#6b7280', fontSize: '12px',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#1e293b')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#6b7280')}
+              >
+                Dashboard
+              </button>
+              {activeNav !== 'home' && (
+                <>
+                  <span style={{ color: '#9ca3af', fontSize: '12px' }}>›</span>
+                  <span style={{ color: '#1e293b', fontSize: '12px', fontWeight: 600 }}>
+                    {meta.title}
+                  </span>
+                </>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button style={{
+                width: 26, height: 26, borderRadius: '5px',
+                border: '1px solid #d1d5db',
+                backgroundColor: '#fff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', color: '#6b7280', fontSize: '11px', fontWeight: 700,
+                boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
               }}
-              onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-secondary)')}
-              onMouseLeave={e => (e.currentTarget.style.color = activeNav === 'home' ? 'var(--text-secondary)' : 'var(--text-muted)')}
-            >
-              Dashboard
-            </button>
-            {activeNav !== 'home' && (
-              <>
-                <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>›</span>
-                <span style={{ color: 'var(--text-secondary)', fontSize: '11px' }}>
-                  {meta.title}
-                </span>
-              </>
-            )}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#fff')}
+                title="Help">
+                ?
+              </button>
+              <button style={{
+                width: 26, height: 26, borderRadius: '5px',
+                border: '1px solid #d1d5db',
+                backgroundColor: '#fff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', color: '#6b7280',
+                position: 'relative',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+              }}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#fff')}
+                title="Notifications">
+                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+              </button>
+              {user && <UserMenu user={user} onLogout={handleLogout} variant="light" />}
+            </div>
           </div>
 
           {/* Content area */}
-          <div style={{ padding: '20px 24px', flex: 1, minHeight: 0, overflowY: 'auto' }}>
+          <div key={sectionKey} style={{ padding: '20px 24px', flex: 1, minHeight: 0, overflowY: 'auto' }}>
             {renderSection()}
           </div>
         </main>
       </div>
 
+      {showChangePwd && <ChangePasswordModal onClose={() => setShowChangePwd(false)} />}
     </div>
   );
 }

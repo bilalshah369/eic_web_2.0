@@ -37,7 +37,7 @@ function ProductForm({
 }: {
   initial?: CertificateProduct;
   categories: string[];
-  onSave: (data: { name: string; category: string; sortOrder: number }) => void;
+  onSave: (data: { name: string; category: string; hsCode: string; sortOrder: number }) => void;
   onCancel: () => void;
   saving: boolean;
 }) {
@@ -45,6 +45,7 @@ function ProductForm({
   const [category, setCategory] = useState(initial?.category ?? '');
   const [newCat, setNewCat] = useState('');
   const [useNew, setUseNew] = useState(false);
+  const [hsCode, setHsCode] = useState(initial?.hsCode ?? '');
   const [sortOrder, setSortOrder] = useState(initial?.sortOrder ?? 0);
   const [nameErr, setNameErr] = useState('');
 
@@ -53,7 +54,7 @@ function ProductForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) { setNameErr('Name is required'); return; }
-    onSave({ name: name.trim(), category: effectiveCat, sortOrder });
+    onSave({ name: name.trim(), category: effectiveCat, hsCode: hsCode.trim(), sortOrder });
   };
 
   const inp: React.CSSProperties = {
@@ -101,6 +102,11 @@ function ProductForm({
             )}
           </div>
 
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 5 }}>HS Code</label>
+            <input value={hsCode} onChange={e => setHsCode(e.target.value)} style={inp} placeholder="e.g. 0804.50" />
+          </div>
+
           <div style={{ marginBottom: 22 }}>
             <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 5 }}>Sort Order</label>
             <input type="number" value={sortOrder} onChange={e => setSortOrder(Number(e.target.value))}
@@ -131,6 +137,7 @@ export default function ProductsSection() {
   const qc = useQueryClient();
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState('');
+  const [hsFilter, setHsFilter] = useState('');
   const [editTarget, setEditTarget] = useState<CertificateProduct | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<CertificateProduct | null>(null);
@@ -146,14 +153,14 @@ export default function ProductsSection() {
   const products: CertificateProduct[] = Array.isArray(rawProducts) ? rawProducts : [];
 
   const createMut = useMutation({
-    mutationFn: (d: { name: string; category: string; sortOrder: number }) =>
-      adminApi.createCertificateProduct({ name: d.name, category: d.category || undefined, sortOrder: d.sortOrder }),
+    mutationFn: (d: { name: string; category: string; hsCode: string; sortOrder: number }) =>
+      adminApi.createCertificateProduct({ name: d.name, category: d.category || undefined, hsCode: d.hsCode || undefined, sortOrder: d.sortOrder }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-certificate-products'] }); setShowCreate(false); },
   });
 
   const updateMut = useMutation({
-    mutationFn: (d: { id: string; name: string; category: string; sortOrder: number }) =>
-      adminApi.updateCertificateProduct(d.id, { name: d.name, category: d.category || undefined, sortOrder: d.sortOrder }),
+    mutationFn: (d: { id: string; name: string; category: string; hsCode: string; sortOrder: number }) =>
+      adminApi.updateCertificateProduct(d.id, { name: d.name, category: d.category || undefined, hsCode: d.hsCode || undefined, sortOrder: d.sortOrder }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-certificate-products'] }); setEditTarget(null); },
   });
 
@@ -164,9 +171,10 @@ export default function ProductsSection() {
 
   // Filter
   const filtered = products.filter(p => {
-    const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || (p.category ?? '').toLowerCase().includes(search.toLowerCase());
+    const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || (p.category ?? '').toLowerCase().includes(search.toLowerCase()) || (p.hsCode ?? '').toLowerCase().includes(search.toLowerCase());
     const matchCat = !catFilter || p.category === catFilter;
-    return matchSearch && matchCat;
+    const matchHs = !hsFilter || (p.hsCode ?? '').toLowerCase().includes(hsFilter.toLowerCase());
+    return matchSearch && matchCat && matchHs;
   });
 
   // Group by category
@@ -207,43 +215,47 @@ export default function ProductsSection() {
             Manage certificate products assigned to officers ({products.length} total)
           </p>
         </div>
-        <button
-          onClick={() => setShowCreate(true)}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: 'none', backgroundColor: 'var(--bg-nav)', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
-        >
-          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-          </svg>
-          Add Product
-        </button>
-      </div>
-
-      {/* Filters */}
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        <div style={{ position: 'relative', flex: '1 1 220px', maxWidth: 320 }}>
-          <svg width="14" height="14" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24"
-            style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
-            <circle cx="11" cy="11" r="8" strokeWidth={2} /><path strokeLinecap="round" strokeWidth={2} d="M21 21l-4.35-4.35" />
-          </svg>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative' }}>
+            <svg width="14" height="14" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24"
+              style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+              <circle cx="11" cy="11" r="8" strokeWidth={2} /><path strokeLinecap="round" strokeWidth={2} d="M21 21l-4.35-4.35" />
+            </svg>
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search products…"
+              style={{ padding: '8px 12px 8px 32px', borderRadius: 8, fontSize: 13, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', width: 200 }}
+            />
+          </div>
+          <select value={catFilter} onChange={e => setCatFilter(e.target.value)}
+            style={{ padding: '8px 12px', borderRadius: 8, fontSize: 13, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', cursor: 'pointer', minWidth: 140 }}>
+            <option value="">All Categories</option>
+            {allCategories.map(c => <option key={c} value={c}>{c}</option>)}
+            <option value={catNull}>— Uncategorised —</option>
+          </select>
           <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search products…"
-            style={{ width: '100%', padding: '8px 12px 8px 32px', borderRadius: 8, fontSize: 13, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', boxSizing: 'border-box' }}
+            value={hsFilter}
+            onChange={e => setHsFilter(e.target.value)}
+            placeholder="Filter by HS Code…"
+            style={{ padding: '8px 12px', borderRadius: 8, fontSize: 13, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', width: 160 }}
           />
-        </div>
-        <select value={catFilter} onChange={e => setCatFilter(e.target.value)}
-          style={{ padding: '8px 12px', borderRadius: 8, fontSize: 13, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', cursor: 'pointer', minWidth: 160 }}>
-          <option value="">All Categories</option>
-          {allCategories.map(c => <option key={c} value={c}>{c}</option>)}
-          <option value={catNull}>— Uncategorised —</option>
-        </select>
-        {(search || catFilter) && (
-          <button onClick={() => { setSearch(''); setCatFilter(''); }}
-            style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-card)', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 12 }}>
-            Clear
+          {(search || catFilter || hsFilter) && (
+            <button onClick={() => { setSearch(''); setCatFilter(''); setHsFilter(''); }}
+              style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-card)', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 12 }}>
+              Clear
+            </button>
+          )}
+          <button
+            onClick={() => setShowCreate(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: 'none', backgroundColor: 'var(--bg-nav)', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600, flexShrink: 0 }}
+          >
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+            </svg>
+            Add Product
           </button>
-        )}
+        </div>
       </div>
 
       {/* Stats strip */}
@@ -254,9 +266,9 @@ export default function ProductsSection() {
           { label: 'Uncategorised', value: products.filter(p => !p.category).length },
           { label: 'Showing', value: totalVisible },
         ].map(s => (
-          <div key={s.label} style={{ padding: '8px 14px', borderRadius: 8, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>{s.value}</span>
-            <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>{s.label}</span>
+          <div key={s.label} style={{ padding: '8px 16px', borderRadius: 8, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', minWidth: 80 }}>
+            <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.2 }}>{s.value}</span>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500, marginTop: 2 }}>{s.label}</span>
           </div>
         ))}
       </div>
@@ -303,8 +315,9 @@ export default function ProductsSection() {
                       <colgroup>
                         <col style={{ minWidth: 40 }} />
                         <col style={{ minWidth: 220 }} />
-                        <col style={{ minWidth: 160 }} />
-                        <col style={{ minWidth: 80 }} />
+                        <col style={{ minWidth: 140 }} />
+                        <col style={{ minWidth: 120 }} />
+                        <col style={{ minWidth: 70 }} />
                         <col style={{ minWidth: 90 }} />
                       </colgroup>
                       <thead>
@@ -312,6 +325,7 @@ export default function ProductsSection() {
                           <th style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>#</th>
                           <th style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>Product Name</th>
                           <th style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>Category</th>
+                          <th style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>HS Code</th>
                           <th style={{ padding: '8px 12px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>Order</th>
                           <th style={{ padding: '8px 12px', textAlign: 'right', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>Actions</th>
                         </tr>
@@ -330,6 +344,15 @@ export default function ProductsSection() {
                               {p.category ? (
                                 <span style={{ fontSize: 11, padding: '2px 10px', borderRadius: 20, backgroundColor: 'rgba(99,102,241,0.1)', color: '#6366F1', border: '1px solid rgba(99,102,241,0.25)', fontWeight: 500 }}>
                                   {p.category}
+                                </span>
+                              ) : (
+                                <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>—</span>
+                              )}
+                            </td>
+                            <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
+                              {p.hsCode ? (
+                                <span style={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--text-primary)', backgroundColor: 'var(--card-overlay)', padding: '2px 7px', borderRadius: 5, border: '1px solid var(--border-subtle)' }}>
+                                  {p.hsCode}
                                 </span>
                               ) : (
                                 <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>—</span>
@@ -393,6 +416,7 @@ export default function ProductsSection() {
           saving={updateMut.isPending}
         />
       )}
+
 
       {deleteTarget && (
         <Confirm

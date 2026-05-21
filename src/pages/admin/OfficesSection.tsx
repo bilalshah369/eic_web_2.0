@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminApi, Office, CreateOfficeDto } from '../../services/admin.service';
 
@@ -45,19 +45,22 @@ function CredentialsModal({ creds, onClose }: { creds: Credentials; onClose: () 
     </div>
   );
 }
-function ConfirmModal({ message, onConfirm, onCancel }: { message: string; onConfirm: () => void; onCancel: () => void }) {
+function ConfirmModal({ message, onConfirm, onCancel, confirmLabel = 'Delete', confirmColor = '#DC2626', iconColor = '#DC2626', iconBg = '#FEE2E2' }: {
+  message: string; onConfirm: () => void; onCancel: () => void;
+  confirmLabel?: string; confirmColor?: string; iconColor?: string; iconBg?: string;
+}) {
   return (
     <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1001 }}>
       <div style={{ backgroundColor: '#fff', borderRadius: 12, padding: 28, width: 380, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-          <div style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <svg width="18" height="18" fill="none" stroke="#DC2626" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          <div style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width="18" height="18" fill="none" stroke={iconColor} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
           </div>
           <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#111827' }}>{message}</p>
         </div>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
           <button onClick={onCancel} style={{ padding: '8px 20px', borderRadius: 8, border: '1.5px solid #D1D5DB', backgroundColor: '#fff', color: '#374151', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-          <button onClick={onConfirm} style={{ padding: '8px 20px', borderRadius: 8, border: 'none', backgroundColor: '#DC2626', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Delete</button>
+          <button onClick={onConfirm} style={{ padding: '8px 20px', borderRadius: 8, border: 'none', backgroundColor: confirmColor, color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{confirmLabel}</button>
         </div>
       </div>
     </div>
@@ -73,7 +76,7 @@ const OFFICE_TYPES = [
 ];
 
 const TYPE_BADGE: Record<string, { bg: string; fg: string; short: string }> = {
-  EIC:     { bg: '#DBEAFE', fg: '#1D4ED8', short: 'EIC' },
+  EIC:     { bg: '#DBEAFE', fg: '#1D4ED8', short: 'HQ (Head Office)' },
   EIA:     { bg: '#D1FAE5', fg: '#065F46', short: 'EIA' },
   SUB_EIA: { bg: '#FEF3C7', fg: '#92400E', short: 'Sub-EIA' },
 };
@@ -407,13 +410,23 @@ function OfficeForm({
 export default function OfficesSection() {
   const qc = useQueryClient();
   const [view, setView] = useState<'list' | 'create' | 'edit'>('list');
+  const [createInitial, setCreateInitial] = useState<CreateOfficeDto>(EMPTY);
   const [editOffice, setEditOffice] = useState<Office | null>(null);
   const [credentials, setCredentials] = useState<Credentials | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [confirmResetLoginId, setConfirmResetLoginId] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(5);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [openDrop, setOpenDrop] = useState<{ id: string; top: number; right: number } | null>(null);
+
+  useEffect(() => {
+    if (!openDrop) return;
+    const close = () => setOpenDrop(null);
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, [openDrop]);
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-offices', page, pageSize, search, typeFilter],
@@ -433,7 +446,15 @@ export default function OfficesSection() {
   const total = data?.total ?? 0;
   const allOffices = Array.isArray(allOfficesData) ? allOfficesData : [];
 
-  const openCreate = () => { setView('create'); };
+  const openCreate = () => { setCreateInitial(EMPTY); setView('create'); };
+  const openCreateEia = (parent: Office) => {
+    setCreateInitial({ ...EMPTY, type: 'EIA', parentId: parent.id });
+    setView('create');
+  };
+  const openCreateSub = (parent: Office) => {
+    setCreateInitial({ ...EMPTY, type: 'SUB_EIA', parentId: parent.id });
+    setView('create');
+  };
   const openEdit = (o: Office) => { setEditOffice(o); setView('edit'); };
 
   const handleSuccess = (creds?: Credentials) => {
@@ -451,7 +472,7 @@ export default function OfficesSection() {
   if (view === 'create') {
     return (
       <OfficeForm
-        initial={EMPTY}
+        initial={createInitial}
         allOffices={allOffices}
         onSuccess={handleSuccess}
         onCancel={handleCancel}
@@ -505,51 +526,69 @@ export default function OfficesSection() {
           onCancel={() => setConfirmDeleteId(null)}
         />
       )}
+      {confirmResetLoginId && (
+        <ConfirmModal
+          message="Reset login credentials for this office? A new temporary password will be generated."
+          confirmLabel="Reset Login"
+          confirmColor="#0369A1"
+          iconColor="#0369A1"
+          iconBg="#E0F2FE"
+          onConfirm={async () => {
+            const id = confirmResetLoginId;
+            setConfirmResetLoginId(null);
+            try {
+              const res = await adminApi.resetOfficeLogin(id);
+              setCredentials(res.data.data);
+            } catch (e: unknown) {
+              alert((e as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Failed');
+            }
+          }}
+          onCancel={() => setConfirmResetLoginId(null)}
+        />
+      )}
 
       {/* Page header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
         <div>
           <h2 style={{ color: 'var(--text-primary)', fontSize: '20px', fontWeight: 700, margin: 0 }}>Office Management</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '12px', margin: '3px 0 0' }}>
             {isLoading ? 'Loading…' : `${total} office${total !== 1 ? 's' : ''} found`}
           </p>
         </div>
-        <button
-          onClick={openCreate}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '6px',
-            padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-            backgroundColor: '#1B2A6B', color: '#fff', border: 'none', cursor: 'pointer',
-          }}
-        >
-          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-          </svg>
-          Add Office
-        </button>
-      </div>
-
-      {/* Filters */}
-      <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '10px', padding: '8px 12px', display: 'flex', gap: '10px', alignItems: 'center' }}>
-        <div style={{ flex: 1, position: 'relative' }}>
-          <svg width="14" height="14" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}>
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input
-            value={search}
-            onChange={e => { setSearch(e.target.value); setPage(0); }}
-            placeholder="Search by name or code…"
-            style={{ ...inp, paddingLeft: 32 }}
-          />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative' }}>
+            <svg width="14" height="14" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              value={search}
+              onChange={e => { setSearch(e.target.value); setPage(0); }}
+              placeholder="Search by name or code…"
+              style={{ ...inp, paddingLeft: 32, width: 220 }}
+            />
+          </div>
+          <select
+            value={typeFilter}
+            onChange={e => { setTypeFilter(e.target.value); setPage(0); }}
+            style={{ ...inp, width: 'auto', minWidth: 140 }}
+          >
+            <option value="">All Types</option>
+            {OFFICE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+          </select>
+          <button
+            onClick={openCreate}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0,
+              padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
+              backgroundColor: '#1B2A6B', color: '#fff', border: 'none', cursor: 'pointer',
+            }}
+          >
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+            </svg>
+            Add Office
+          </button>
         </div>
-        <select
-          value={typeFilter}
-          onChange={e => { setTypeFilter(e.target.value); setPage(0); }}
-          style={{ ...inp, width: 'auto', minWidth: 160 }}
-        >
-          <option value="">All Types</option>
-          {OFFICE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-        </select>
       </div>
 
       {/* Table */}
@@ -560,11 +599,11 @@ export default function OfficesSection() {
               <col style={{ minWidth: 180 }} />
               <col style={{ minWidth: 90 }} />
               <col style={{ minWidth: 80 }} />
-              <col style={{ minWidth: 150 }} />
               <col style={{ minWidth: 160 }} />
               <col style={{ minWidth: 48 }} />
               <col style={{ minWidth: 76 }} />
               <col style={{ minWidth: 90 }} />
+              <col style={{ width: 44, minWidth: 44 }} />
             </colgroup>
             <thead>
               <tr style={{ backgroundColor: 'var(--bg-utility)' }}>
@@ -572,7 +611,6 @@ export default function OfficesSection() {
                   { label: 'Office', sortable: true },
                   { label: 'Code', sortable: true },
                   { label: 'Type', sortable: true },
-                  { label: 'Parent', sortable: false },
                   { label: 'Location', sortable: false },
                   { label: 'Lab', sortable: false },
                   { label: 'Status', sortable: true },
@@ -589,6 +627,7 @@ export default function OfficesSection() {
                     </div>
                   </th>
                 ))}
+                <th style={{ padding: '10px 6px', position: 'sticky', right: 0, backgroundColor: 'var(--bg-utility)', zIndex: 3, width: 44 }} />
               </tr>
             </thead>
             <tbody>
@@ -637,8 +676,8 @@ export default function OfficesSection() {
                               </svg>
                             </div>
                             <div style={{ minWidth: 0 }}>
-                              <div style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 200 }}>{office.name}</div>
-                              {office.email && <div style={{ color: 'var(--text-muted)', fontSize: 11, whiteSpace: 'nowrap' }}>{office.email}</div>}
+                              <div title={office.name} style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 200 }}>{office.name}</div>
+                              {office.email && <div title={office.email} style={{ color: 'var(--text-muted)', fontSize: 11, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 200 }}>{office.email}</div>}
                             </div>
                           </div>
                         </td>
@@ -654,10 +693,6 @@ export default function OfficesSection() {
                             {tb.short}
                           </span>
                         </td>
-                        {/* PARENT */}
-                        <td style={{ padding: '9px 12px', color: 'var(--text-muted)', fontSize: 12, whiteSpace: 'nowrap', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {office.parent ? office.parent.name : <span style={{ color: 'var(--border-subtle)' }}>—</span>}
-                        </td>
                         {/* LOCATION */}
                         <td style={{ padding: '9px 12px', maxWidth: 180, whiteSpace: 'nowrap' }}>
                           {office.address ? (
@@ -668,7 +703,7 @@ export default function OfficesSection() {
                               {office.address}
                             </div>
                           ) : locationParts.length > 0 ? (
-                            <div style={{ color: 'var(--text-muted)', fontSize: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 190 }}>
+                            <div title={[...locationParts, office.pincode].filter(Boolean).join(', ')} style={{ color: 'var(--text-muted)', fontSize: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 190 }}>
                               {locationParts.join(', ')}{office.pincode ? ` – ${office.pincode}` : ''}
                             </div>
                           ) : (
@@ -693,50 +728,42 @@ export default function OfficesSection() {
                         </td>
                         {/* ACTIONS */}
                         <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
-                          <div style={{ display: 'flex', gap: '8px' }}>
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                             <button
                               onClick={() => openEdit(office)}
                               title="Edit office"
-                              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, borderRadius: '5px', color: 'var(--text-muted)', display: 'flex' }}
-                              onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--card-overlay)')}
-                              onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+                              style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: '5px', fontSize: 11, fontWeight: 600, backgroundColor: '#F1F5F9', color: '#475569', border: '1px solid #CBD5E1', cursor: 'pointer' }}
+                              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#E2E8F0')}
+                              onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#F1F5F9')}
                             >
-                              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                              </svg>
+                              <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                              Edit
                             </button>
-                            {(office.type === 'EIA' || office.type === 'SUB_EIA') && (
-                              <button
-                                title="Reset / View Login Credentials"
-                                onClick={async () => {
-                                  try {
-                                    const res = await adminApi.resetOfficeLogin(office.id);
-                                    setCredentials(res.data.data);
-                                  } catch (e: unknown) {
-                                    alert((e as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Failed');
-                                  }
-                                }}
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, borderRadius: '5px', color: '#0369A1', display: 'flex' }}
-                                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#E0F2FE')}
-                                onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
-                              >
-                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                </svg>
-                              </button>
-                            )}
                             <button
                               onClick={() => setConfirmDeleteId(office.id)}
                               title="Delete office"
-                              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, borderRadius: '5px', color: '#DC2626', display: 'flex' }}
-                              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#FEE2E2')}
-                              onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+                              style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: '5px', fontSize: 11, fontWeight: 600, backgroundColor: '#FEE2E2', color: '#DC2626', border: '1px solid #FECACA', cursor: 'pointer' }}
+                              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#FECACA')}
+                              onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#FEE2E2')}
                             >
-                              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
+                              <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                              Delete
                             </button>
                           </div>
+                        </td>
+                        {/* STICKY ⋮ */}
+                        <td style={{ padding: '4px 6px', position: 'sticky', right: 0, backgroundColor: 'var(--bg-card)', borderLeft: '1px solid var(--border-subtle)', zIndex: 1, textAlign: 'center' }}>
+                          <button
+                            title="More actions"
+                            onClick={e => {
+                              e.stopPropagation();
+                              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                              setOpenDrop(d => d?.id === office.id ? null : { id: office.id, top: rect.bottom + 4, right: window.innerWidth - rect.right });
+                            }}
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, border: '1px solid var(--border-subtle)', backgroundColor: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 16, fontWeight: 700, lineHeight: 1 }}
+                            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--card-overlay)')}
+                            onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+                          >⋮</button>
                         </td>
                       </tr>
                     );
@@ -745,6 +772,50 @@ export default function OfficesSection() {
             </tbody>
           </table>
         </div>
+        {openDrop && (() => {
+          const office = offices.find(o => o.id === openDrop.id);
+          if (!office) return null;
+          return (
+            <div
+              onClick={e => e.stopPropagation()}
+              style={{ position: 'fixed', top: openDrop.top, right: openDrop.right, zIndex: 9999, backgroundColor: '#fff', border: '1px solid #E5E7EB', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.13)', padding: '6px 0', minWidth: 170 }}
+            >
+              {office.type === 'EIC' && (
+                <button
+                  onClick={() => { setOpenDrop(null); openCreateEia(office); }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 16px', fontSize: 13, fontWeight: 500, color: '#065F46', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F0FDF4')}
+                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+                >
+                  <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+                  Add EIA Office
+                </button>
+              )}
+              {office.type === 'EIA' && (
+                <button
+                  onClick={() => { setOpenDrop(null); openCreateSub(office); }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 16px', fontSize: 13, fontWeight: 500, color: '#4338CA', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#EEF2FF')}
+                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+                >
+                  <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+                  Add Sub-Office
+                </button>
+              )}
+              {(office.type === 'EIA' || office.type === 'SUB_EIA') && (
+                <button
+                  onClick={() => { setOpenDrop(null); setConfirmResetLoginId(office.id); }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 16px', fontSize: 13, fontWeight: 500, color: '#0369A1', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F0F9FF')}
+                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+                >
+                  <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
+                  Reset Login
+                </button>
+              )}
+            </div>
+          );
+        })()}
         <TablePagination page={page} total={total} pageSize={pageSize} onPage={setPage} onPageSize={p => { setPageSize(p); setPage(0); }} />
       </div>
     </div>

@@ -109,10 +109,24 @@ export default function PortsSection() {
           <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: 18, fontWeight: 700 }}>Port & Location Master</h2>
           <p style={{ margin: '3px 0 0', color: 'var(--text-muted)', fontSize: 12 }}>Manage ports and crushing sheds available for PIA scope ({items.length} total)</p>
         </div>
-        <button onClick={() => setShowCreate(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: 'none', backgroundColor: 'var(--bg-nav)', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
-          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
-          Add Port
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative' }}>
+            <svg width="14" height="14" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+              <circle cx="11" cy="11" r="8" strokeWidth={2} /><path strokeLinecap="round" strokeWidth={2} d="M21 21l-4.35-4.35" />
+            </svg>
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search ports…"
+              style={{ padding: '8px 12px 8px 32px', borderRadius: 8, fontSize: 13, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', width: 200 }} />
+          </div>
+          <select value={stateFilter} onChange={e => setStateFilter(e.target.value)} style={{ padding: '8px 12px', borderRadius: 8, fontSize: 13, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', cursor: 'pointer', minWidth: 140 }}>
+            <option value="">All States</option>
+            {allStates.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+          {(search || stateFilter) && <button onClick={() => { setSearch(''); setStateFilter(''); }} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-card)', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 12 }}>Clear</button>}
+          <button onClick={() => setShowCreate(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: 'none', backgroundColor: 'var(--bg-nav)', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600, flexShrink: 0 }}>
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+            Add Port
+          </button>
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: 8 }}>
@@ -124,19 +138,6 @@ export default function PortsSection() {
         ))}
       </div>
 
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        <div style={{ position: 'relative', flex: '1 1 220px', maxWidth: 320 }}>
-          <svg width="14" height="14" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
-            <circle cx="11" cy="11" r="8" strokeWidth={2} /><path strokeLinecap="round" strokeWidth={2} d="M21 21l-4.35-4.35" />
-          </svg>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search ports…" style={{ width: '100%', padding: '8px 12px 8px 32px', borderRadius: 8, fontSize: 13, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', boxSizing: 'border-box' }} />
-        </div>
-        <select value={stateFilter} onChange={e => setStateFilter(e.target.value)} style={{ padding: '8px 12px', borderRadius: 8, fontSize: 13, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', cursor: 'pointer', minWidth: 160 }}>
-          <option value="">All States</option>
-          {allStates.map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
-        {(search || stateFilter) && <button onClick={() => { setSearch(''); setStateFilter(''); }} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-card)', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 12 }}>Clear</button>}
-      </div>
 
       {isLoading ? (
         <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 10, padding: 40, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Loading…</div>

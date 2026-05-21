@@ -21,7 +21,7 @@ export interface PIAMineralMaster { id: string; name: string; code: string | nul
 
 export interface PIABranchPayload {
   branchName: string; address: string; state: string; district: string; city: string;
-  pincode: string; phone: string; email: string; headOfBranchName: string; headOfBranchDesignation: string;
+  pincode: string; phone: string; fax: string; email: string; headOfBranchName: string; headOfBranchDesignation: string;
 }
 
 export interface PIAPartIPayload {
@@ -31,8 +31,11 @@ export interface PIAPartIPayload {
   headOfficePhone?: string; headOfficeFax?: string; headOfficeEmail?: string;
   headOfOrgName?: string; headOfOrgDesignation?: string; headOfOrgContact?: string;
   legalStatus?: string; legalStatusDetails?: string;
-  inspectionDivHeadName?: string; inspectionDivHeadDesignation?: string; inspectionDivPhone?: string; inspectionDivEmail?: string;
-  labDivHeadName?: string; labDivHeadDesignation?: string; labDivPhone?: string; labDivEmail?: string;
+  inspectionDivHeadName?: string; inspectionDivHeadDesignation?: string; inspectionDivPhone?: string; inspectionDivFax?: string; inspectionDivEmail?: string;
+  labDivHeadName?: string; labDivHeadDesignation?: string; labDivPhone?: string; labDivFax?: string; labDivEmail?: string;
+  recognitionValidityDate?: string | null; recognitionPeriod?: number | null; existingRecognitionNo?: string | null;
+  hasCriminalProceedings?: boolean; criminalProceedingsDetails?: string;
+  mineralScopes?: MineralScopeRow[];
   branches?: PIABranchPayload[];
 }
 
@@ -103,9 +106,11 @@ export interface PIAApplicationFull extends PIAApplicationSummary {
     headOfOrgName: string | null; headOfOrgDesignation: string | null; headOfOrgContact: string | null;
     legalStatus: string | null; legalStatusDetails: string | null;
     inspectionDivHeadName: string | null; inspectionDivHeadDesignation: string | null;
-    inspectionDivPhone: string | null; inspectionDivEmail: string | null;
+    inspectionDivPhone: string | null; inspectionDivFax: string | null; inspectionDivEmail: string | null;
     labDivHeadName: string | null; labDivHeadDesignation: string | null;
-    labDivPhone: string | null; labDivEmail: string | null;
+    labDivPhone: string | null; labDivFax: string | null; labDivEmail: string | null;
+    recognitionValidityDate: string | null; recognitionPeriod: number | null; existingRecognitionNo: string | null;
+    hasCriminalProceedings: boolean; criminalProceedingsDetails: string | null;
     branches: Array<PIABranchPayload & { id: string }>;
     // Part II
     seniorMgmtCount: number | null; inspectingStaffCount: number | null;

@@ -329,19 +329,6 @@ export default function Login() {
             </Link>
           </p>
 
-          {/* Trust badges */}
-          <div className="flex items-center justify-between mt-8 pt-5 border-t border-gray-100">
-            <span className="flex items-center gap-1 text-gray-500 text-xs">
-              <span className="text-green-600">🔒</span> SSL Secured
-            </span>
-            <span className="flex items-center gap-1 text-gray-500 text-xs">
-              🏛️ Govt. of India Portal
-            </span>
-            <span className="flex items-center gap-1 text-gray-500 text-xs">
-              <span className="text-orange-500">🕐</span> 24×7 Access
-            </span>
-          </div>
-
           {/* Help */}
           <div className="mt-4 bg-gray-50 rounded-xl p-4 flex items-center gap-3">
             <div className="w-9 h-9 bg-[#0B1428] rounded-full flex-shrink-0 flex items-center justify-center text-white text-base">

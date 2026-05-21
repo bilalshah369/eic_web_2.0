@@ -109,12 +109,12 @@ export interface Officer {
   gender: 'MALE' | 'FEMALE' | 'OTHER';
   isActive: boolean;
   createdAt: string;
-  _count: { offices: number; products: number };
+  _count: { offices: number; categories: number };
 }
 
 export interface OfficerDetail extends Omit<Officer, '_count'> {
-  offices: { office: { id: string; name: string; code: string; type: string } }[];
-  products: { product: { id: string; name: string; category: string | null } }[];
+  offices:    { office: { id: string; name: string; code: string; type: string } }[];
+  categories: { category: string }[];
 }
 
 export interface OfficersResponse {
@@ -142,6 +142,7 @@ export interface CertificateProduct {
   id: string;
   name: string;
   category: string | null;
+  hsCode: string | null;
   sortOrder: number;
 }
 
@@ -188,16 +189,16 @@ export const adminApi = {
   assignOfficerOffices: (id: string, officeIds: string[]) =>
     api.put<{ success: boolean; data: OfficerDetail }>(`/admin/officers/${id}/assign-offices`, { officeIds }),
 
-  assignOfficerProducts: (id: string, productIds: string[]) =>
-    api.put<{ success: boolean; data: OfficerDetail }>(`/admin/officers/${id}/assign-products`, { productIds }),
+  assignOfficerCategories: (id: string, categories: string[]) =>
+    api.put<{ success: boolean; data: OfficerDetail }>(`/admin/officers/${id}/assign-categories`, { categories }),
 
   getCertificateProducts: () =>
     api.get<{ success: boolean; data: CertificateProduct[] }>('/admin/certificate-products'),
 
-  createCertificateProduct: (data: { name: string; category?: string; sortOrder?: number }) =>
+  createCertificateProduct: (data: { name: string; category?: string; hsCode?: string; sortOrder?: number }) =>
     api.post<{ success: boolean; data: CertificateProduct }>('/admin/certificate-products', data),
 
-  updateCertificateProduct: (id: string, data: { name?: string; category?: string; sortOrder?: number }) =>
+  updateCertificateProduct: (id: string, data: { name?: string; category?: string; hsCode?: string; sortOrder?: number }) =>
     api.put<{ success: boolean; data: CertificateProduct }>(`/admin/certificate-products/${id}`, data),
 
   deleteCertificateProduct: (id: string) =>

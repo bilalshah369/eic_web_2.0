@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import PaletteButton from './PaletteButton';
+import ChangePasswordModal from './ChangePasswordModal';
 import { User } from '../types';
 
-const GOI_LOGO = 'https://website.eiconline.in/assets/GOI-ChnNbBjX.png';
-const EIC_LOGO = 'https://website.eiconline.in/assets/Frame%20629800%20(1)-D4jM2TG7.png';
+const GOI_EMBLEM = 'https://website.eiconline.in/assets/emblem-CXmomrxX.png';
+const EIC_EMBLEM = 'https://website.eiconline.in/assets/eic-800x800-CpqoY7n5.jpg';
 const EIC_WEBSITE = 'https://website.eiconline.in/';
 
 const PUBLIC_NAV = [
@@ -22,12 +23,14 @@ interface HeaderProps {
   pageTitle?: string;
   sidebarCollapsed?: boolean;
   notificationCount?: number;
+  hideNav?: boolean;
 }
 
 // ─── User Menu ────────────────────────────────────────────────────────────────
 
-function UserMenu({ user, onLogout }: { user: User; onLogout?: () => void }) {
+export function UserMenu({ user, onLogout, variant = 'dark' }: { user: User; onLogout?: () => void; variant?: 'dark' | 'light' }) {
   const [open, setOpen] = useState(false);
+  const [changePwOpen, setChangePwOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -40,85 +43,168 @@ function UserMenu({ user, onLogout }: { user: User; onLogout?: () => void }) {
   }, [open]);
 
   const initial = (user.name || user.email || '?').charAt(0).toUpperCase();
+  const displayName = user.name || user.email || 'User';
   const roleLabel = (user.role || '').replace(/_/g, ' ');
 
+  const isDark = variant === 'dark';
+
+  /* ── trigger colours ── */
+  const btnBg       = isDark ? 'rgba(255,255,255,0.09)' : 'rgba(27,42,107,0.06)';
+  const btnBgHover  = isDark ? 'rgba(255,255,255,0.16)' : 'rgba(27,42,107,0.11)';
+  const btnBorder   = isDark ? '1px solid rgba(255,255,255,0.18)' : '1px solid rgba(27,42,107,0.15)';
+  const nameColor   = isDark ? '#fff' : '#1e293b';
+  const roleColor   = isDark ? 'rgba(255,255,255,0.48)' : '#64748b';
+  const chevronCol  = isDark ? 'rgba(255,255,255,0.45)' : '#94a3b8';
+
   return (
+    <>
     <div ref={ref} style={{ position: 'relative' }}>
+
+      {/* ── Trigger button ── */}
       <button
         onClick={() => setOpen(o => !o)}
         style={{
-          display: 'flex', alignItems: 'center', gap: '10px',
-          background: 'rgba(255,255,255,0.08)',
-          border: '1px solid rgba(255,255,255,0.15)',
-          borderRadius: '8px', cursor: 'pointer',
-          padding: '5px 10px 5px 5px',
+          display: 'flex', alignItems: 'center', gap: 8,
+          background: open ? btnBgHover : btnBg,
+          border: btnBorder,
+          borderRadius: 9, cursor: 'pointer',
+          padding: '4px 10px 4px 4px',
+          transition: 'background 0.15s',
         }}
-        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.14)')}
-        onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+        onMouseEnter={e => (e.currentTarget.style.background = btnBgHover)}
+        onMouseLeave={e => (e.currentTarget.style.background = open ? btnBgHover : btnBg)}
       >
+        {/* Avatar */}
         <div style={{
-          width: 30, height: 30, borderRadius: '7px',
-          backgroundColor: 'var(--accent)',
+          width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+          background: 'linear-gradient(135deg, #1B2A6B 0%, #3B5BDB 100%)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontWeight: 700, fontSize: '13px', color: '#fff', flexShrink: 0,
+          fontWeight: 800, fontSize: 13, color: '#fff',
+          boxShadow: isDark ? '0 0 0 1.5px rgba(255,255,255,0.15)' : '0 0 0 1.5px rgba(27,42,107,0.2)',
         }}>
           {initial}
         </div>
-        <div style={{ textAlign: 'left' }}>
-          <div style={{ color: '#fff', fontSize: '12px', fontWeight: 600, lineHeight: 1.2, whiteSpace: 'nowrap' }}>
-            {user.name}
+        {/* Name + role */}
+        <div style={{ textAlign: 'left', lineHeight: 1.25 }}>
+          <div style={{ color: nameColor, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap' }}>
+            {displayName}
           </div>
-          <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', letterSpacing: '0.04em', lineHeight: 1.2, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+          <div style={{ color: roleColor, fontSize: 9.5, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
             {roleLabel}
           </div>
         </div>
-        <svg width="10" height="10" fill="none" stroke="rgba(255,255,255,0.5)" viewBox="0 0 24 24"
-          style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}>
+        {/* Chevron */}
+        <svg width="9" height="9" fill="none" stroke={chevronCol} viewBox="0 0 24 24" flexShrink={0}
+          style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease', marginLeft: 2 }}>
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 
+      {/* ── Dropdown ── */}
       {open && (
         <div style={{
-          position: 'absolute', top: 'calc(100% + 8px)', right: 0,
-          backgroundColor: '#fff', borderRadius: '10px',
-          boxShadow: '0 8px 30px rgba(0,0,0,0.25)',
-          border: '1px solid rgba(0,0,0,0.08)',
-          minWidth: '220px', zIndex: 9999, overflow: 'hidden',
+          position: 'absolute', top: 'calc(100% + 10px)', right: 0,
+          backgroundColor: '#fff',
+          borderRadius: 14,
+          boxShadow: '0 16px 48px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08)',
+          border: '1px solid #E8EAED',
+          minWidth: 260, zIndex: 9999, overflow: 'hidden',
+          animation: 'userMenuIn 0.15s ease',
         }}>
-          <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(0,0,0,0.07)' }}>
-            <p style={{ fontWeight: 700, fontSize: '14px', color: '#111', margin: 0 }}>{user.name}</p>
-            <p style={{ fontSize: '12px', color: '#888', margin: '2px 0 0' }}>{user.email}</p>
+          <style>{`
+            @keyframes userMenuIn {
+              from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+              to   { opacity: 1; transform: translateY(0)  scale(1); }
+            }
+          `}</style>
+
+          {/* Profile header */}
+          <div style={{
+            padding: '18px 20px 16px',
+            background: 'linear-gradient(135deg, #1B2A6B 0%, #2D4AAB 100%)',
+            display: 'flex', alignItems: 'center', gap: 14,
+          }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+              background: 'rgba(255,255,255,0.2)',
+              border: '2px solid rgba(255,255,255,0.35)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: 800, fontSize: 18, color: '#fff',
+            }}>
+              {initial}
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 14, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {displayName}
+              </div>
+              <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.65)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {user.email}
+              </div>
+              <span style={{
+                display: 'inline-block', marginTop: 5, padding: '1px 8px',
+                borderRadius: 20, fontSize: 9.5, fontWeight: 700,
+                letterSpacing: '0.07em', textTransform: 'uppercase',
+                backgroundColor: 'rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.9)',
+                border: '1px solid rgba(255,255,255,0.25)',
+              }}>
+                {roleLabel}
+              </span>
+            </div>
           </div>
+
+          {/* Menu items */}
           <div style={{ padding: '6px 0' }}>
-            <button style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#333', textAlign: 'left' }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f5')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
-              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-              </svg>
-              Change Password
+            <button
+              onClick={() => { setOpen(false); setChangePwOpen(true); }}
+              style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '11px 20px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: '#1e293b', textAlign: 'left', transition: 'background 0.1s' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F1F5F9'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'none'; }}
+            >
+              <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#EEF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width="15" height="15" fill="none" stroke="#4338CA" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                </svg>
+              </div>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 13, color: '#1e293b' }}>Change Password</div>
+                <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 1 }}>Update your login credentials</div>
+              </div>
             </button>
+          </div>
+
+          {/* Divider */}
+          <div style={{ height: 1, backgroundColor: '#F1F5F9', margin: '0 16px' }} />
+
+          <div style={{ padding: '6px 0 8px' }}>
             <button
               onClick={() => { setOpen(false); onLogout?.(); }}
-              style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#EF4444', textAlign: 'left' }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#fff5f5')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
-              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              Logout
+              style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '11px 20px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, textAlign: 'left', transition: 'background 0.1s' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#FFF5F5'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'none'; }}
+            >
+              <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width="15" height="15" fill="none" stroke="#DC2626" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </div>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 13, color: '#DC2626' }}>Sign Out</div>
+                <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 1 }}>End your current session</div>
+              </div>
             </button>
           </div>
         </div>
       )}
     </div>
+
+    {changePwOpen && <ChangePasswordModal onClose={() => setChangePwOpen(false)} />}
+    </>
   );
 }
 
 // ─── Header ───────────────────────────────────────────────────────────────────
 
-export default function Header({ onLoginClick, user, onLogout, pageTitle, sidebarCollapsed, notificationCount = 0 }: HeaderProps) {
+export default function Header({ onLoginClick, user, onLogout, pageTitle, sidebarCollapsed, notificationCount = 0, hideNav = false }: HeaderProps) {
   const [fontSize, setFontSize] = useState<'normal' | 'large'>('normal');
 
   const sidebarW = user ? (sidebarCollapsed ? 60 : 260) : 0;
@@ -128,15 +214,41 @@ export default function Header({ onLoginClick, user, onLogout, pageTitle, sideba
 
       {/* ── Utility bar ── */}
       <div className="py-[7px] px-5" style={{ backgroundColor: 'var(--bg-utility)' }}>
-        <div className="max-w-screen-xl mx-auto flex items-center justify-between">
+        <div className="w-full flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="flex flex-col w-[22px] h-[15px] rounded-sm overflow-hidden flex-shrink-0 border border-white/20">
-              <div className="flex-1 bg-[#FF9933]" />
-              <div className="flex-1 bg-white flex items-center justify-center">
-                <div className="w-[6px] h-[6px] rounded-full border border-[#000080]" style={{ borderWidth: '0.5px' }} />
-              </div>
-              <div className="flex-1 bg-[#138808]" />
-            </div>
+            <svg viewBox="0 0 30 20" className="h-4 w-auto flex-shrink-0" aria-label="Indian flag" role="img">
+              <g aria-hidden="true">
+                <rect width="30" height="6.67" fill="#FF9933" />
+                <rect y="6.67" width="30" height="6.67" fill="#FFFFFF" />
+                <rect y="13.33" width="30" height="6.67" fill="#138808" />
+                <circle cx="15" cy="10" r="2.8" fill="none" stroke="#000088" strokeWidth="0.5" />
+                <line x1="15.6" y1="10" x2="17.8" y2="10" stroke="#000088" strokeWidth="0.25" />
+                <line x1="15.579555495773441" y1="10.155291427061513" x2="17.704592313609393" y2="10.724693326287058" stroke="#000088" strokeWidth="0.25" />
+                <line x1="15.519615242270664" y1="10.3" x2="17.42487113059643" y2="11.4" stroke="#000088" strokeWidth="0.25" />
+                <line x1="15.424264068711928" y1="10.424264068711928" x2="16.979898987322333" y2="11.979898987322333" stroke="#000088" strokeWidth="0.25" />
+                <line x1="15.3" y1="10.519615242270664" x2="16.4" y2="12.424871130596427" stroke="#000088" strokeWidth="0.25" />
+                <line x1="15.155291427061513" y1="10.579555495773441" x2="15.724693326287058" y2="12.70459231360939" stroke="#000088" strokeWidth="0.25" />
+                <line x1="15" y1="10.6" x2="15" y2="12.8" stroke="#000088" strokeWidth="0.25" />
+                <line x1="14.844708572938488" y1="10.579555495773441" x2="14.275306673712942" y2="12.70459231360939" stroke="#000088" strokeWidth="0.25" />
+                <line x1="14.7" y1="10.519615242270664" x2="13.600000000000001" y2="12.42487113059643" stroke="#000088" strokeWidth="0.25" />
+                <line x1="14.575735931288072" y1="10.424264068711928" x2="13.020101012677667" y2="11.979898987322333" stroke="#000088" strokeWidth="0.25" />
+                <line x1="14.480384757729336" y1="10.3" x2="12.57512886940357" y2="11.4" stroke="#000088" strokeWidth="0.25" />
+                <line x1="14.420444504226559" y1="10.155291427061513" x2="12.29540768639061" y2="10.724693326287058" stroke="#000088" strokeWidth="0.25" />
+                <line x1="14.4" y1="10" x2="12.2" y2="10" stroke="#000088" strokeWidth="0.25" />
+                <line x1="14.420444504226559" y1="9.844708572938487" x2="12.29540768639061" y2="9.275306673712942" stroke="#000088" strokeWidth="0.25" />
+                <line x1="14.480384757729336" y1="9.7" x2="12.57512886940357" y2="8.600000000000001" stroke="#000088" strokeWidth="0.25" />
+                <line x1="14.57573593128807" y1="9.575735931288072" x2="13.020101012677666" y2="8.020101012677667" stroke="#000088" strokeWidth="0.25" />
+                <line x1="14.7" y1="9.480384757729336" x2="13.599999999999998" y2="7.5751288694035726" stroke="#000088" strokeWidth="0.25" />
+                <line x1="14.844708572938488" y1="9.420444504226559" x2="14.275306673712942" y2="7.295407686390609" stroke="#000088" strokeWidth="0.25" />
+                <line x1="15" y1="9.4" x2="15" y2="7.2" stroke="#000088" strokeWidth="0.25" />
+                <line x1="15.155291427061512" y1="9.420444504226559" x2="15.724693326287056" y2="7.295407686390609" stroke="#000088" strokeWidth="0.25" />
+                <line x1="15.3" y1="9.480384757729336" x2="16.4" y2="7.5751288694035726" stroke="#000088" strokeWidth="0.25" />
+                <line x1="15.424264068711928" y1="9.57573593128807" x2="16.979898987322333" y2="8.020101012677667" stroke="#000088" strokeWidth="0.25" />
+                <line x1="15.519615242270664" y1="9.7" x2="17.42487113059643" y2="8.599999999999998" stroke="#000088" strokeWidth="0.25" />
+                <line x1="15.579555495773441" y1="9.844708572938487" x2="17.70459231360939" y2="9.27530667371294" stroke="#000088" strokeWidth="0.25" />
+                <circle cx="15" cy="10" r="0.7" fill="#000088" />
+              </g>
+            </svg>
             <span className="text-white text-[12px] tracking-wide leading-none">
               Ministry of Commerce &amp; Industry | GOI
             </span>
@@ -171,19 +283,28 @@ export default function Header({ onLoginClick, user, onLogout, pageTitle, sideba
       </div>
 
       {/* ── Branding bar ── */}
-      <div className="bg-white border-b border-gray-200 py-2.5 px-5">
-        <div className="max-w-screen-xl mx-auto flex items-center justify-between">
-          <a href={EIC_WEBSITE} target="_blank" rel="noreferrer">
-            <img src={GOI_LOGO} alt="Government of India" className="h-[72px] w-auto object-contain flex-shrink-0" />
+      <div className="bg-white border-b border-gray-200">
+        <div className="w-full flex items-center justify-between py-3 px-4 md:px-8 gap-4">
+          <a href="https://commerce.gov.in/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <img src={GOI_EMBLEM} alt="Government of India Emblem" className="h-12 sm:h-16 md:h-20 w-auto flex-shrink-0" />
+            <div className="flex flex-col leading-snug">
+              <span className="font-bold" style={{ color: '#C24500', fontSize: '1.7rem' }}>Government of India</span>
+              <span className="font-medium text-[#222]" style={{ fontSize: '18px' }}>Ministry of Commerce &amp; Industry</span>
+              <span className="font-medium text-[#222]" style={{ fontSize: '18px' }}>Department of Commerce</span>
+            </div>
           </a>
-          <a href={EIC_WEBSITE} target="_blank" rel="noreferrer">
-            <img src={EIC_LOGO} alt="Export Inspection Council" className="h-[72px] w-auto object-contain flex-shrink-0" />
+          <a className="flex items-center gap-2 sm:gap-3 min-w-0" href="/">
+            <div className="flex flex-col leading-snug text-right">
+              <span className="font-medium text-[#222]" style={{ fontSize: '1.7rem' }}>निर्यात निरीक्षण परिषद</span>
+              <span className="font-bold" style={{ fontSize: '1.4rem', color: 'var(--eic-navy, #1B2A6B)' }}>Export Inspection Council (EIC)</span>
+            </div>
+            <img src={EIC_EMBLEM} alt="Export Inspection Council Emblem" className="w-auto flex-shrink-0" style={{ height: '6rem' }} />
           </a>
         </div>
       </div>
 
       {/* ── Nav bar ── */}
-      <nav style={{ backgroundColor: 'var(--bg-nav)', display: 'flex', alignItems: 'stretch' }}>
+      {!hideNav && <nav style={{ backgroundColor: 'var(--bg-nav)', display: 'flex', alignItems: 'stretch' }}>
 
         {user ? (
           /* ── DASHBOARD NAV — sidebar spacer + page title + actions ── */
@@ -302,7 +423,7 @@ export default function Header({ onLoginClick, user, onLogout, pageTitle, sideba
             </button>
           </div>
         )}
-      </nav>
+      </nav>}
     </header>
   );
 }

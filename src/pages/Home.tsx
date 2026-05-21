@@ -406,12 +406,6 @@ export default function Home() {
                     </button>
                   </p>
 
-                  {/* Trust badges */}
-                  <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
-                    <span className="flex items-center gap-1 text-xs" style={{ color: '#9CA3AF' }}><span className="text-green-500">🔒</span> SSL Secured</span>
-                    <span className="flex items-center gap-1 text-xs" style={{ color: '#9CA3AF' }}>🏛️ Govt. of India</span>
-                    <span className="flex items-center gap-1 text-xs" style={{ color: '#9CA3AF' }}><span className="text-orange-400">🕐</span> 24×7 Access</span>
-                  </div>
 
                   <div className="mt-3 rounded-xl p-3 flex items-center gap-3" style={{ backgroundColor: '#F0F4FF', border: '1px solid #C7D2FE' }}>
                     <div className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-base" style={{ backgroundColor: '#EEF2FF' }}>📞</div>
