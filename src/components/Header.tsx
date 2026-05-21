@@ -94,8 +94,8 @@ export function UserMenu({ user, onLogout, variant = 'dark' }: { user: User; onL
           </div>
         </div>
         {/* Chevron */}
-        <svg width="9" height="9" fill="none" stroke={chevronCol} viewBox="0 0 24 24" flexShrink={0}
-          style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease', marginLeft: 2 }}>
+        <svg width="9" height="9" fill="none" stroke={chevronCol} viewBox="0 0 24 24"
+          style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease', marginLeft: 2, flexShrink: 0 }}>
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
         </svg>
       </button>

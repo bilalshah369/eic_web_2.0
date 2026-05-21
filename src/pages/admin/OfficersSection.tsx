@@ -214,20 +214,6 @@ function Badge({ active }: { active: boolean }) {
   );
 }
 
-function GenderBadge({ gender }: { gender: string }) {
-  const map: Record<string, { bg: string; color: string; label: string }> = {
-    MALE:   { bg: '#DBEAFE', color: '#1E40AF', label: 'Male' },
-    FEMALE: { bg: '#FCE7F3', color: '#9D174D', label: 'Female' },
-    OTHER:  { bg: '#F3F4F6', color: '#374151', label: 'Other' },
-  };
-  const s = map[gender] ?? map.OTHER;
-  return (
-    <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 600, backgroundColor: s.bg, color: s.color }}>
-      {s.label}
-    </span>
-  );
-}
-
 /* ─── blank form ───────────────────────────────────────────────────────────── */
 
 const BLANK: CreateOfficerDto = {
@@ -257,11 +243,10 @@ function ViewAssignmentsModal({
   const isOffices = type === 'offices';
   const accentColor = isOffices ? '#1D4ED8' : '#C2410C';
   const accentBg    = isOffices ? '#EFF6FF' : '#FFF7ED';
-  const accentBorder = isOffices ? '#BFDBFE' : '#FED7AA';
 
   const offices = detail?.offices ?? [];
 
-  const typeLabel    = { EIC: 'EIC', EIA: 'EIA', SUB_EIA: 'Sub-EIA' };
+  const typeLabel: Record<string, string> = { EIC: 'EIC', EIA: 'EIA', SUB_EIA: 'Sub-EIA' };
   const typeBadgeColor: Record<string, { bg: string; color: string }> = {
     EIA:     { bg: '#EFF6FF', color: '#1D4ED8' },
     SUB_EIA: { bg: '#F5F3FF', color: '#7C3AED' },
@@ -711,12 +696,6 @@ function OfficerList(p: OfficerListProps) {
     return () => document.removeEventListener('click', close);
   }, [openDrop]);
 
-  const ib = (bg: string, color: string, border: string): React.CSSProperties => ({
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    width: 28, height: 28, borderRadius: 6,
-    backgroundColor: bg, color, border: `1px solid ${border}`,
-    cursor: 'pointer', flexShrink: 0,
-  });
 
   return (
     <>

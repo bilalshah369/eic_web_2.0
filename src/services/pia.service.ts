@@ -126,7 +126,6 @@ export interface PIAApplicationFull extends PIAApplicationSummary {
     hasLinkedOrganization: boolean; linkedOrgDetails: string | null;
     hasRelatedActivities: boolean;  relatedActivitiesDetails: string | null;
     hasDisputesWithClients: boolean; disputesDetails: string | null;
-    hasCriminalProceedings: boolean; criminalProceedingsDetails: string | null;
     ports: Array<{ id: string; isDefault: boolean; port: PIAPortMaster }>;
     scopes: Array<{ id: string; specifications: string | null; mineralOre: PIAMineralMaster }>;
     inspectionManpower: Array<{ id: string; isSeniorMgmt: boolean; name: string; designation: string; qualification: string | null; experienceYears: number | null; specialization: string | null }>;
