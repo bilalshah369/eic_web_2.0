@@ -16,16 +16,23 @@ const CUSTOM_LABELS: { key: keyof ThemeVars; label: string }[] = [
   { key: '--accent-muted-hover', label: 'Accent Button Hover' },
 ];
 
-type Tab = 'deep' | 'light' | 'pastel' | 'white' | 'custom';
+type Tab = 'deep' | 'light' | 'pastel' | 'white' | 'clean' | 'custom';
 
 /* ── Mini theme card preview matching screenshot style ── */
 function ThemeCard({ theme, active, onClick }: { theme: Theme; active: boolean; onClick: () => void }) {
   const { bg, nav, accent, accent2 } = theme.preview;
+  const isClean = theme.category === 'clean';
+  const sidebarLine = isClean ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.25)';
+  const contentLine1 = isClean ? 'rgba(0,0,0,0.10)' : 'rgba(255,255,255,0.22)';
+  const contentLine2 = isClean ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.14)';
+  const contentLine3 = isClean ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.10)';
+  const labelText = isClean ? 'rgba(31,41,55,0.85)' : 'rgba(255,255,255,0.9)';
+  const navBorder = isClean ? '1px solid rgba(0,0,0,0.08)' : 'none';
   return (
     <button
       onClick={onClick}
       style={{
-        border: active ? `2px solid ${accent}` : '2px solid rgba(255,255,255,0.08)',
+        border: active ? `2px solid ${accent}` : isClean ? '2px solid rgba(0,0,0,0.10)' : '2px solid rgba(255,255,255,0.08)',
         borderRadius: '10px',
         overflow: 'hidden',
         transition: 'transform 0.15s, box-shadow 0.15s',
@@ -34,28 +41,28 @@ function ThemeCard({ theme, active, onClick }: { theme: Theme; active: boolean; 
         padding: 0,
         width: '100%',
       }}
-      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1.04)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 16px rgba(0,0,0,0.4)'; }}
+      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1.04)'; (e.currentTarget as HTMLElement).style.boxShadow = isClean ? '0 4px 16px rgba(0,0,0,0.15)' : '0 4px 16px rgba(0,0,0,0.4)'; }}
       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1)'; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}
     >
       {/* Preview area */}
       <div style={{ backgroundColor: bg, padding: '8px 6px 6px 6px' }}>
         {/* Top nav strip */}
-        <div style={{ height: '6px', borderRadius: '3px 3px 0 0', backgroundColor: nav, marginBottom: '5px' }} />
+        <div style={{ height: '6px', borderRadius: '3px 3px 0 0', backgroundColor: nav, marginBottom: '5px', border: navBorder, borderBottom: 'none' }} />
         {/* Content rows */}
         <div style={{ display: 'flex', gap: '4px' }}>
           {/* Sidebar */}
           <div style={{ width: '14px', display: 'flex', flexDirection: 'column', gap: '3px', paddingTop: '1px' }}>
             {[1,1,1,1].map((_, i) => (
-              <div key={i} style={{ height: '2px', borderRadius: '1px', backgroundColor: 'rgba(255,255,255,0.25)', width: i === 1 ? '10px' : '14px' }} />
+              <div key={i} style={{ height: '2px', borderRadius: '1px', backgroundColor: sidebarLine, width: i === 1 ? '10px' : '14px' }} />
             ))}
           </div>
           {/* Lines */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '3px' }}>
-            <div style={{ height: '3px', borderRadius: '2px', backgroundColor: 'rgba(255,255,255,0.22)', width: '90%' }} />
+            <div style={{ height: '3px', borderRadius: '2px', backgroundColor: contentLine1, width: '90%' }} />
             <div style={{ height: '3px', borderRadius: '2px', backgroundColor: accent, width: '65%' }} />
-            <div style={{ height: '2px', borderRadius: '2px', backgroundColor: 'rgba(255,255,255,0.14)', width: '80%' }} />
+            <div style={{ height: '2px', borderRadius: '2px', backgroundColor: contentLine2, width: '80%' }} />
             <div style={{ height: '3px', borderRadius: '2px', backgroundColor: accent2, width: '50%', opacity: 0.7 }} />
-            <div style={{ height: '2px', borderRadius: '2px', backgroundColor: 'rgba(255,255,255,0.10)', width: '70%' }} />
+            <div style={{ height: '2px', borderRadius: '2px', backgroundColor: contentLine3, width: '70%' }} />
           </div>
         </div>
       </div>
@@ -66,8 +73,9 @@ function ThemeCard({ theme, active, onClick }: { theme: Theme; active: boolean; 
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
+        borderTop: navBorder,
       }}>
-        <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '9px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '80%' }}>
+        <span style={{ color: labelText, fontSize: '9px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '80%' }}>
           {theme.emoji} {theme.name}
         </span>
         {active && <span style={{ color: accent, fontSize: '10px', fontWeight: 700 }}>✓</span>}
@@ -119,7 +127,7 @@ export default function PaletteButton() {
     applyCustom(updated);
   };
 
-  const filteredThemes = themes.filter(t => tab === 'white' ? t.category === 'white' : t.category === tab);
+  const filteredThemes = themes.filter(t => t.category === tab);
   const activeName = activeId === 'custom' ? 'Custom'
     : (themes.find(t => t.id === activeId)?.name ?? 'Royal Blue');
   const activeTheme = themes.find(t => t.id === activeId);
@@ -199,6 +207,7 @@ export default function PaletteButton() {
               <button style={tabStyle('light')}  onClick={() => setTab('light')}>Light &amp; Soft</button>
               <button style={tabStyle('pastel')} onClick={() => setTab('pastel')}>Pastel &amp; Dreamy</button>
               <button style={tabStyle('white')}  onClick={() => setTab('white')}>☀️ White &amp; Light</button>
+              <button style={tabStyle('clean')}  onClick={() => setTab('clean')}>✨ Clean White</button>
               <button
                 style={{ ...tabStyle('custom'), display: 'flex', alignItems: 'center', gap: '5px' }}
                 onClick={() => setTab('custom')}

@@ -123,7 +123,7 @@ export default function Dashboard() {
           transition: 'width 0.2s ease',
           position: 'relative',
           height: '100%', overflow: 'visible',
-          borderRight: '1px solid rgba(255,255,255,0.07)',
+          borderRight: '1px solid var(--nav-border)',
         }}>
 
           {/* Collapse toggle */}
@@ -132,8 +132,8 @@ export default function Dashboard() {
             style={{
               position: 'absolute', top: '16px', right: '-12px',
               width: 24, height: 24, borderRadius: '50%',
-              backgroundColor: 'var(--bg-nav)', border: '1px solid rgba(255,255,255,0.15)',
-              color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
+              backgroundColor: 'var(--bg-nav)', border: '1px solid var(--nav-border)',
+              color: 'var(--nav-text)', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               zIndex: 50, fontSize: '10px',
             }}
@@ -143,25 +143,28 @@ export default function Dashboard() {
 
           {/* Brand */}
           <div style={{
-            padding: sidebarCollapsed ? '14px 0' : '12px 16px',
-            borderBottom: '1px solid rgba(255,255,255,0.08)',
+            padding: sidebarCollapsed ? '13px 0' : '11px 14px 12px',
+            borderBottom: '1px solid var(--nav-border)',
             display: 'flex', alignItems: 'center', gap: '10px',
             overflow: 'hidden', justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+            flexShrink: 0,
           }}>
+            {/* Monogram badge */}
             <div style={{
-              width: 34, height: 34, borderRadius: '8px',
-              backgroundColor: 'rgba(255,255,255,0.12)',
+              width: 36, height: 36, borderRadius: '9px',
+              background: 'linear-gradient(135deg, #2563EB 0%, #1B2A6B 100%)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              boxShadow: '0 2px 8px rgba(37,99,235,0.35)',
             }}>
-              <svg width="18" height="18" fill="none" stroke="rgba(255,255,255,0.85)" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
-                  d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <span style={{ color: '#fff', fontSize: 13, fontWeight: 800, letterSpacing: '0.04em', fontFamily: 'system-ui, sans-serif' }}>EIC</span>
             </div>
             {!sidebarCollapsed && (
-              <div style={{ overflow: 'hidden' }}>
-                <p style={{ color: '#fff', fontSize: '13px', fontWeight: 700, margin: 0, lineHeight: 1.2 }}>EIC EServices</p>
-                <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '10px', margin: '2px 0 0' }}>Export Inspection Council</p>
+              <div style={{ overflow: 'hidden', minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                  <span style={{ color: '#fff', fontSize: 14, fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1, whiteSpace: 'nowrap' }}>e-Services</span>
+                  <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, fontWeight: 500 }}>PORTAL</span>
+                </div>
+                <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, margin: '3px 0 0', fontWeight: 400, letterSpacing: '0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Export Inspection Council</p>
               </div>
             )}
           </div>
@@ -169,9 +172,9 @@ export default function Dashboard() {
           {/* Scroll up */}
           <button
             onClick={() => scroll('up')}
-            style={{ width: '100%', padding: '4px 0', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer', color: 'rgba(255,255,255,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-            onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.75)')}
-            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.35)')}
+            style={{ width: '100%', padding: '4px 0', background: 'none', border: 'none', borderBottom: '1px solid var(--nav-border)', cursor: 'pointer', color: 'var(--nav-text-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+            onMouseEnter={e => (e.currentTarget.style.color = 'var(--nav-text-active)')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'var(--nav-text-dim)')}
           >
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" /></svg>
           </button>
@@ -188,20 +191,20 @@ export default function Dashboard() {
                   width: '100%',
                   padding: sidebarCollapsed ? '12px 0' : '11px 20px',
                   justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
-                  background: activeNav === item.key ? 'rgba(255,255,255,0.15)' : 'none',
+                  background: activeNav === item.key ? 'var(--nav-active-bg)' : 'none',
                   border: 'none',
-                  borderLeft: activeNav === item.key ? '3px solid #60A5FA' : '3px solid transparent',
+                  borderLeft: activeNav === item.key ? '3px solid var(--nav-active-bar)' : '3px solid transparent',
                   cursor: 'pointer',
-                  color: activeNav === item.key ? '#fff' : 'rgba(255,255,255,0.78)',
+                  color: activeNav === item.key ? 'var(--nav-text-active)' : 'var(--nav-text)',
                   fontSize: '13px', fontWeight: activeNav === item.key ? 700 : 500,
                   textAlign: 'left',
                   transition: 'background 0.15s, color 0.15s',
                   whiteSpace: 'nowrap', overflow: 'hidden',
                 }}
-                onMouseEnter={e => { if (activeNav !== item.key) { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.10)'; (e.currentTarget as HTMLElement).style.color = '#fff'; } }}
-                onMouseLeave={e => { if (activeNav !== item.key) { (e.currentTarget as HTMLElement).style.background = 'none'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.78)'; } }}
+                onMouseEnter={e => { if (activeNav !== item.key) { (e.currentTarget as HTMLElement).style.background = 'var(--nav-hover-bg)'; (e.currentTarget as HTMLElement).style.color = 'var(--nav-text-active)'; } }}
+                onMouseLeave={e => { if (activeNav !== item.key) { (e.currentTarget as HTMLElement).style.background = 'none'; (e.currentTarget as HTMLElement).style.color = 'var(--nav-text)'; } }}
               >
-                <span style={{ flexShrink: 0, color: activeNav === item.key ? '#60A5FA' : 'rgba(255,255,255,0.65)' }}>{item.icon}</span>
+                <span style={{ flexShrink: 0, color: activeNav === item.key ? 'var(--nav-active-bar)' : 'var(--nav-icon-dim)' }}>{item.icon}</span>
                 {!sidebarCollapsed && <span>{item.label}</span>}
               </button>
             ))}
@@ -215,19 +218,19 @@ export default function Dashboard() {
                   style={{
                     display: 'flex', alignItems: 'center', gap: 10,
                     width: '100%', padding: '11px 20px',
-                    background: isPiaActive ? 'rgba(255,255,255,0.15)' : 'none',
+                    background: isPiaActive ? 'var(--nav-active-bg)' : 'none',
                     border: 'none',
-                    borderLeft: isPiaActive ? '3px solid #60A5FA' : '3px solid transparent',
+                    borderLeft: isPiaActive ? '3px solid var(--nav-active-bar)' : '3px solid transparent',
                     cursor: 'pointer',
-                    color: isPiaActive ? '#fff' : 'rgba(255,255,255,0.78)',
+                    color: isPiaActive ? 'var(--nav-text-active)' : 'var(--nav-text)',
                     fontSize: '13px', fontWeight: isPiaActive ? 700 : 500,
                     textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden',
                     transition: 'background 0.15s, color 0.15s',
                   }}
-                  onMouseEnter={e => { if (!isPiaActive) { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.10)'; (e.currentTarget as HTMLElement).style.color = '#fff'; } }}
-                  onMouseLeave={e => { if (!isPiaActive) { (e.currentTarget as HTMLElement).style.background = 'none'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.78)'; } }}
+                  onMouseEnter={e => { if (!isPiaActive) { (e.currentTarget as HTMLElement).style.background = 'var(--nav-hover-bg)'; (e.currentTarget as HTMLElement).style.color = 'var(--nav-text-active)'; } }}
+                  onMouseLeave={e => { if (!isPiaActive) { (e.currentTarget as HTMLElement).style.background = 'none'; (e.currentTarget as HTMLElement).style.color = 'var(--nav-text)'; } }}
                 >
-                  <span style={{ flexShrink: 0, color: isPiaActive ? '#60A5FA' : 'rgba(255,255,255,0.65)' }}>
+                  <span style={{ flexShrink: 0, color: isPiaActive ? 'var(--nav-active-bar)' : 'var(--nav-icon-dim)' }}>
                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
@@ -241,7 +244,7 @@ export default function Dashboard() {
                 </button>
 
                 {piaExpanded && (
-                  <div style={{ borderLeft: '1px solid rgba(255,255,255,0.1)', marginLeft: 28 }}>
+                  <div style={{ borderLeft: '1px solid var(--nav-border)', marginLeft: 28 }}>
                     {PIA_SUB_ITEMS.map(sub => (
                       <button
                         key={sub.key}
@@ -249,19 +252,19 @@ export default function Dashboard() {
                         style={{
                           display: 'flex', alignItems: 'center', gap: '8px',
                           width: '100%', padding: '9px 16px',
-                          background: activeNav === sub.key ? 'rgba(255,255,255,0.15)' : 'none',
+                          background: activeNav === sub.key ? 'var(--nav-active-bg)' : 'none',
                           border: 'none',
-                          borderLeft: activeNav === sub.key ? '2px solid #60A5FA' : '2px solid transparent',
+                          borderLeft: activeNav === sub.key ? '2px solid var(--nav-active-bar)' : '2px solid transparent',
                           cursor: 'pointer',
-                          color: activeNav === sub.key ? '#fff' : 'rgba(255,255,255,0.75)',
+                          color: activeNav === sub.key ? 'var(--nav-text-active)' : 'var(--nav-text)',
                           fontSize: '12px', fontWeight: activeNav === sub.key ? 700 : 500,
                           textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden',
                           transition: 'background 0.15s, color 0.15s',
                         }}
-                        onMouseEnter={e => { if (activeNav !== sub.key) { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.10)'; (e.currentTarget as HTMLElement).style.color = '#fff'; } }}
-                        onMouseLeave={e => { if (activeNav !== sub.key) { (e.currentTarget as HTMLElement).style.background = 'none'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.75)'; } }}
+                        onMouseEnter={e => { if (activeNav !== sub.key) { (e.currentTarget as HTMLElement).style.background = 'var(--nav-hover-bg)'; (e.currentTarget as HTMLElement).style.color = 'var(--nav-text-active)'; } }}
+                        onMouseLeave={e => { if (activeNav !== sub.key) { (e.currentTarget as HTMLElement).style.background = 'none'; (e.currentTarget as HTMLElement).style.color = 'var(--nav-text)'; } }}
                       >
-                        <span style={{ flexShrink: 0, color: activeNav === sub.key ? '#60A5FA' : 'rgba(255,255,255,0.6)' }}>{sub.icon}</span>
+                        <span style={{ flexShrink: 0, color: activeNav === sub.key ? 'var(--nav-active-bar)' : 'var(--nav-icon-dim)' }}>{sub.icon}</span>
                         <span>{sub.label}</span>
                       </button>
                     ))}
@@ -278,11 +281,11 @@ export default function Dashboard() {
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   width: '100%', padding: '12px 0',
-                  background: isPiaActive ? 'rgba(255,255,255,0.12)' : 'none',
+                  background: isPiaActive ? 'var(--nav-active-bg)' : 'none',
                   border: 'none',
-                  borderLeft: isPiaActive ? '3px solid #60A5FA' : '3px solid transparent',
+                  borderLeft: isPiaActive ? '3px solid var(--nav-active-bar)' : '3px solid transparent',
                   cursor: 'pointer',
-                  color: isPiaActive ? '#fff' : 'rgba(255,255,255,0.55)',
+                  color: isPiaActive ? 'var(--nav-text-active)' : 'var(--nav-icon-dim)',
                 }}
               >
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -296,15 +299,15 @@ export default function Dashboard() {
           {/* Scroll down */}
           <button
             onClick={() => scroll('down')}
-            style={{ width: '100%', padding: '4px 0', background: 'none', border: 'none', borderTop: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer', color: 'rgba(255,255,255,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-            onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.75)')}
-            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.35)')}
+            style={{ width: '100%', padding: '4px 0', background: 'none', border: 'none', borderTop: '1px solid var(--nav-border)', cursor: 'pointer', color: 'var(--nav-text-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+            onMouseEnter={e => (e.currentTarget.style.color = 'var(--nav-text-active)')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'var(--nav-text-dim)')}
           >
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
           </button>
 
           {/* Bottom actions */}
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', padding: '8px 0' }}>
+          <div style={{ borderTop: '1px solid var(--nav-border)', padding: '8px 0' }}>
             <button
               onClick={() => setShowChangePwd(true)}
               title={sidebarCollapsed ? 'Change Password' : undefined}
@@ -313,11 +316,11 @@ export default function Dashboard() {
                 width: '100%', padding: sidebarCollapsed ? '11px 0' : '11px 20px',
                 justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
                 background: 'none', border: 'none', cursor: 'pointer',
-                color: 'rgba(255,255,255,0.75)', fontSize: '13px', fontWeight: 500,
+                color: 'var(--nav-text)', fontSize: '13px', fontWeight: 500,
                 whiteSpace: 'nowrap', overflow: 'hidden', transition: 'color 0.15s, background 0.15s',
               }}
-              onMouseEnter={e => { (e.currentTarget.style.color = '#fff'); (e.currentTarget.style.background = 'rgba(255,255,255,0.10)'); }}
-              onMouseLeave={e => { (e.currentTarget.style.color = 'rgba(255,255,255,0.75)'); (e.currentTarget.style.background = 'none'); }}
+              onMouseEnter={e => { (e.currentTarget.style.color = 'var(--nav-text-active)'); (e.currentTarget.style.background = 'var(--nav-hover-bg)'); }}
+              onMouseLeave={e => { (e.currentTarget.style.color = 'var(--nav-text)'); (e.currentTarget.style.background = 'none'); }}
             >
               <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -583,10 +586,13 @@ function DashboardHome({ onNavigate }: { onNavigate: (key: NavKey) => void }) {
                   style={{
                     display: 'flex', alignItems: 'center', gap: '5px',
                     padding: '6px 14px', borderRadius: '6px',
-                    backgroundColor: svc.accentColor, border: 'none',
+                    backgroundColor: '#1B2A6B', border: 'none',
                     color: '#fff', fontSize: '12px', fontWeight: 600,
                     cursor: 'pointer',
+                    transition: 'background 0.15s',
                   }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.backgroundColor = '#142057'}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.backgroundColor = '#1B2A6B'}
                 >
                   Apply Now
                   <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -599,9 +605,9 @@ function DashboardHome({ onNavigate }: { onNavigate: (key: NavKey) => void }) {
                   style={{
                     display: 'flex', alignItems: 'center', gap: '5px',
                     padding: '6px 14px', borderRadius: '6px',
-                    backgroundColor: svc.accentColor, border: 'none',
-                    color: '#fff', fontSize: '12px', fontWeight: 600,
-                    cursor: 'default', opacity: 0.45,
+                    backgroundColor: '#f1f5f9', border: '1px solid #e2e8f0',
+                    color: '#94a3b8', fontSize: '12px', fontWeight: 600,
+                    cursor: 'default',
                   }}
                 >
                   Coming Soon

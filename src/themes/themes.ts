@@ -17,8 +17,8 @@ export interface Theme {
   id: string;
   name: string;
   emoji: string;
-  category: 'deep' | 'light' | 'pastel' | 'white';
-  mode: 'dark' | 'light';
+  category: 'deep' | 'light' | 'pastel' | 'white' | 'clean';
+  mode: 'dark' | 'light' | 'clean';
   vars: ThemeVars;
   preview: { bg: string; nav: string; accent: string; accent2: string };
 }
@@ -40,6 +40,17 @@ function tLight(id: string, name: string, emoji: string,
   accent: string, accentH: string, muted: string, mutedH: string, pAccent2: string): Theme {
   return {
     id, name, emoji, category: 'white', mode: 'light',
+    vars: { '--bg-page': bg, '--bg-nav': nav, '--bg-utility': util, '--bg-footer': nav, '--bg-footer-bar': util, '--bg-card': card, '--bg-modal': modal, '--bg-input': input, '--accent': accent, '--accent-hover': accentH, '--accent-muted': muted, '--accent-muted-hover': mutedH },
+    preview: { bg, nav, accent, accent2: pAccent2 },
+  };
+}
+
+/* Helper for clean white themes — white/light sidebar, dark text everywhere */
+function tClean(id: string, name: string, emoji: string,
+  bg: string, nav: string, util: string, card: string, modal: string, input: string,
+  accent: string, accentH: string, muted: string, mutedH: string, pAccent2: string): Theme {
+  return {
+    id, name, emoji, category: 'clean', mode: 'clean',
     vars: { '--bg-page': bg, '--bg-nav': nav, '--bg-utility': util, '--bg-footer': nav, '--bg-footer-bar': util, '--bg-card': card, '--bg-modal': modal, '--bg-input': input, '--accent': accent, '--accent-hover': accentH, '--accent-muted': muted, '--accent-muted-hover': mutedH },
     preview: { bg, nav, accent, accent2: pAccent2 },
   };
@@ -123,6 +134,23 @@ export const themes: Theme[] = [
   tLight('midnight-white',    'Midnight White',    '🌙', '#f8fafc','#141428','#0C0C1E','#ffffff','#ffffff','#EEF2FF','#6366F1','#4F46E5','#E0E7FF','#C7D2FE','#141428'),
   tLight('forest-white',      'Forest White',      '🌿', '#f0fdf4','#1A3A28','#0D2015','#ffffff','#ffffff','#DCFCE7','#16A34A','#15803D','#DCFCE7','#BBF7D0','#1A3A28'),
   tLight('deep-purple-white', 'Deep Purple White', '💜', '#faf5ff','#2A1A4E','#1A0F30','#ffffff','#ffffff','#EDE9FE','#7C3AED','#6D28D9','#EDE9FE','#DDD6FE','#2A1A4E'),
+
+  /* ══════════════════════════════════════
+     CLEAN WHITE — white sidebar, dark text
+  ══════════════════════════════════════ */
+  //           id                  name                emoji   bg        nav       util      card      modal     input     accent    accentH   muted     mutedH    pAccent2
+  tClean('cw-pure',        'Pure White',       '🤍', '#f8fafc','#ffffff','#f1f5f9','#ffffff','#ffffff','#f1f5f9','#3B82F6','#2563EB','#DBEAFE','#BFDBFE','#60A5FA'),
+  tClean('cw-sky',         'Sky White',        '🩵', '#f0f9ff','#ffffff','#e0f2fe','#ffffff','#ffffff','#f0f9ff','#0EA5E9','#0284C7','#E0F2FE','#BAE6FD','#38BDF8'),
+  tClean('cw-mint',        'Mint White',       '🌿', '#f0fdf4','#ffffff','#dcfce7','#ffffff','#ffffff','#f0fdf4','#16A34A','#15803D','#DCFCE7','#BBF7D0','#4ADE80'),
+  tClean('cw-rose',        'Rose White',       '🌸', '#fff1f2','#ffffff','#ffe4e6','#ffffff','#ffffff','#fff1f2','#F43F5E','#E11D48','#FFE4E6','#FECDD3','#FB7185'),
+  tClean('cw-peach',       'Peach White',      '🍑', '#fff7ed','#ffffff','#ffedd5','#ffffff','#ffffff','#fff7ed','#F97316','#EA6C0A','#FFEDD5','#FED7AA','#FB923C'),
+  tClean('cw-lavender',    'Lavender White',   '💜', '#faf5ff','#ffffff','#ede9fe','#ffffff','#ffffff','#faf5ff','#8B5CF6','#7C3AED','#EDE9FE','#DDD6FE','#A78BFA'),
+  tClean('cw-teal',        'Teal White',       '🌊', '#f0fdfa','#ffffff','#ccfbf1','#ffffff','#ffffff','#f0fdfa','#0D9488','#0F766E','#CCFBF1','#99F6E4','#2DD4BF'),
+  tClean('cw-amber',       'Amber White',      '🌟', '#fefce8','#ffffff','#fef9c3','#ffffff','#ffffff','#fefce8','#D97706','#B45309','#FEF9C3','#FEF08A','#FACC15'),
+  tClean('cw-indigo',      'Indigo White',     '💎', '#eef2ff','#ffffff','#e0e7ff','#ffffff','#ffffff','#eef2ff','#4F46E5','#4338CA','#E0E7FF','#C7D2FE','#818CF8'),
+  tClean('cw-fuchsia',     'Fuchsia White',    '🪻', '#fdf4ff','#ffffff','#fae8ff','#ffffff','#ffffff','#fdf4ff','#D946EF','#C026D3','#FAE8FF','#F5D0FE','#E879F9'),
+  tClean('cw-slate',       'Slate White',      '🩶', '#f8fafc','#ffffff','#f1f5f9','#ffffff','#ffffff','#f8fafc','#475569','#334155','#E2E8F0','#CBD5E1','#94A3B8'),
+  tClean('cw-crimson',     'Crimson White',    '❤️', '#fff5f5','#ffffff','#fee2e2','#ffffff','#ffffff','#fff5f5','#DC2626','#B91C1C','#FEE2E2','#FECACA','#F87171'),
 ];
 
 export const DEFAULT_THEME_ID = 'clean-white';
@@ -134,7 +162,7 @@ export const DEFAULT_CUSTOM_VARS: ThemeVars = {
   '--accent-hover': '#EA6C0A', '--accent-muted': '#FEE2CC', '--accent-muted-hover': '#FDD0AA',
 };
 
-export function applyThemeVars(vars: ThemeVars, mode: 'dark' | 'light' = 'dark') {
+export function applyThemeVars(vars: ThemeVars, mode: 'dark' | 'light' | 'clean' = 'dark') {
   const root = document.documentElement;
   (Object.entries(vars) as [string, string][]).forEach(([k, v]) => root.style.setProperty(k, v));
   root.setAttribute('data-theme-mode', mode);

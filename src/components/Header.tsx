@@ -212,8 +212,8 @@ export default function Header({ onLoginClick, user, onLogout, pageTitle, sideba
   return (
     <header className={`sticky top-0 z-30 ${fontSize === 'large' ? 'text-base' : 'text-sm'}`}>
 
-      {/* ── Utility bar ── */}
-      <div className="py-[7px] px-5" style={{ backgroundColor: 'var(--bg-utility)' }}>
+      {/* ── Utility bar — hidden when logged in ── */}
+      {!user && <div className="py-[7px] px-5" style={{ backgroundColor: 'var(--bg-utility)' }}>
         <div className="w-full flex items-center justify-between">
           <div className="flex items-center gap-2">
             <svg viewBox="0 0 30 20" className="h-4 w-auto flex-shrink-0" aria-label="Indian flag" role="img">
@@ -280,10 +280,10 @@ export default function Header({ onLoginClick, user, onLogout, pageTitle, sideba
             <PaletteButton />
           </div>
         </div>
-      </div>
+      </div>}
 
-      {/* ── Branding bar ── */}
-      <div className="bg-white border-b border-gray-200">
+      {/* ── Branding bar — hidden when logged in ── */}
+      {!user && <div className="bg-white border-b border-gray-200">
         <div className="w-full flex items-center justify-between py-3 px-4 md:px-8 gap-4">
           <a href="https://commerce.gov.in/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 sm:gap-3 min-w-0">
             <img src={GOI_EMBLEM} alt="Government of India Emblem" className="h-12 sm:h-16 md:h-20 w-auto flex-shrink-0" />
@@ -301,7 +301,7 @@ export default function Header({ onLoginClick, user, onLogout, pageTitle, sideba
             <img src={EIC_EMBLEM} alt="Export Inspection Council Emblem" className="w-auto flex-shrink-0" style={{ height: '6rem' }} />
           </a>
         </div>
-      </div>
+      </div>}
 
       {/* ── Nav bar ── */}
       {!hideNav && <nav style={{ backgroundColor: 'var(--bg-nav)', display: 'flex', alignItems: 'stretch' }}>
@@ -414,7 +414,10 @@ export default function Header({ onLoginClick, user, onLogout, pageTitle, sideba
             </ul>
             <button
               onClick={onLoginClick}
-              className="flex items-center gap-2 border border-white text-white text-[12px] font-semibold tracking-widest px-5 py-[7px] rounded hover:bg-white hover:text-[#1B2A6B] transition my-[7px]">
+              className="flex items-center gap-2 border border-white text-[12px] font-semibold tracking-widest px-5 py-[7px] rounded transition my-[7px]"
+              style={{ color: '#fff', backgroundColor: 'transparent' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '#fff'; (e.currentTarget as HTMLElement).style.color = '#1B2A6B'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#fff'; }}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

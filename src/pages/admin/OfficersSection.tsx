@@ -1206,12 +1206,10 @@ function TransferOfficerModal({ officer, allOffices, currentOfficeIds, onClose, 
                           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = isSel ? '#EFF6FF' : 'transparent'; }}>
                           <input type="checkbox" checked={isSel} onChange={() => toggle(o.id)}
                             style={{ accentColor: '#1D4ED8', width: 15, height: 15, cursor: 'pointer', flexShrink: 0 }} />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: isSel ? '#1D4ED8' : '#374151', backgroundColor: isSel ? '#DBEAFE' : '#F3F4F6', padding: '1px 6px', borderRadius: 4 }}>{o.code}</span>
-                              {wasOriginal && <span style={{ fontSize: 10, color: '#6B7280', fontStyle: 'italic' }}>current</span>}
-                            </div>
-                            <div style={{ fontSize: 12, color: '#6B7280', marginTop: 1 }}>{o.name}</div>
+                          <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: isSel ? '#1D4ED8' : '#374151', backgroundColor: isSel ? '#DBEAFE' : '#F3F4F6', padding: '1px 6px', borderRadius: 4, flexShrink: 0 }}>{o.code}</span>
+                            <span style={{ fontSize: 13, color: '#374151', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.name}</span>
+                            {wasOriginal && <span style={{ fontSize: 10, color: '#6B7280', fontStyle: 'italic', flexShrink: 0 }}>current</span>}
                           </div>
                           {isSel && <svg width="14" height="14" fill="none" stroke="#1D4ED8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>}
                         </label>
@@ -1238,12 +1236,10 @@ function TransferOfficerModal({ officer, allOffices, currentOfficeIds, onClose, 
                           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = isSel ? '#F5F3FF' : 'transparent'; }}>
                           <input type="checkbox" checked={isSel} onChange={() => toggle(o.id)}
                             style={{ accentColor: '#7C3AED', width: 15, height: 15, cursor: 'pointer', flexShrink: 0 }} />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: isSel ? '#7C3AED' : '#374151', backgroundColor: isSel ? '#EDE9FE' : '#F3F4F6', padding: '1px 6px', borderRadius: 4 }}>{o.code}</span>
-                              {wasOriginal && <span style={{ fontSize: 10, color: '#6B7280', fontStyle: 'italic' }}>current</span>}
-                            </div>
-                            <div style={{ fontSize: 12, color: '#6B7280', marginTop: 1 }}>{o.name}</div>
+                          <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: isSel ? '#7C3AED' : '#374151', backgroundColor: isSel ? '#EDE9FE' : '#F3F4F6', padding: '1px 6px', borderRadius: 4, flexShrink: 0 }}>{o.code}</span>
+                            <span style={{ fontSize: 13, color: '#374151', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.name}</span>
+                            {wasOriginal && <span style={{ fontSize: 10, color: '#6B7280', fontStyle: 'italic', flexShrink: 0 }}>current</span>}
                           </div>
                           {isSel && <svg width="14" height="14" fill="none" stroke="#7C3AED" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>}
                         </label>
