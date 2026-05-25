@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+﻿import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   piaApi, PIABranchPayload, PIASubType, PIAApplicationFull,
   PIAPortMaster, PIAMineralMaster, PIAEIAOffice, PIADocChecklistItem, PIADocumentItem, PIAFeeConfigItem,
@@ -209,7 +209,7 @@ const inp: React.CSSProperties = {
 const STEP_CARD: React.CSSProperties = {
   backgroundColor: '#fff',
   borderRadius: '12px',
-  border: '1px solid rgba(59,130,246,0.1)',
+  border: '1px solid rgba(0,0,0,0.04)',
   boxShadow: '0 2px 16px rgba(59,130,246,0.07), 0 1px 4px rgba(0,0,0,0.04)',
   padding: '24px',
   display: 'flex',
@@ -253,22 +253,19 @@ function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
       {([true, false] as const).map(opt => (
         <button key={String(opt)} type="button" onClick={() => onChange(opt)} style={{
           padding: '6px 18px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
-          border: `1px solid ${value === opt ? '#3B82F6' : 'var(--border-subtle)'}`,
-          backgroundColor: value === opt ? 'rgba(59,130,246,0.12)' : 'transparent',
-          color: value === opt ? '#3B82F6' : 'var(--text-muted)',
+          border: `1px solid ${value === opt ? 'var(--grad-to)' : 'var(--border-subtle)'}`,
+          backgroundColor: value === opt ? 'rgba(0,0,0,0.05)' : 'transparent',
+          color: value === opt ? 'var(--grad-to)' : 'var(--text-muted)',
         }}>{opt ? 'Yes' : 'No'}</button>
       ))}
     </div>
   );
 }
-function SecHead({ num, title, subtitle }: { num: string; title: string; subtitle?: string }) {
+function SecHead({ title, subtitle }: { num?: string; title: string; subtitle?: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', paddingBottom: '16px', borderBottom: '1px solid rgba(59,130,246,0.1)', marginBottom: '20px' }}>
-      <div style={{ width: 30, height: 30, borderRadius: '8px', flexShrink: 0, background: 'linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: '#fff', boxShadow: '0 2px 6px rgba(59,130,246,0.4)' }}>{num}</div>
-      <div>
-        <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: '#1e3a8a' }}>{title}</p>
-        {subtitle && <p style={{ margin: '3px 0 0', fontSize: '11px', color: 'rgba(29,78,216,0.55)' }}>{subtitle}</p>}
-      </div>
+    <div style={{ paddingBottom: '16px', borderBottom: '1px solid var(--border-subtle)', marginBottom: '20px' }}>
+      <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>{title}</p>
+      {subtitle && <p style={{ margin: '3px 0 0', fontSize: '11px', color: 'var(--text-muted)' }}>{subtitle}</p>}
     </div>
   );
 }
@@ -501,7 +498,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
 
   if (isLoading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px', gap: '12px' }}>
-      <div style={{ width: 20, height: 20, border: '2px solid rgba(59,130,246,0.3)', borderTopColor: '#3B82F6', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+      <div style={{ width: 20, height: 20, border: '2px solid rgba(59,130,246,0.3)', borderTopColor: 'var(--grad-to)', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
       <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Loading application…</span>
     </div>
   );
@@ -509,16 +506,16 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
   const subTypeLabel = form.subType === 'NEW_RECOGNITION' ? 'New Recognition' : form.subType === 'RENEWAL' ? 'Renewal' : 'Modification / Extension of Scope';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, backgroundColor: '#EFF6FF', borderRadius: '12px', overflow: 'clip' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, backgroundColor: '#f8fafc', borderRadius: '12px', overflow: 'clip' }}>
       {/* Hidden file input for document upload */}
       <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display: 'none' }} onChange={handleFileSelected} />
 
       {/* ── Sticky top bar ── */}
       <div style={{
         background: 'linear-gradient(135deg, #fff 0%, #f0f9ff 100%)',
-        borderBottom: '1px solid rgba(59,130,246,0.12)',
+        borderBottom: '1px solid rgba(0,0,0,0.05)',
         padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        boxShadow: '0 2px 8px rgba(59,130,246,0.06)',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '12px', padding: 0 }}>
@@ -527,7 +524,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
           </button>
           <span style={{ color: 'var(--border-subtle)' }}>|</span>
           <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>{subTypeLabel}</span>
-          <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', backgroundColor: 'rgba(59,130,246,0.12)', color: '#3B82F6' }}>{appNo}</span>
+          <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', backgroundColor: 'rgba(0,0,0,0.05)', color: 'var(--grad-to)' }}>{appNo}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <span style={{ fontSize: '11px', color: saveError ? '#EF4444' : 'var(--text-muted)' }}>
@@ -536,8 +533,8 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
           <button onClick={() => doSave(true)} disabled={isSaving || (!isDirty && !saveError)} style={{
             display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 16px', borderRadius: '7px',
             backgroundColor: isDirty ? 'rgba(59,130,246,0.15)' : 'transparent',
-            border: `1px solid ${isDirty ? '#3B82F6' : 'var(--border-subtle)'}`,
-            color: isDirty ? '#3B82F6' : 'var(--text-muted)', fontSize: '12px', fontWeight: 600,
+            border: `1px solid ${isDirty ? 'var(--grad-to)' : 'var(--border-subtle)'}`,
+            color: isDirty ? 'var(--grad-to)' : 'var(--text-muted)', fontSize: '12px', fontWeight: 600,
             cursor: isSaving ? 'wait' : 'pointer', opacity: (!isDirty && !saveError) ? 0.5 : 1,
           }}>
             <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
@@ -547,7 +544,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
       </div>
 
       {/* ── Step indicator — 2 × 5 grid ── */}
-      <div style={{ background: 'linear-gradient(135deg, #f0f9ff 0%, #dbeafe 100%)', borderBottom: '1px solid rgba(59,130,246,0.12)', padding: '12px 20px 14px' }}>
+      <div style={{ background: '#f8fafc', borderBottom: '1px solid rgba(0,0,0,0.05)', padding: '12px 20px 14px' }}>
         {/* Header row */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -557,21 +554,21 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
                 <div key={i} style={{
                   height: 4, borderRadius: 2,
                   width: i === step ? 20 : 8,
-                  backgroundColor: i < step ? '#10B981' : i === step ? '#3B82F6' : 'var(--border-subtle)',
+                  backgroundColor: i < step ? '#10B981' : i === step ? 'var(--grad-to)' : 'var(--border-subtle)',
                   transition: 'all 0.25s ease',
                 }} />
               ))}
             </div>
           </div>
-          <span style={{ fontSize: '11px', fontWeight: 600, color: '#3B82F6' }}>
+          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--grad-to)' }}>
             {step + 1} / {STEPS.length} &nbsp;·&nbsp; <span style={{ fontWeight: 700 }}>{STEPS[step].label}</span>
           </span>
         </div>
         {/* Step grid on tinted tray */}
         <div style={{
           display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '5px',
-          backgroundColor: 'rgba(59,130,246,0.06)', borderRadius: '10px', padding: '5px',
-          border: '1px solid rgba(59,130,246,0.1)',
+          backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: '10px', padding: '5px',
+          border: '1px solid rgba(0,0,0,0.04)',
         }}>
           {STEPS.map((s, i) => {
             const isActive = i === step;
@@ -583,9 +580,9 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
                 style={{
                   display: 'flex', alignItems: 'center', gap: '8px',
                   padding: '8px 11px', borderRadius: '7px', cursor: 'pointer', border: 'none',
-                  backgroundColor: isActive ? '#3B82F6' : isDone ? '#F0FDF4' : 'var(--bg-card)',
+                  background: isActive ? 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)' : isDone ? '#F0FDF4' : 'var(--bg-card)',
                   boxShadow: isActive
-                    ? '0 3px 10px rgba(59,130,246,0.4)'
+                    ? '0 3px 10px rgba(0,0,0,0.2)'
                     : isDone ? 'none'
                     : '0 1px 3px rgba(0,0,0,0.07), inset 0 0 0 1px var(--border-subtle)',
                   transition: 'all 0.15s',
@@ -599,9 +596,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
                   backgroundColor: isActive ? 'rgba(255,255,255,0.22)' : isDone ? '#10B981' : '#f1f5f9',
                   color: isActive ? '#fff' : isDone ? '#fff' : '#64748b',
                 }}>
-                  {isDone
-                    ? <svg width="10" height="10" fill="none" stroke="#fff" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                    : i + 1}
+                  {isDone && <svg width="10" height="10" fill="none" stroke="#fff" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
                 </div>
                 <span style={{
                   fontSize: '11px',
@@ -616,7 +611,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
       </div>
 
       {/* ── Step content ── */}
-      <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', backgroundColor: '#EFF6FF' }}>
+      <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', backgroundColor: '#f8fafc' }}>
 
         {/* ═══ STEP 1: General Information ═══ */}
         {step === 0 && <div style={STEP_CARD}>
@@ -645,11 +640,11 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
                 {form.submittingOfficeId && (() => {
                   const office = eiaOffices.find(o => o.id === form.submittingOfficeId);
                   return office ? (
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 14px', borderRadius: '8px', backgroundColor: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)' }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 14px', borderRadius: '8px', backgroundColor: 'rgba(0,0,0,0.03)', border: '1px solid rgba(59,130,246,0.2)' }}>
                       <svg width="14" height="14" fill="none" stroke="#3B82F6" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                       </svg>
-                      <span style={{ fontSize: '12px', fontWeight: 600, color: '#3B82F6' }}>{office.name}</span>
+                      <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--grad-to)' }}>{office.name}</span>
                       {office.city && <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{office.city}{office.state ? `, ${office.state}` : ''}</span>}
                     </div>
                   ) : null;
@@ -739,14 +734,14 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
                     <Field label="PIN"><TI value={b.pincode} onChange={v => updBranch(idx, 'pincode', v)} placeholder="PIN" /></Field>
                   </Grid>
                   <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '12px' }}>
-                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#3B82F6', display: 'block', marginBottom: '10px' }}>2.1 — Name of Head of Branch</span>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--grad-to)', display: 'block', marginBottom: '10px' }}>2.1 — Name of Head of Branch</span>
                     <Grid>
                       <Field label="Name"><TI value={b.headOfBranchName} onChange={v => updBranch(idx, 'headOfBranchName', v)} placeholder="Full name" /></Field>
                       <Field label="Designation"><TI value={b.headOfBranchDesignation} onChange={v => updBranch(idx, 'headOfBranchDesignation', v)} placeholder="Designation" /></Field>
                     </Grid>
                   </div>
                   <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '12px' }}>
-                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#3B82F6', display: 'block', marginBottom: '10px' }}>2.2 — Branch Phone No. / Fax / E-mail</span>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--grad-to)', display: 'block', marginBottom: '10px' }}>2.2 — Branch Phone No. / Fax / E-mail</span>
                     <Grid cols={3}>
                       <Field label="Phone"><TI value={b.phone} onChange={v => updBranch(idx, 'phone', v)} placeholder="+91 XXXXX XXXXX" /></Field>
                       <Field label="Fax"><TI value={b.fax} onChange={v => updBranch(idx, 'fax', v)} placeholder="Fax" /></Field>
@@ -757,8 +752,8 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
               ))}
               <button type="button" onClick={() => set('branches', [...(form.branches ?? []), { ...EMPTY_BRANCH }])} style={{
                 display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 16px', borderRadius: '7px',
-                border: '1px dashed #3B82F6', backgroundColor: 'rgba(59,130,246,0.05)',
-                color: '#3B82F6', fontSize: '12px', fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start',
+                border: '1px dashed #3B82F6', backgroundColor: 'rgba(0,0,0,0.03)',
+                color: 'var(--grad-to)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start',
               }}>
                 <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                 Add Branch Office
@@ -818,13 +813,13 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
                     const scope = form.mineralScopes.find(s => s.mineralOreId === mineral.id);
                     const selected = !!scope;
                     return (
-                      <div key={mineral.id} style={{ borderRadius: '8px', border: `1px solid ${selected ? '#3B82F6' : 'var(--border-subtle)'}`, backgroundColor: selected ? 'rgba(59,130,246,0.05)' : 'transparent', overflow: 'hidden', transition: 'all 0.15s' }}>
+                      <div key={mineral.id} style={{ borderRadius: '8px', border: `1px solid ${selected ? 'var(--grad-to)' : 'var(--border-subtle)'}`, backgroundColor: selected ? 'rgba(0,0,0,0.03)' : 'transparent', overflow: 'hidden', transition: 'all 0.15s' }}>
                         <button type="button" onClick={() => toggleMineral(mineral.id)} style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
-                          <div style={{ width: 16, height: 16, borderRadius: '4px', flexShrink: 0, border: `2px solid ${selected ? '#3B82F6' : 'var(--border-subtle)'}`, backgroundColor: selected ? '#3B82F6' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <div style={{ width: 16, height: 16, borderRadius: '4px', flexShrink: 0, border: `2px solid ${selected ? 'var(--grad-to)' : 'var(--border-subtle)'}`, backgroundColor: selected ? 'var(--grad-to)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             {selected && <svg width="10" height="10" fill="none" stroke="#fff" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
                           </div>
                           <div style={{ flex: 1 }}>
-                            <span style={{ fontSize: '12px', fontWeight: 600, color: selected ? '#3B82F6' : 'var(--text-primary)' }}>{mineral.name}</span>
+                            <span style={{ fontSize: '12px', fontWeight: 600, color: selected ? 'var(--grad-to)' : 'var(--text-primary)' }}>{mineral.name}</span>
                             {mineral.code && <span style={{ marginLeft: '8px', fontSize: '10px', color: 'var(--text-muted)', backgroundColor: 'var(--border-subtle)', padding: '1px 6px', borderRadius: '4px' }}>Code: {mineral.code}</span>}
                             {mineral.hsCode && <span style={{ marginLeft: '6px', fontSize: '10px', color: 'var(--text-muted)', backgroundColor: 'var(--border-subtle)', padding: '1px 6px', borderRadius: '4px' }}>HS: {mineral.hsCode}</span>}
                           </div>
@@ -882,7 +877,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {/* 10.1.1 — Senior Management */}
               <div>
-                <p style={{ margin: '0 0 10px', fontSize: '11px', fontWeight: 700, color: '#3B82F6' }}>10.1.1 — Senior Management - Inspection Division</p>
+                <p style={{ margin: '0 0 10px', fontSize: '11px', fontWeight: 700, color: 'var(--grad-to)' }}>10.1.1 — Senior Management - Inspection Division</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {form.manpower.filter(m => m.isSeniorMgmt).length === 0 && (
                     <div style={{ padding: '14px', borderRadius: '8px', border: '1px dashed var(--border-subtle)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>No senior management added.</div>
@@ -902,14 +897,14 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
                       </div>
                     </div>
                   ))}
-                  <button type="button" onClick={() => set('manpower', [...form.manpower, { ...EMPTY_MANPOWER, isSeniorMgmt: true }])} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '7px', border: '1px dashed #3B82F6', backgroundColor: 'rgba(59,130,246,0.05)', color: '#3B82F6', fontSize: '12px', fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
+                  <button type="button" onClick={() => set('manpower', [...form.manpower, { ...EMPTY_MANPOWER, isSeniorMgmt: true }])} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '7px', border: '1px dashed #3B82F6', backgroundColor: 'rgba(0,0,0,0.03)', color: 'var(--grad-to)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
                     <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>Add Senior Management
                   </button>
                 </div>
               </div>
               {/* 10.1.2 — Technical Inspecting Staff */}
               <div>
-                <p style={{ margin: '0 0 10px', fontSize: '11px', fontWeight: 700, color: '#3B82F6' }}>10.1.2 — Inspecting Staff</p>
+                <p style={{ margin: '0 0 10px', fontSize: '11px', fontWeight: 700, color: 'var(--grad-to)' }}>10.1.2 — Inspecting Staff</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {form.manpower.filter(m => !m.isSeniorMgmt).length === 0 && (
                     <div style={{ padding: '14px', borderRadius: '8px', border: '1px dashed var(--border-subtle)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>No inspecting staff added.</div>
@@ -929,7 +924,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
                       </div>
                     </div>
                   ))}
-                  <button type="button" onClick={() => set('manpower', [...form.manpower, { ...EMPTY_MANPOWER, isSeniorMgmt: false }])} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '7px', border: '1px dashed #3B82F6', backgroundColor: 'rgba(59,130,246,0.05)', color: '#3B82F6', fontSize: '12px', fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
+                  <button type="button" onClick={() => set('manpower', [...form.manpower, { ...EMPTY_MANPOWER, isSeniorMgmt: false }])} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '7px', border: '1px dashed #3B82F6', backgroundColor: 'rgba(0,0,0,0.03)', color: 'var(--grad-to)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
                     <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>Add Inspecting Staff
                   </button>
                 </div>
@@ -946,20 +941,20 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
                     {QMS_OPTIONS.map(opt => (
                       <button key={opt.value} type="button" onClick={() => set('qmsType', opt.value)} style={{
                         padding: '8px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
-                        border: `1px solid ${form.qmsType === opt.value ? '#3B82F6' : 'var(--border-subtle)'}`,
-                        backgroundColor: form.qmsType === opt.value ? 'rgba(59,130,246,0.12)' : 'transparent',
-                        color: form.qmsType === opt.value ? '#3B82F6' : 'var(--text-secondary)',
+                        border: `1px solid ${form.qmsType === opt.value ? 'var(--grad-to)' : 'var(--border-subtle)'}`,
+                        backgroundColor: form.qmsType === opt.value ? 'rgba(0,0,0,0.05)' : 'transparent',
+                        color: form.qmsType === opt.value ? 'var(--grad-to)' : 'var(--text-secondary)',
                       }}>{opt.label}</button>
                     ))}
                   </div>
                 </Field>
               )}
               <div>
-                <p style={{ margin: '0 0 10px', fontSize: '11px', fontWeight: 700, color: '#3B82F6' }}>11.1 — Accreditation Status (ISO/IEC 17020)</p>
+                <p style={{ margin: '0 0 10px', fontSize: '11px', fontWeight: 700, color: 'var(--grad-to)' }}>11.1 — Accreditation Status (ISO/IEC 17020)</p>
                 <Field label="Is the agency accredited (ISO/IEC 17020)?"><Toggle value={form.isAccredited} onChange={v => set('isAccredited', v)} /></Field>
                 {form.isAccredited && (
                   <div style={{ marginTop: '12px' }}>
-                    <p style={{ margin: '0 0 10px', fontSize: '11px', fontWeight: 700, color: '#3B82F6' }}>11.2 — Scope of Accreditation</p>
+                    <p style={{ margin: '0 0 10px', fontSize: '11px', fontWeight: 700, color: 'var(--grad-to)' }}>11.2 — Scope of Accreditation</p>
                     <Grid>
                       <Field label="Accreditation Body"><TI value={form.accreditationBody} onChange={v => set('accreditationBody', v)} placeholder="e.g. NABL" /></Field>
                       <Field label="Scope of Accreditation"><TI value={form.accreditationScope} onChange={v => set('accreditationScope', v)} placeholder="Commodity scope" /></Field>
@@ -968,7 +963,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
                 )}
               </div>
               <div>
-                <p style={{ margin: '0 0 10px', fontSize: '11px', fontWeight: 700, color: '#3B82F6' }}>11.3 — Consultancy / Advisory Details</p>
+                <p style={{ margin: '0 0 10px', fontSize: '11px', fontWeight: 700, color: 'var(--grad-to)' }}>11.3 — Consultancy / Advisory Details</p>
                 <Field label="Consultancy / Advisory involvement" hint="Leave blank if none">
                   <TA value={form.consultancyDetails} onChange={v => set('consultancyDetails', v)} placeholder="Describe any consultancy involvement" rows={2} />
                 </Field>
@@ -979,11 +974,11 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
             <SecHead num="12" title="Previous Experience in Inspection" />
             <Grid>
               <div>
-                <p style={{ margin: '0 0 8px', fontSize: '11px', fontWeight: 700, color: '#3B82F6' }}>12.1 — Domestic Inspection</p>
+                <p style={{ margin: '0 0 8px', fontSize: '11px', fontWeight: 700, color: 'var(--grad-to)' }}>12.1 — Domestic Inspection</p>
                 <Field label="Has the agency carried out domestic inspections?"><Toggle value={form.hasDomesticExperience} onChange={v => set('hasDomesticExperience', v)} /></Field>
               </div>
               <div>
-                <p style={{ margin: '0 0 8px', fontSize: '11px', fontWeight: 700, color: '#3B82F6' }}>12.2 — Export Inspection</p>
+                <p style={{ margin: '0 0 8px', fontSize: '11px', fontWeight: 700, color: 'var(--grad-to)' }}>12.2 — Export Inspection</p>
                 <Field label="Has the agency carried out export inspections?"><Toggle value={form.hasExportExperience} onChange={v => set('hasExportExperience', v)} /></Field>
               </div>
             </Grid>
@@ -1006,9 +1001,9 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
                     {LAB_ACCREDITATION_OPTIONS.map(opt => (
                       <button key={opt.value} type="button" onClick={() => set('labAccreditationType', opt.value)} style={{
                         padding: '7px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
-                        border: `1px solid ${form.labAccreditationType === opt.value ? '#3B82F6' : 'var(--border-subtle)'}`,
-                        backgroundColor: form.labAccreditationType === opt.value ? 'rgba(59,130,246,0.12)' : 'transparent',
-                        color: form.labAccreditationType === opt.value ? '#3B82F6' : 'var(--text-secondary)',
+                        border: `1px solid ${form.labAccreditationType === opt.value ? 'var(--grad-to)' : 'var(--border-subtle)'}`,
+                        backgroundColor: form.labAccreditationType === opt.value ? 'rgba(0,0,0,0.05)' : 'transparent',
+                        color: form.labAccreditationType === opt.value ? 'var(--grad-to)' : 'var(--text-secondary)',
                       }}>{opt.label}</button>
                     ))}
                   </div>
@@ -1041,7 +1036,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
           <div>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '12px' }}>
               <SecHead num="9.3" title="List of Products Tested in Laboratory" subtitle="Products / product groups tested — Annexure-2 format" />
-              <button type="button" onClick={() => set('labProducts', [...form.labProducts, { ...EMPTY_LAB_PRODUCT }])} style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 13px', borderRadius: '7px', border: '1px dashed #3B82F6', backgroundColor: 'rgba(59,130,246,0.05)', color: '#3B82F6', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+              <button type="button" onClick={() => set('labProducts', [...form.labProducts, { ...EMPTY_LAB_PRODUCT }])} style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 13px', borderRadius: '7px', border: '1px dashed #3B82F6', backgroundColor: 'rgba(0,0,0,0.03)', color: 'var(--grad-to)', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
                 <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>Add Product
               </button>
             </div>
@@ -1049,7 +1044,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
               ? <div style={{ padding: '20px', borderRadius: '8px', border: '1px dashed var(--border-subtle)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>No products added yet.</div>
               : (
                 <div style={{ border: '1px solid var(--border-subtle)', borderRadius: '8px', overflow: 'hidden' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 2fr 36px', backgroundColor: 'rgba(59,130,246,0.08)', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 2fr 36px', backgroundColor: 'rgba(0,0,0,0.03)', borderBottom: '1px solid var(--border-subtle)' }}>
                     {['Product / Commodity', 'Test Parameters', 'Test Methods / Standards', ''].map((h, i) => (
                       <div key={i} style={{ padding: '8px 10px', fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>{h}</div>
                     ))}
@@ -1076,7 +1071,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
           <div>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '12px' }}>
               <SecHead num="9.4" title="List of Equipment Available in Laboratory" subtitle="Equipment, model, date of purchase, calibration status — Annexure-3 format" />
-              <button type="button" onClick={() => set('labEquipment', [...form.labEquipment, { ...EMPTY_EQUIPMENT }])} style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 13px', borderRadius: '7px', border: '1px dashed #3B82F6', backgroundColor: 'rgba(59,130,246,0.05)', color: '#3B82F6', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+              <button type="button" onClick={() => set('labEquipment', [...form.labEquipment, { ...EMPTY_EQUIPMENT }])} style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 13px', borderRadius: '7px', border: '1px dashed #3B82F6', backgroundColor: 'rgba(0,0,0,0.03)', color: 'var(--grad-to)', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
                 <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>Add Equipment
               </button>
             </div>
@@ -1084,7 +1079,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
               ? <div style={{ padding: '20px', borderRadius: '8px', border: '1px dashed var(--border-subtle)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>No equipment added yet.</div>
               : (
                 <div style={{ border: '1px solid var(--border-subtle)', borderRadius: '8px', overflow: 'hidden' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1.4fr 36px', backgroundColor: 'rgba(59,130,246,0.08)', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1.4fr 36px', backgroundColor: 'rgba(0,0,0,0.03)', borderBottom: '1px solid var(--border-subtle)' }}>
                     {['Equipment Name', 'Make', 'Model', 'Serial No.', 'Range / Capacity', 'Calib. Due Date', ''].map((h, i) => (
                       <div key={i} style={{ padding: '8px 10px', fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>{h}</div>
                     ))}
@@ -1134,7 +1129,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
                   </div>
                 </div>
               ))}
-              <button type="button" onClick={() => set('manpower', [...form.manpower, { ...EMPTY_MANPOWER, isSeniorMgmt: true }])} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '7px', border: '1px dashed #3B82F6', backgroundColor: 'rgba(59,130,246,0.05)', color: '#3B82F6', fontSize: '12px', fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
+              <button type="button" onClick={() => set('manpower', [...form.manpower, { ...EMPTY_MANPOWER, isSeniorMgmt: true }])} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '7px', border: '1px dashed #3B82F6', backgroundColor: 'rgba(0,0,0,0.03)', color: 'var(--grad-to)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
                 <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>Add Senior Management
               </button>
             </div>
@@ -1162,7 +1157,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
                   </div>
                 </div>
               ))}
-              <button type="button" onClick={() => set('manpower', [...form.manpower, { ...EMPTY_MANPOWER, isSeniorMgmt: false }])} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '7px', border: '1px dashed #3B82F6', backgroundColor: 'rgba(59,130,246,0.05)', color: '#3B82F6', fontSize: '12px', fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
+              <button type="button" onClick={() => set('manpower', [...form.manpower, { ...EMPTY_MANPOWER, isSeniorMgmt: false }])} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '7px', border: '1px dashed #3B82F6', backgroundColor: 'rgba(0,0,0,0.03)', color: 'var(--grad-to)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
                 <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>Add Inspecting Staff
               </button>
             </div>
@@ -1189,7 +1184,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
                     </div>
                   </div>
                 ))}
-                <button type="button" onClick={() => set('labManpower', [...form.labManpower, { ...EMPTY_LAB_MP, isSeniorMgmt: true }])} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '7px', border: '1px dashed #3B82F6', backgroundColor: 'rgba(59,130,246,0.05)', color: '#3B82F6', fontSize: '12px', fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
+                <button type="button" onClick={() => set('labManpower', [...form.labManpower, { ...EMPTY_LAB_MP, isSeniorMgmt: true }])} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '7px', border: '1px dashed #3B82F6', backgroundColor: 'rgba(0,0,0,0.03)', color: 'var(--grad-to)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
                   <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>Add Senior Management
                 </button>
               </div>
@@ -1216,7 +1211,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
                   </div>
                 </div>
               ))}
-              <button type="button" onClick={() => set('labManpower', [...form.labManpower, { ...EMPTY_LAB_MP, isSeniorMgmt: false }])} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '7px', border: '1px dashed #3B82F6', backgroundColor: 'rgba(59,130,246,0.05)', color: '#3B82F6', fontSize: '12px', fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
+              <button type="button" onClick={() => set('labManpower', [...form.labManpower, { ...EMPTY_LAB_MP, isSeniorMgmt: false }])} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '7px', border: '1px dashed #3B82F6', backgroundColor: 'rgba(0,0,0,0.03)', color: 'var(--grad-to)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
                 <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>Add Testing Staff
               </button>
             </div>
@@ -1270,14 +1265,14 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
                   return (
                     <button key={port.id} type="button" onClick={() => togglePort(port.id)} style={{
                       display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', borderRadius: '8px', cursor: 'pointer', textAlign: 'left',
-                      border: `1px solid ${selected ? '#3B82F6' : 'var(--border-subtle)'}`,
-                      backgroundColor: selected ? 'rgba(59,130,246,0.08)' : 'transparent', transition: 'all 0.15s',
+                      border: `1px solid ${selected ? 'var(--grad-to)' : 'var(--border-subtle)'}`,
+                      backgroundColor: selected ? 'rgba(0,0,0,0.03)' : 'transparent', transition: 'all 0.15s',
                     }}>
-                      <div style={{ width: 16, height: 16, borderRadius: '4px', flexShrink: 0, border: `2px solid ${selected ? '#3B82F6' : 'var(--border-subtle)'}`, backgroundColor: selected ? '#3B82F6' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ width: 16, height: 16, borderRadius: '4px', flexShrink: 0, border: `2px solid ${selected ? 'var(--grad-to)' : 'var(--border-subtle)'}`, backgroundColor: selected ? 'var(--grad-to)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {selected && <svg width="10" height="10" fill="none" stroke="#fff" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: '12px', fontWeight: 600, color: selected ? '#3B82F6' : 'var(--text-primary)' }}>{port.name}</div>
+                        <div style={{ fontSize: '12px', fontWeight: 600, color: selected ? 'var(--grad-to)' : 'var(--text-primary)' }}>{port.name}</div>
                         <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
                           {port.state ?? ''}{port.code ? ` · ${port.code}` : ''}
                           {isDefault && <span style={{ marginLeft: '6px', color: '#10B981', fontWeight: 600 }}>Primary</span>}
@@ -1313,7 +1308,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
                     borderRadius: '8px', border: `1px solid ${uploaded ? 'rgba(34,197,94,0.35)' : 'var(--border-subtle)'}`,
                     backgroundColor: uploaded ? 'rgba(34,197,94,0.04)' : 'var(--bg-card)',
                   }}>
-                    <div style={{ width: 28, height: 28, borderRadius: '7px', flexShrink: 0, backgroundColor: uploaded ? 'rgba(34,197,94,0.15)' : 'rgba(59,130,246,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: uploaded ? '#16A34A' : '#3B82F6' }}>
+                    <div style={{ width: 28, height: 28, borderRadius: '7px', flexShrink: 0, backgroundColor: uploaded ? 'rgba(34,197,94,0.15)' : 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: uploaded ? '#16A34A' : 'var(--grad-to)' }}>
                       {uploaded ? <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg> : i + 1}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -1328,7 +1323,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
                         ? <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '3px' }}>
                             <svg width="10" height="10" fill="currentColor" viewBox="0 0 20 20" style={{ color: '#16A34A', flexShrink: 0 }}><path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" /></svg>
                             <a href={`${uploadBaseUrl}/${uploaded.filePath}`} target="_blank" rel="noreferrer"
-                              style={{ fontSize: '11px', color: '#2563EB', textDecoration: 'none', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '280px' }}>
+                              style={{ fontSize: '11px', color: 'var(--grad-to)', textDecoration: 'none', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '280px' }}>
                               {uploaded.documentName}
                             </a>
                             {uploaded.fileSize && <span style={{ fontSize: '10px', color: 'var(--text-muted)', flexShrink: 0 }}>{fmtSize(uploaded.fileSize)}</span>}
@@ -1348,9 +1343,9 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
                         </button>
                       )}
                       <button type="button" onClick={() => handleUploadClick(doc.documentType)} disabled={isUploading}
-                        style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 12px', borderRadius: '6px', border: `1px ${uploaded ? 'solid' : 'dashed'} #3B82F6`, backgroundColor: uploaded ? 'rgba(59,130,246,0.08)' : 'rgba(59,130,246,0.05)', color: '#3B82F6', fontSize: '11px', fontWeight: 600, cursor: isUploading ? 'not-allowed' : 'pointer', opacity: isUploading ? 0.6 : 1 }}>
+                        style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 12px', borderRadius: '6px', border: `1px ${uploaded ? 'solid' : 'dashed'} #3B82F6`, backgroundColor: uploaded ? 'rgba(0,0,0,0.03)' : 'rgba(0,0,0,0.03)', color: 'var(--grad-to)', fontSize: '11px', fontWeight: 600, cursor: isUploading ? 'not-allowed' : 'pointer', opacity: isUploading ? 0.6 : 1 }}>
                         {isUploading
-                          ? <div style={{ width: 10, height: 10, border: '1.5px solid rgba(59,130,246,0.3)', borderTopColor: '#3B82F6', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+                          ? <div style={{ width: 10, height: 10, border: '1.5px solid rgba(59,130,246,0.3)', borderTopColor: 'var(--grad-to)', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
                           : <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
                         }
                         {uploaded ? 'Replace' : 'Upload'}
@@ -1398,14 +1393,14 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
             </div>
           </div>
           <div>
-            <div style={{ paddingBottom: '16px', borderBottom: '1px solid rgba(59,130,246,0.1)', marginBottom: '20px' }}>
+            <div style={{ paddingBottom: '16px', borderBottom: '1px solid rgba(0,0,0,0.04)', marginBottom: '20px' }}>
               <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: '#1e3a8a' }}>Declaration</p>
               <p style={{ margin: '3px 0 0', fontSize: '11px', color: 'rgba(29,78,216,0.55)' }}>Read all clauses carefully. Fields below must be filled by the Authorized Signatory.</p>
             </div>
             {/* Official declaration document */}
             <div style={{ borderRadius: '10px', border: '1.5px solid rgba(59,130,246,0.25)', backgroundColor: '#fff', overflow: 'hidden' }}>
               {/* Document header */}
-              <div style={{ textAlign: 'center', padding: '18px 24px 12px', borderBottom: '1px solid rgba(59,130,246,0.12)', backgroundColor: 'rgba(59,130,246,0.03)' }}>
+              <div style={{ textAlign: 'center', padding: '18px 24px 12px', borderBottom: '1px solid rgba(0,0,0,0.05)', backgroundColor: 'rgba(59,130,246,0.03)' }}>
                 <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500 }}>Annex 7</p>
                 <p style={{ margin: '4px 0 0', fontSize: '15px', fontWeight: 800, letterSpacing: '0.08em', color: 'var(--text-primary)', textTransform: 'uppercase' }}>DECLARATION</p>
               </div>
@@ -1438,7 +1433,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
                 </ol>
 
                 {/* Signature block */}
-                <div style={{ borderTop: '1px solid rgba(59,130,246,0.12)', marginTop: '18px', paddingTop: '18px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px 32px' }}>
+                <div style={{ borderTop: '1px solid rgba(0,0,0,0.05)', marginTop: '18px', paddingTop: '18px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px 32px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     <div>
                       <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Name of Authorized Signatory <span style={{ color: '#EF4444' }}>*</span></label>
@@ -1475,7 +1470,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
               </div>
 
               {/* Acceptance checkbox */}
-              <div style={{ padding: '14px 24px 18px', borderTop: '1px solid rgba(59,130,246,0.12)', backgroundColor: declarationAccepted ? 'rgba(34,197,94,0.05)' : 'rgba(59,130,246,0.03)' }}>
+              <div style={{ padding: '14px 24px 18px', borderTop: '1px solid rgba(0,0,0,0.05)', backgroundColor: declarationAccepted ? 'rgba(34,197,94,0.05)' : 'rgba(59,130,246,0.03)' }}>
                 <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
                   <input type="checkbox" checked={declarationAccepted} onChange={e => setDeclarationAccepted(e.target.checked)}
                     style={{ accentColor: '#16A34A', width: 16, height: 16, marginTop: '1px', flexShrink: 0 }} />
@@ -1562,7 +1557,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
                 </p>
               </div>
               {dueNow.map((row, i) => (
-                <div key={row.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: i < dueNow.length - 1 ? '1px solid rgba(59,130,246,0.08)' : 'none', backgroundColor: '#fff' }}>
+                <div key={row.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: i < dueNow.length - 1 ? '1px solid rgba(0,0,0,0.03)' : 'none', backgroundColor: '#fff' }}>
                   <div>
                     <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{row.label}</p>
                     <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--text-muted)' }}>{row.note}</p>
@@ -1596,7 +1591,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
         })()}
 
         {/* ── Step navigation ── */}
-        <div style={{ position: 'sticky', bottom: 0, zIndex: 20, backgroundColor: '#fff', borderTop: '1px solid rgba(59,130,246,0.12)', padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 -4px 16px rgba(59,130,246,0.08)' }}>
+        <div style={{ position: 'sticky', bottom: 0, zIndex: 20, backgroundColor: '#fff', borderTop: '1px solid rgba(0,0,0,0.05)', padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 -4px 16px rgba(0,0,0,0.03)' }}>
           <button type="button" onClick={() => step > 0 ? setStep(s => s - 1) : onBack()} style={{
             display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 18px', borderRadius: '7px',
             border: '1px solid var(--border-subtle)', background: 'none', color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', margin: 0,
@@ -1607,13 +1602,13 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
           <div style={{ display: 'flex', gap: '10px' }}>
             <button type="button" onClick={() => doSave(true)} disabled={isSaving} style={{
               padding: '9px 20px', borderRadius: '7px', border: '1px solid #3B82F6',
-              backgroundColor: 'rgba(59,130,246,0.1)', color: '#3B82F6', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+              backgroundColor: 'rgba(0,0,0,0.04)', color: 'var(--grad-to)', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
             }}>{isSaving ? 'Saving…' : 'Save Draft'}</button>
             {step < STEPS.length - 1
               ? (
                 <button type="button" onClick={async () => { await doSave(false); setStep(s => s + 1); }} disabled={isSaving} style={{
                   display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 20px', borderRadius: '7px',
-                  backgroundColor: '#3B82F6', border: 'none', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+                  background: 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)', border: 'none', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
                 }}>
                   Save &amp; Next
                   <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>

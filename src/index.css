@@ -25,6 +25,10 @@
   --bg-modal:           #ffffff;
   --bg-input:           #f1f5f9;
 
+  /* Accent gradient */
+  --grad-from: #1B2A6B;
+  --grad-to:   #2563EB;
+
   /* Accent */
   --accent:             #F97316;
   --accent-hover:       #EA6C0A;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   adminApi,
@@ -718,7 +718,7 @@ function OfficerList(p: OfficerListProps) {
             />
           </div>
           <button onClick={p.onCreate} style={{
-            background: 'linear-gradient(135deg, #1B2A6B, #2563EB)', color: '#fff', border: 'none',
+            background: 'linear-gradient(135deg, var(--grad-from), var(--grad-to))', color: '#fff', border: 'none',
             borderRadius: 8, padding: '9px 20px', fontWeight: 600, fontSize: 13, cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
             boxShadow: '0 2px 8px rgba(27,42,107,0.30)',
@@ -747,7 +747,7 @@ function OfficerList(p: OfficerListProps) {
               <col style={{ width: 44 }} />
             </colgroup>
             <thead>
-              <tr style={{ background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)' }}>
+              <tr style={{ background: 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)' }}>
                 {[
                   { label: 'Officer Name', sortable: true },
                   { label: 'Qualification', sortable: true },

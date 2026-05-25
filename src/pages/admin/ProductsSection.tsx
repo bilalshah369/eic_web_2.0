@@ -120,7 +120,7 @@ function ProductForm({
               Cancel
             </button>
             <button type="submit" disabled={saving}
-              style={{ padding: '8px 20px', borderRadius: 7, border: 'none', background: saving ? '#94A3B8' : 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', color: '#fff', cursor: saving ? 'default' : 'pointer', fontSize: 13, fontWeight: 600, boxShadow: saving ? 'none' : '0 4px 14px rgba(27,42,107,0.25)' }}>
+              style={{ padding: '8px 20px', borderRadius: 7, border: 'none', background: saving ? '#94A3B8' : 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)', color: '#fff', cursor: saving ? 'default' : 'pointer', fontSize: 13, fontWeight: 600, boxShadow: saving ? 'none' : '0 4px 14px rgba(27,42,107,0.25)' }}>
               {saving ? 'Saving…' : initial ? 'Save Changes' : 'Add Product'}
             </button>
           </div>

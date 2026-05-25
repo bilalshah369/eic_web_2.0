@@ -1,9 +1,10 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../services/api';
 import Header, { UserMenu } from '../components/Header';
+import PaletteButton from '../components/PaletteButton';
 
 /* ─── types ──────────────────────────────────────────────────────────────── */
 interface OfficeRef { id: string; name: string; code: string; type: string; }
@@ -33,7 +34,7 @@ function SidebarBtn({ item, active, collapsed, onClick }: { item: typeof NAV[num
       display: 'flex', alignItems: 'center', gap: 10, width: '100%',
       padding: collapsed ? '11px 0' : '10px 14px',
       justifyContent: collapsed ? 'center' : 'flex-start',
-      background: active ? 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)' : 'none',
+      background: active ? 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)' : 'none',
       border: 'none', borderRadius: '10px',
       cursor: 'pointer', color: active ? '#fff' : 'rgba(27,42,107,0.70)',
       fontSize: 13, fontWeight: active ? 600 : 500, textAlign: 'left',
@@ -91,7 +92,7 @@ function Overview({ officer, loading }: { officer: OfficerData | null | undefine
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
       {/* ── Hero banner — compact, matches dashboard strip ── */}
-      <div style={{ position: 'relative', background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', borderRadius: 12, padding: '14px 20px', color: '#fff', overflow: 'hidden' }}>
+      <div style={{ position: 'relative', background: 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)', borderRadius: 12, padding: '14px 20px', color: '#fff', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.05)', pointerEvents: 'none' }} />
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, position: 'relative' }}>
@@ -290,7 +291,7 @@ function ProfileSection({ officer }: { officer: OfficerData | null | undefined }
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
       {/* Identity card */}
-      <div style={{ background: 'linear-gradient(135deg, #1B2A6B 0%, #243580 100%)', borderRadius: 16, padding: '24px 28px', display: 'flex', alignItems: 'center', gap: 20, boxShadow: '0 4px 20px rgba(27,42,107,0.25)', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)', borderRadius: 16, padding: '24px 28px', display: 'flex', alignItems: 'center', gap: 20, boxShadow: '0 4px 20px rgba(27,42,107,0.25)', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: -30, right: -30, width: 140, height: 140, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.04)', pointerEvents: 'none' }} />
         <div style={{ width: 72, height: 72, borderRadius: 18, background: 'rgba(255,255,255,0.15)', border: '2px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <span style={{ fontSize: 26, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>{initials}</span>
@@ -385,7 +386,7 @@ export default function OfficerPortal() {
         <aside style={{ width: collapsed ? 64 : 256, backgroundColor: '#ffffff', display: 'flex', flexDirection: 'column', flexShrink: 0, transition: 'width 0.22s cubic-bezier(.4,0,.2,1)', position: 'relative', height: '100%', overflow: 'visible', boxShadow: '4px 0 24px rgba(27,42,107,0.10)', zIndex: 10 }}>
 
           {/* Collapse toggle */}
-          <button onClick={() => setCollapsed(c => !c)} style={{ position: 'absolute', top: 20, right: -14, width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg, #1B2A6B, #2563EB)', border: '2px solid #fff', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, fontSize: 11, fontWeight: 700, boxShadow: '0 2px 10px rgba(27,42,107,0.30)', transition: 'transform 0.15s' }}
+          <button onClick={() => setCollapsed(c => !c)} style={{ position: 'absolute', top: 20, right: -14, width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg, var(--grad-from), var(--grad-to))', border: '2px solid #fff', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, fontSize: 11, fontWeight: 700, boxShadow: '0 2px 10px rgba(27,42,107,0.30)', transition: 'transform 0.15s' }}
             onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.12)')}
             onMouseLeave={e => (e.currentTarget.style.transform = 'none')}>
             {collapsed ? '›' : '‹'}
@@ -393,7 +394,7 @@ export default function OfficerPortal() {
 
           {/* Brand */}
           <div style={{ padding: collapsed ? '13px 0' : '11px 14px 12px', borderBottom: '1px solid var(--nav-border)', display: 'flex', alignItems: 'center', gap: 10, overflow: 'hidden', justifyContent: collapsed ? 'center' : 'flex-start', flexShrink: 0 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 9, background: 'linear-gradient(135deg, #2563EB 0%, #1B2A6B 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 8px rgba(37,99,235,0.35)' }}>
+            <div style={{ width: 36, height: 36, borderRadius: 9, background: 'linear-gradient(135deg, var(--grad-to) 0%, var(--grad-from) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 8px rgba(37,99,235,0.35)' }}>
               <span style={{ color: '#fff', fontSize: 13, fontWeight: 800, letterSpacing: '0.04em', fontFamily: 'system-ui, sans-serif' }}>EIC</span>
             </div>
             {!collapsed && (
@@ -451,6 +452,7 @@ export default function OfficerPortal() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
               </button>
+              <PaletteButton variant="light" />
               {user && <UserMenu user={user} onLogout={handleLogout} variant="light" />}
             </div>
           </div>
@@ -462,7 +464,7 @@ export default function OfficerPortal() {
       </div>
 
       {/* ── Sticky footer bar ─────────────────────────── */}
-      <div style={{ flexShrink: 0, padding: '7px 24px', background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+      <div style={{ flexShrink: 0, padding: '7px 24px', background: 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
         <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11 }}>© 2026 Export Inspection Council. All Rights Reserved.</span>
         <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11 }}>Last Updated : 28 Jan 2026 &nbsp;|&nbsp; Total Visitors : <span style={{ color: '#ffffff', fontWeight: 600 }}>2,195,193</span></span>
       </div>

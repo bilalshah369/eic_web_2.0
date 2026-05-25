@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminApi, Office, CreateOfficeDto } from '../../services/admin.service';
 
@@ -108,7 +108,7 @@ function FormLabel({ text, required }: { text: string; required?: boolean }) {
 
 function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
-    <div style={{ padding: '10px 20px', background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <div style={{ padding: '10px 20px', background: 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)', display: 'flex', alignItems: 'center', gap: '8px' }}>
       <span style={{ color: 'rgba(255,255,255,0.85)' }}>{icon}</span>
       <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.09em', color: '#ffffff', textTransform: 'uppercase' as const }}>{title}</span>
     </div>
@@ -391,7 +391,7 @@ function OfficeForm({
 
         {/* ── Footer: Buttons ── */}
         <div style={{ padding: '14px 20px', borderTop: '1px solid #E8EDF5', backgroundColor: '#F8FAFF', display: 'flex', gap: '10px' }}>
-          <button onClick={handleSubmit} disabled={saving} style={{ padding: '9px 24px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, background: saving ? '#94A3B8' : 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', color: '#fff', border: 'none', cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 4px 14px rgba(27,42,107,0.30)' }}>
+          <button onClick={handleSubmit} disabled={saving} style={{ padding: '9px 24px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, background: saving ? '#94A3B8' : 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)', color: '#fff', border: 'none', cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 4px 14px rgba(27,42,107,0.30)' }}>
             {saving ? 'Saving…' : editId ? 'Update Office' : 'Create Office'}
           </button>
           <button onClick={onCancel} style={{ padding: '9px 24px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, backgroundColor: '#ffffff', color: '#374151', border: '1.5px solid #E2E8F0', cursor: 'pointer' }}>
@@ -580,7 +580,7 @@ export default function OfficesSection() {
             style={{
               display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0,
               padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-              background: 'linear-gradient(135deg, #1B2A6B, #2563EB)', color: '#fff', border: 'none', cursor: 'pointer',
+              background: 'linear-gradient(135deg, var(--grad-from), var(--grad-to))', color: '#fff', border: 'none', cursor: 'pointer',
               boxShadow: '0 2px 8px rgba(27,42,107,0.30)',
             }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88'; }}
@@ -609,7 +609,7 @@ export default function OfficesSection() {
               <col style={{ width: 44, minWidth: 44 }} />
             </colgroup>
             <thead>
-              <tr style={{ background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)' }}>
+              <tr style={{ background: 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)' }}>
                 {[
                   { label: 'Office', sortable: true },
                   { label: 'Code', sortable: true },

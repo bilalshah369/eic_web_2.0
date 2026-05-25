@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+﻿import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../hooks/useAuth';
 import { adminApi } from '../services/admin.service';
 import Header, { UserMenu } from '../components/Header';
+import PaletteButton from '../components/PaletteButton';
 import ChangePasswordModal from '../components/ChangePasswordModal';
 import OfficesSection from './admin/OfficesSection';
 import OfficersSection from './admin/OfficersSection';
@@ -152,7 +153,7 @@ function SidebarBtn({
         width: '100%',
         padding: collapsed ? '11px 0' : '10px 14px',
         justifyContent: collapsed ? 'center' : 'flex-start',
-        background: active ? 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)' : 'none',
+        background: active ? 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)' : 'none',
         border: 'none',
         borderRadius: '10px',
         cursor: 'pointer',
@@ -464,7 +465,7 @@ function AdminHome(_props: { user: { name?: string; email?: string; role: string
       <div style={{ backgroundColor: '#ffffff', border: '1px solid #E8EDF5', borderRadius: '14px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(27,42,107,0.07)' }}>
 
         {/* Card header — dark gradient */}
-        <div style={{ background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ background: 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)', padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 34, height: 34, borderRadius: 9, backgroundColor: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <svg width="17" height="17" fill="none" stroke="rgba(255,255,255,0.9)" viewBox="0 0 24 24">
@@ -596,7 +597,7 @@ function AuditLogsSection() {
     <div style={{ backgroundColor: '#ffffff', border: '1px solid #E8EDF5', borderRadius: '14px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(27,42,107,0.07)' }}>
 
       {/* Header */}
-      <div style={{ background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+      <div style={{ background: 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)', padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 34, height: 34, borderRadius: 9, backgroundColor: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width="17" height="17" fill="none" stroke="rgba(255,255,255,0.9)" viewBox="0 0 24 24">
@@ -834,7 +835,7 @@ export default function AdminDashboard() {
             style={{
               position: 'absolute', top: '20px', right: '-14px',
               width: 28, height: 28, borderRadius: '50%',
-              background: 'linear-gradient(135deg, #1B2A6B, #2563EB)',
+              background: 'linear-gradient(135deg, var(--grad-from), var(--grad-to))',
               border: '2px solid #fff',
               color: '#fff', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -859,7 +860,7 @@ export default function AdminDashboard() {
             {/* Monogram badge */}
             <div style={{
               width: 36, height: 36, borderRadius: '9px',
-              background: 'linear-gradient(135deg, #2563EB 0%, #1B2A6B 100%)',
+              background: 'linear-gradient(135deg, var(--grad-to) 0%, var(--grad-from) 100%)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               boxShadow: '0 2px 8px rgba(37,99,235,0.35)',
             }}>
@@ -908,7 +909,7 @@ export default function AdminDashboard() {
                   style={{
                     display: 'flex', alignItems: 'center', gap: 10,
                     width: '100%', padding: '10px 14px',
-                    background: isPiaActive ? 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)' : 'none',
+                    background: isPiaActive ? 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)' : 'none',
                     border: 'none', borderRadius: '10px',
                     cursor: 'pointer',
                     color: isPiaActive ? '#ffffff' : 'rgba(27,42,107,0.70)',
@@ -982,7 +983,7 @@ export default function AdminDashboard() {
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   width: '100%', padding: '11px 0',
-                  background: isPiaActive ? 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)' : 'none',
+                  background: isPiaActive ? 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)' : 'none',
                   border: 'none', borderRadius: '10px',
                   cursor: 'pointer',
                   color: isPiaActive ? '#ffffff' : 'rgba(27,42,107,0.55)',
@@ -1119,6 +1120,7 @@ export default function AdminDashboard() {
                     d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
               </button>
+              <PaletteButton variant="light" />
               {user && <UserMenu user={user} onLogout={handleLogout} variant="light" />}
             </div>
           </div>
@@ -1131,7 +1133,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* ── Sticky footer bar ─────────────────────────── */}
-      <div style={{ flexShrink: 0, padding: '7px 24px', background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+      <div style={{ flexShrink: 0, padding: '7px 24px', background: 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
         <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11 }}>© 2026 Export Inspection Council. All Rights Reserved.</span>
         <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11 }}>Last Updated : 28 Jan 2026 &nbsp;|&nbsp; Total Visitors : <span style={{ color: '#ffffff', fontWeight: 600 }}>2,195,193</span></span>
       </div>

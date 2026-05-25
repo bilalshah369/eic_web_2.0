@@ -76,7 +76,7 @@ export function UserMenu({ user, onLogout, variant = 'dark' }: { user: User; onL
         {/* Avatar */}
         <div style={{
           width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-          background: 'linear-gradient(135deg, #1B2A6B 0%, #3B5BDB 100%)',
+          background: 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontWeight: 800, fontSize: 13, color: '#fff',
           boxShadow: isDark ? '0 0 0 1.5px rgba(255,255,255,0.15)' : '0 0 0 1.5px rgba(27,42,107,0.2)',
@@ -120,7 +120,7 @@ export function UserMenu({ user, onLogout, variant = 'dark' }: { user: User; onL
           {/* Profile header */}
           <div style={{
             padding: '18px 20px 16px',
-            background: 'linear-gradient(135deg, #1B2A6B 0%, #2D4AAB 100%)',
+            background: 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)',
             display: 'flex', alignItems: 'center', gap: 14,
           }}>
             <div style={{

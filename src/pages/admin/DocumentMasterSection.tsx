@@ -77,7 +77,7 @@ function DocMasterForm({ initial, onSave, onCancel, saving }: {
           {err && <p style={{ color: '#DC2626', fontSize: 12, margin: 0 }}>{err}</p>}
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>
             <button type="button" onClick={onCancel} style={{ padding: '8px 18px', borderRadius: 7, border: '1px solid #D1D5DB', backgroundColor: '#F3F4F6', color: '#374151', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>Cancel</button>
-            <button type="submit" disabled={saving} style={{ padding: '8px 20px', borderRadius: 7, border: 'none', background: saving ? '#94A3B8' : 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 4px 14px rgba(27,42,107,0.25)' }}>
+            <button type="submit" disabled={saving} style={{ padding: '8px 20px', borderRadius: 7, border: 'none', background: saving ? '#94A3B8' : 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 4px 14px rgba(27,42,107,0.25)' }}>
               {saving ? 'Saving…' : initial ? 'Update' : 'Add Document'}
             </button>
           </div>

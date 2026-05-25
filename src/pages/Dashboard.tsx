@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
+﻿import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import Header, { UserMenu } from '../components/Header';
+import PaletteButton from '../components/PaletteButton';
 import ChangePasswordModal from '../components/ChangePasswordModal';
 import PIAApplicationForm from './pia/PIAApplicationForm';
 import { piaApi, PIAApplicationSummary, PIASubType } from '../services/pia.service';
@@ -143,7 +144,7 @@ export default function Dashboard() {
             style={{
               position: 'absolute', top: '20px', right: '-14px',
               width: 28, height: 28, borderRadius: '50%',
-              background: 'linear-gradient(135deg, #1B2A6B, #2563EB)',
+              background: 'linear-gradient(135deg, var(--grad-from), var(--grad-to))',
               border: '2px solid #fff',
               color: '#fff', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -167,7 +168,7 @@ export default function Dashboard() {
           }}>
             <div style={{
               width: 36, height: 36, borderRadius: '9px',
-              background: 'linear-gradient(135deg, #2563EB 0%, #1B2A6B 100%)',
+              background: 'linear-gradient(135deg, var(--grad-to) 0%, var(--grad-from) 100%)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               boxShadow: '0 2px 8px rgba(37,99,235,0.35)',
             }}>
@@ -208,7 +209,7 @@ export default function Dashboard() {
                     width: '100%',
                     padding: sidebarCollapsed ? '11px 0' : '10px 14px',
                     justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
-                    background: isActive ? 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)' : 'none',
+                    background: isActive ? 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)' : 'none',
                     border: 'none',
                     borderRadius: '10px',
                     cursor: 'pointer',
@@ -237,7 +238,7 @@ export default function Dashboard() {
                   style={{
                     display: 'flex', alignItems: 'center', gap: 10,
                     width: '100%', padding: '10px 14px',
-                    background: isPiaActive ? 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)' : 'none',
+                    background: isPiaActive ? 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)' : 'none',
                     border: 'none', borderRadius: '10px',
                     cursor: 'pointer',
                     color: isPiaActive ? '#ffffff' : 'rgba(27,42,107,0.70)',
@@ -307,7 +308,7 @@ export default function Dashboard() {
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   width: '100%', padding: '11px 0',
-                  background: isPiaActive ? 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)' : 'none',
+                  background: isPiaActive ? 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)' : 'none',
                   border: 'none', borderRadius: '10px',
                   cursor: 'pointer',
                   color: isPiaActive ? '#ffffff' : 'rgba(27,42,107,0.55)',
@@ -438,6 +439,7 @@ export default function Dashboard() {
                     d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
               </button>
+              <PaletteButton variant="light" />
               {user && <UserMenu user={user} onLogout={handleLogout} variant="light" />}
             </div>
           </div>
@@ -454,7 +456,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── Sticky footer bar ─────────────────────────── */}
-      <div style={{ flexShrink: 0, padding: '7px 24px', background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+      <div style={{ flexShrink: 0, padding: '7px 24px', background: 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
         <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11 }}>© 2026 Export Inspection Council. All Rights Reserved.</span>
         <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11 }}>Last Updated : 28 Jan 2026 &nbsp;|&nbsp; Total Visitors : <span style={{ color: '#ffffff', fontWeight: 600 }}>2,195,193</span></span>
       </div>
@@ -540,7 +542,7 @@ function DashboardHome({ onNavigate }: { onNavigate: (key: NavKey) => void }) {
     <div>
       {/* ── Hero Welcome Strip ── */}
       <div style={{
-        background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)',
+        background: 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)',
         borderRadius: '12px',
         padding: '14px 20px',
         marginBottom: '20px',
@@ -678,7 +680,7 @@ function DashboardHome({ onNavigate }: { onNavigate: (key: NavKey) => void }) {
                     style={{
                       display: 'flex', alignItems: 'center', gap: '5px',
                       padding: '7px 16px', borderRadius: '8px',
-                      background: 'linear-gradient(135deg, #1B2A6B, #2563EB)',
+                      background: 'linear-gradient(135deg, var(--grad-from), var(--grad-to))',
                       border: 'none', color: '#fff', fontSize: '12px', fontWeight: 600,
                       cursor: 'pointer', letterSpacing: '0.01em',
                       boxShadow: '0 2px 8px rgba(27,42,107,0.30)',
@@ -896,7 +898,7 @@ function PIAApplicationsSection() {
           style={{
             display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0,
             padding: '9px 20px', borderRadius: '9px',
-            background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', border: 'none',
+            background: 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)', border: 'none',
             color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
             boxShadow: '0 4px 14px rgba(27,42,107,0.30)',
             transition: 'box-shadow 0.15s, transform 0.15s',
@@ -956,7 +958,7 @@ function PIAApplicationsSection() {
             {!loadingList && (
               <span style={{
                 fontSize: '10px', fontWeight: 700, padding: '1px 7px', borderRadius: '10px',
-                background: tab === t.key ? 'linear-gradient(135deg, #1B2A6B, #2563EB)' : 'none',
+                background: tab === t.key ? 'linear-gradient(135deg, var(--grad-from), var(--grad-to))' : 'none',
                 backgroundColor: tab === t.key ? undefined : '#E8EDF5',
                 color: tab === t.key ? '#fff' : '#6B7280',
               }}>{tabCounts[t.key] ?? 0}</span>
@@ -1002,7 +1004,7 @@ function PIAApplicationsSection() {
             <button onClick={() => setCreateModal(true)} style={{
               marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px',
               padding: '9px 20px', borderRadius: '8px',
-              background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', border: 'none',
+              background: 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)', border: 'none',
               color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
               boxShadow: '0 4px 14px rgba(27,42,107,0.30)',
             }}>
@@ -1094,7 +1096,7 @@ function PIAApplicationsSection() {
                       style={{
                         display: 'flex', alignItems: 'center', gap: '5px',
                         padding: '7px 18px', borderRadius: '8px',
-                        background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', border: 'none',
+                        background: 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)', border: 'none',
                         color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
                         boxShadow: '0 4px 12px rgba(27,42,107,0.28)',
                         transition: 'box-shadow 0.15s, transform 0.15s',
