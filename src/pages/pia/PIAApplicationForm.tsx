@@ -411,62 +411,6 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
     finally { setDeletingDocId(null); }
   };
 
-  const downloadDeclaration = () => {
-    const dateStr = declarantDate ? new Date(declarantDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : '___________';
-    const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Declaration – Annex 7</title>
-<style>
-  @page{size:A4;margin:14mm 18mm}
-  *{box-sizing:border-box}
-  html,body{margin:0;padding:0;font-family:Times New Roman,serif;font-size:11pt;line-height:1.55;color:#111;width:100%}
-  h2{text-align:center;font-size:13pt;letter-spacing:2px;margin:3px 0 0}
-  h3{text-align:center;font-size:10pt;font-weight:normal;margin:0 0 10px}
-  p{margin:0 0 8px}
-  ol{margin:0 0 8px;padding-left:20px}
-  ol li{margin-bottom:4px}
-  .sub-list{list-style-type:lower-alpha;margin-top:4px;margin-bottom:0}
-  .sub-list li{margin-bottom:2px}
-  .agency{border-bottom:1.5px solid #000;min-width:160px;display:inline-block;font-weight:700;padding:0 4px}
-  .sig-block{display:flex;justify-content:space-between;align-items:flex-end;margin-top:18px}
-  .sig-col p{margin:3px 0;font-size:10.5pt}
-  .sig-line{border-bottom:1px solid #000;min-width:200px;height:36px;display:block;margin-bottom:4px}
-</style></head><body>
-<h3>Annex 7</h3><h2>DECLARATION</h2>
-<p>I/We on behalf of <span class="agency">${form.agencyName || '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}</span> apply for Recognition under EIC Inspection Agency Recognition Scheme, 2012 for the scope specified in item 6 of the Application and declare that:</p>
-<ol>
-  <li>The information given in the application is true.</li>
-  <li>The recognition procedure has been read and understood.</li>
-  <li>The applicant body has adequate resources to conduct inspection in accordance with the recognition criteria and other guidance documents.</li>
-  <li>The applicant body shall pay fees as per the applicable schedule of fee.</li>
-  <li>If any information given by the applicant body is wrong or the applicant body is found to be not complying with the criteria of recognition or other specified rules and regulations, the recognition may be suspended or withdrawn at the discretion of the EIC.</li>
-  <li>The applicant body agrees to provide access to all the information relevant to the inspection system (including details of complaints, disputes and appeals for which recognition is sought).</li>
-  <li>The applicant body, will from the date of signing of this application;
-    <ol class="sub-list">
-      <li>Comply with the recognition criteria and the rules of the EIC.</li>
-      <li>Shall ensure that none of the acts of omission or commission of the applicant body will bring the recognition system to disrepute.</li>
-      <li>Shall ensure that it will not overstate its capabilities with respect to the scope for which it has applied for recognition.</li>
-      <li>Shall take appropriate corrective &amp; preventive actions on its conduct and issues that are identified by the EIC as contrary to the conditions of vii) a to vii) c.</li>
-    </ol>
-  </li>
-</ol>
-<div class="sig-block">
-  <div class="sig-col">
-    <p><strong>Name:</strong>&nbsp;&nbsp;${declarantName || '___________________________'}</p>
-    <p>&nbsp;</p>
-    <p><strong>Date:</strong>&nbsp;&nbsp;${dateStr}</p>
-    <p><strong>Place:</strong>&nbsp;${declarantPlace || '___________________________'}</p>
-  </div>
-  <div class="sig-col" style="text-align:right">
-    <span class="sig-line"></span>
-    <p>Signature of Authorized Signatory</p>
-    <p><strong>Designation:</strong>&nbsp;${declarantDesignation || '___________________________'}</p>
-    <p>Designation and seal</p>
-  </div>
-</div>
-<script>window.onload=function(){window.print();}<\/script>
-</body></html>`;
-    const w = window.open('', '_blank', 'width=800,height=900');
-    if (w) { w.document.open(); w.document.write(html); w.document.close(); }
-  };
 
   const fmtSize = (bytes: number | null) => {
     if (!bytes) return '';
@@ -1551,9 +1495,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
             return { amount: c ? Number(c.amount) : 0, label: c?.label ?? type, configured: !!c && Number(c.amount) > 0 };
           };
           const appFee   = fee('APPLICATION_FEE');
-          const annualFee = fee('ANNUAL_FEE');
           const portFee   = fee('ADDITIONAL_PORT_FEE');
-          const auditFee  = fee('INSPECTION_FEE');
           const extraPorts = Math.max(0, form.selectedPortIds.length - 1);
 
           const isNew = form.subType === 'NEW_RECOGNITION';

@@ -449,7 +449,6 @@ export default function Dashboard() {
             {activeNav === 'pia-applications' && <PIAApplicationsSection />}
             {activeNav === 'pia-fees' && <PIAEmptySection title="Pending Fees" desc="No pending fee payments at this time." icon="fees" />}
             {activeNav === 'pia-nc' && <PIAEmptySection title="Non-Conformities" desc="No non-conformities raised for your agency." icon="nc" />}
-            {activeNav === 'pia-alerts' && <PIAEmptySection title="Alerts" desc="No alerts or notifications at this time." icon="alerts" />}
           </div>
         </main>
       </div>
