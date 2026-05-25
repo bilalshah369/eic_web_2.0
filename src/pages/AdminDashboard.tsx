@@ -150,22 +150,24 @@ function SidebarBtn({
       style={{
         display: 'flex', alignItems: 'center', gap: '10px',
         width: '100%',
-        padding: collapsed ? '12px 0' : '10px 20px',
+        padding: collapsed ? '11px 0' : '10px 14px',
         justifyContent: collapsed ? 'center' : 'flex-start',
-        background: active ? 'var(--nav-active-bg)' : 'none',
+        background: active ? 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)' : 'none',
         border: 'none',
-        borderLeft: active ? '3px solid var(--nav-active-bar)' : '3px solid transparent',
+        borderRadius: '10px',
         cursor: 'pointer',
-        color: active ? 'var(--nav-text-active)' : 'var(--nav-text)',
-        fontSize: '13px', fontWeight: active ? 700 : 500,
+        color: active ? '#ffffff' : 'rgba(27,42,107,0.70)',
+        fontSize: '13px', fontWeight: active ? 600 : 500,
         textAlign: 'left',
-        transition: 'background 0.15s, color 0.15s',
+        transition: 'background 0.15s, color 0.15s, box-shadow 0.15s',
         whiteSpace: 'nowrap', overflow: 'hidden',
+        boxShadow: active ? '0 4px 14px rgba(27,42,107,0.30)' : 'none',
+        marginBottom: '2px',
       }}
-      onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'var(--nav-hover-bg)'; (e.currentTarget as HTMLElement).style.color = 'var(--nav-text-active)'; } }}
-      onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'none'; (e.currentTarget as HTMLElement).style.color = 'var(--nav-text)'; } }}
+      onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'rgba(27,42,107,0.07)'; (e.currentTarget as HTMLElement).style.color = '#1B2A6B'; } }}
+      onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'none'; (e.currentTarget as HTMLElement).style.color = 'rgba(27,42,107,0.70)'; } }}
     >
-      <span style={{ flexShrink: 0, color: active ? 'var(--nav-active-bar)' : 'var(--nav-icon-dim)' }}>{item.icon}</span>
+      <span style={{ flexShrink: 0, color: active ? '#ffffff' : 'rgba(27,42,107,0.55)' }}>{item.icon}</span>
       {!collapsed && <span>{item.label}</span>}
     </button>
   );
@@ -173,42 +175,51 @@ function SidebarBtn({
 
 // ── Stat card ──────────────────────────────────────────────────
 function StatCard({
-  label, value, iconBg, icon, loading,
+  label, value, accentColor, accentBg, icon, loading,
 }: {
   label: string;
   value: string | number;
-  iconBg: string;
+  accentColor: string;
+  accentBg: string;
   icon: React.ReactNode;
   loading?: boolean;
 }) {
   return (
-    <div style={{
-      backgroundColor: 'var(--bg-card)',
-      border: '1px solid var(--border-subtle)',
-      borderRadius: '12px',
-      padding: '20px 22px',
-      display: 'flex', alignItems: 'center', gap: '16px',
-      boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
-    }}>
-      <div style={{
-        width: 50, height: 50, borderRadius: '12px',
-        backgroundColor: iconBg,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0,
-      }}>
-        {icon}
-      </div>
-      <div>
-        {loading ? (
-          <div style={{ width: 60, height: 26, borderRadius: 6, backgroundColor: 'var(--card-overlay)', animation: 'pulse 1.5s ease-in-out infinite' }} />
-        ) : (
-          <p style={{ color: 'var(--text-primary)', fontSize: '26px', fontWeight: 700, margin: 0, lineHeight: 1 }}>
-            {value}
+    <div
+      style={{
+        backgroundColor: '#ffffff',
+        border: '1px solid #E8EDF5',
+        borderRadius: '14px',
+        overflow: 'hidden',
+        display: 'flex', flexDirection: 'column',
+        boxShadow: '0 2px 8px rgba(27,42,107,0.07)',
+        transition: 'box-shadow 0.18s, transform 0.18s',
+      }}
+      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 28px rgba(27,42,107,0.13)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 8px rgba(27,42,107,0.07)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
+    >
+      <div style={{ height: '4px', background: `linear-gradient(90deg, ${accentColor}, ${accentColor}99)` }} />
+      <div style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{
+          width: 52, height: 52, borderRadius: '12px', flexShrink: 0,
+          background: `linear-gradient(135deg, ${accentBg}, ${accentColor}18)`,
+          border: `1.5px solid ${accentColor}25`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          {icon}
+        </div>
+        <div>
+          {loading ? (
+            <div style={{ width: 60, height: 26, borderRadius: 6, backgroundColor: '#F1F5F9' }} />
+          ) : (
+            <p style={{ color: '#111827', fontSize: '26px', fontWeight: 700, margin: 0, lineHeight: 1 }}>
+              {value}
+            </p>
+          )}
+          <p style={{ color: '#6B7280', fontSize: '12px', margin: '4px 0 0', fontWeight: 500 }}>
+            {label}
           </p>
-        )}
-        <p style={{ color: 'var(--text-muted)', fontSize: '12px', margin: '4px 0 0', fontWeight: 500 }}>
-          {label}
-        </p>
+        </div>
       </div>
     </div>
   );
@@ -394,12 +405,13 @@ function AdminHome(_props: { user: { name?: string; email?: string; role: string
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
       {/* Stat cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '14px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
         <StatCard
           label="Total Users"
           value={stats?.totalUsers ?? 0}
           loading={statsLoading}
-          iconBg="#DBEAFE"
+          accentColor="#1D4ED8"
+          accentBg="#DBEAFE"
           icon={
             <svg width="24" height="24" fill="none" stroke="#1D4ED8" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
@@ -411,9 +423,10 @@ function AdminHome(_props: { user: { name?: string; email?: string; role: string
           label="Admin Users"
           value={stats?.totalAdmins ?? 0}
           loading={statsLoading}
-          iconBg="#D1FAE5"
+          accentColor="#059669"
+          accentBg="#D1FAE5"
           icon={
-            <svg width="24" height="24" fill="none" stroke="#065F46" viewBox="0 0 24 24">
+            <svg width="24" height="24" fill="none" stroke="#059669" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
                 d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
@@ -423,9 +436,10 @@ function AdminHome(_props: { user: { name?: string; email?: string; role: string
           label="Audit Events"
           value={stats?.totalAuditLogs ?? 0}
           loading={statsLoading}
-          iconBg="#FEF3C7"
+          accentColor="#D97706"
+          accentBg="#FEF3C7"
           icon={
-            <svg width="24" height="24" fill="none" stroke="#92400E" viewBox="0 0 24 24">
+            <svg width="24" height="24" fill="none" stroke="#D97706" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
                 d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
             </svg>
@@ -435,9 +449,10 @@ function AdminHome(_props: { user: { name?: string; email?: string; role: string
           label="Applications"
           value={stats?.totalApplications ?? 0}
           loading={statsLoading}
-          iconBg="#EDE9FE"
+          accentColor="#7C3AED"
+          accentBg="#EDE9FE"
           icon={
-            <svg width="24" height="24" fill="none" stroke="#6D28D9" viewBox="0 0 24 24">
+            <svg width="24" height="24" fill="none" stroke="#7C3AED" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
                 d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
             </svg>
@@ -446,10 +461,10 @@ function AdminHome(_props: { user: { name?: string; email?: string; role: string
       </div>
 
       {/* Recent Activity */}
-      <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
+      <div style={{ backgroundColor: '#ffffff', border: '1px solid #E8EDF5', borderRadius: '14px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(27,42,107,0.07)' }}>
 
         {/* Card header — dark gradient */}
-        <div style={{ backgroundColor: 'var(--bg-utility)', padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 34, height: 34, borderRadius: 9, backgroundColor: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <svg width="17" height="17" fill="none" stroke="rgba(255,255,255,0.9)" viewBox="0 0 24 24">
@@ -469,7 +484,6 @@ function AdminHome(_props: { user: { name?: string; email?: string; role: string
                   </span>
                 )}
               </div>
-              <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11 }}>Auto-refreshes every 15 seconds</span>
             </div>
           </div>
           <div style={{ position: 'relative' }}>
@@ -488,7 +502,7 @@ function AdminHome(_props: { user: { name?: string; email?: string; role: string
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ backgroundColor: 'var(--card-overlay)', borderBottom: '2px solid var(--border-subtle)' }}>
+              <tr style={{ backgroundColor: '#F8FAFF', borderBottom: '2px solid #E8EDF8' }}>
                 {[
                   { label: 'User', w: '22%' },
                   { label: 'Action', w: '10%' },
@@ -579,10 +593,10 @@ function AuditLogsSection() {
   const total = data?.total ?? 0;
 
   return (
-    <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
+    <div style={{ backgroundColor: '#ffffff', border: '1px solid #E8EDF5', borderRadius: '14px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(27,42,107,0.07)' }}>
 
       {/* Header */}
-      <div style={{ backgroundColor: 'var(--bg-utility)', padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+      <div style={{ background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 34, height: 34, borderRadius: 9, backgroundColor: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width="17" height="17" fill="none" stroke="rgba(255,255,255,0.9)" viewBox="0 0 24 24">
@@ -598,7 +612,7 @@ function AuditLogsSection() {
                 </span>
               )}
             </div>
-            <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11 }}>Complete system event log · auto-refreshes every 15s</span>
+            <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11 }}>Complete system event log</span>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -804,27 +818,32 @@ export default function AdminDashboard() {
 
         {/* ── Sidebar ─────────────────────────────────────── */}
         <aside style={{
-          width: collapsed ? '60px' : '260px',
-          backgroundColor: 'var(--bg-nav)',
+          width: collapsed ? '64px' : '260px',
+          backgroundColor: '#ffffff',
           display: 'flex', flexDirection: 'column', flexShrink: 0,
-          transition: 'width 0.2s ease',
+          transition: 'width 0.22s cubic-bezier(.4,0,.2,1)',
           position: 'relative',
           height: '100%', overflow: 'visible',
-          borderRight: '1px solid var(--nav-border)',
+          boxShadow: '4px 0 24px rgba(27,42,107,0.10)',
+          zIndex: 10,
         }}>
 
           {/* Collapse toggle */}
           <button
             onClick={() => setCollapsed(c => !c)}
             style={{
-              position: 'absolute', top: '16px', right: '-12px',
-              width: 24, height: 24, borderRadius: '50%',
-              backgroundColor: 'var(--bg-nav)',
-              border: '1px solid var(--nav-border)',
-              color: 'var(--nav-text)', cursor: 'pointer',
+              position: 'absolute', top: '20px', right: '-14px',
+              width: 28, height: 28, borderRadius: '50%',
+              background: 'linear-gradient(135deg, #1B2A6B, #2563EB)',
+              border: '2px solid #fff',
+              color: '#fff', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              zIndex: 50, fontSize: '10px',
+              zIndex: 50, fontSize: '11px', fontWeight: 700,
+              boxShadow: '0 2px 10px rgba(27,42,107,0.30)',
+              transition: 'transform 0.15s',
             }}
+            onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.12)')}
+            onMouseLeave={e => (e.currentTarget.style.transform = 'none')}
           >
             {collapsed ? '›' : '‹'}
           </button>
@@ -849,10 +868,10 @@ export default function AdminDashboard() {
             {!collapsed && (
               <div style={{ overflow: 'hidden', minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                  <span style={{ color: '#fff', fontSize: 14, fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1, whiteSpace: 'nowrap' }}>e-Services</span>
-                  <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, fontWeight: 500 }}>PORTAL</span>
+                  <span style={{ color: '#1B2A6B', fontSize: 14, fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1, whiteSpace: 'nowrap' }}>e-Services</span>
+                  <span style={{ color: 'rgba(27,42,107,0.45)', fontSize: 10, fontWeight: 500 }}>PORTAL</span>
                 </div>
-                <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, margin: '3px 0 0', fontWeight: 400, letterSpacing: '0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Export Inspection Council</p>
+                <p style={{ color: 'rgba(27,42,107,0.55)', fontSize: 10, margin: '3px 0 0', fontWeight: 400, letterSpacing: '0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Export Inspection Council</p>
               </div>
             )}
           </div>
@@ -860,15 +879,15 @@ export default function AdminDashboard() {
           {/* Scroll up button */}
           <button
             onClick={() => scroll('up')}
-            style={{ width: '100%', padding: '4px 0', background: 'none', border: 'none', borderBottom: '1px solid var(--nav-border)', cursor: 'pointer', color: 'var(--nav-text-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-            onMouseEnter={e => (e.currentTarget.style.color = 'var(--nav-text-active)')}
-            onMouseLeave={e => (e.currentTarget.style.color = 'var(--nav-text-dim)')}
+            style={{ width: '100%', padding: '3px 0', background: 'none', border: 'none', borderBottom: '1px solid rgba(27,42,107,0.07)', cursor: 'pointer', color: 'rgba(27,42,107,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#1B2A6B')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(27,42,107,0.35)')}
           >
-            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" /></svg>
+            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" /></svg>
           </button>
 
           {/* Nav items */}
-          <nav ref={navRef} className="scrollbar-none" style={{ flex: 1, padding: '10px 0', overflowY: 'auto', overflowX: 'hidden' }}>
+          <nav ref={navRef} className="scrollbar-none" style={{ flex: 1, padding: '10px 8px', overflowY: 'auto', overflowX: 'hidden' }}>
             {NAV_ITEMS.map(item => (
               <SidebarBtn
                 key={item.key}
@@ -888,21 +907,22 @@ export default function AdminDashboard() {
                   title="PIA Recognition"
                   style={{
                     display: 'flex', alignItems: 'center', gap: 10,
-                    width: '100%', padding: '11px 20px',
-                    background: isPiaActive ? 'var(--nav-active-bg)' : 'none',
-                    border: 'none',
-                    borderLeft: isPiaActive ? '3px solid var(--nav-active-bar)' : '3px solid transparent',
+                    width: '100%', padding: '10px 14px',
+                    background: isPiaActive ? 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)' : 'none',
+                    border: 'none', borderRadius: '10px',
                     cursor: 'pointer',
-                    color: isPiaActive ? 'var(--nav-text-active)' : 'var(--nav-text)',
-                    fontSize: '13px', fontWeight: isPiaActive ? 700 : 500,
+                    color: isPiaActive ? '#ffffff' : 'rgba(27,42,107,0.70)',
+                    fontSize: '13px', fontWeight: isPiaActive ? 600 : 500,
                     textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden',
-                    transition: 'background 0.15s, color 0.15s',
+                    transition: 'background 0.15s, color 0.15s, box-shadow 0.15s',
+                    boxShadow: isPiaActive ? '0 4px 14px rgba(27,42,107,0.30)' : 'none',
+                    marginBottom: '2px',
                   }}
-                  onMouseEnter={e => { if (!isPiaActive) { (e.currentTarget as HTMLElement).style.background = 'var(--nav-hover-bg)'; (e.currentTarget as HTMLElement).style.color = 'var(--nav-text-active)'; } }}
-                  onMouseLeave={e => { if (!isPiaActive) { (e.currentTarget as HTMLElement).style.background = 'none'; (e.currentTarget as HTMLElement).style.color = 'var(--nav-text)'; } }}
+                  onMouseEnter={e => { if (!isPiaActive) { (e.currentTarget as HTMLElement).style.background = 'rgba(27,42,107,0.07)'; (e.currentTarget as HTMLElement).style.color = '#1B2A6B'; } }}
+                  onMouseLeave={e => { if (!isPiaActive) { (e.currentTarget as HTMLElement).style.background = 'none'; (e.currentTarget as HTMLElement).style.color = 'rgba(27,42,107,0.70)'; } }}
                 >
                   {/* PIA icon */}
-                  <span style={{ flexShrink: 0 }}>
+                  <span style={{ flexShrink: 0, color: isPiaActive ? '#ffffff' : 'rgba(27,42,107,0.55)' }}>
                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
@@ -919,30 +939,36 @@ export default function AdminDashboard() {
 
                 {/* Sub-items */}
                 {piaExpanded && (
-                  <div style={{ borderLeft: '1px solid var(--nav-border)', marginLeft: 28 }}>
-                    {PIA_SUB_ITEMS.map(item => (
-                      <button
-                        key={item.key}
-                        onClick={() => handleSetActiveNav(item.key)}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: 8,
-                          width: '100%', padding: '9px 16px',
-                          background: activeNav === item.key ? 'var(--nav-active-bg)' : 'none',
-                          border: 'none',
-                          borderLeft: activeNav === item.key ? '2px solid var(--nav-active-bar)' : '2px solid transparent',
-                          cursor: 'pointer',
-                          color: activeNav === item.key ? 'var(--nav-text-active)' : 'var(--nav-text)',
-                          fontSize: '12px', fontWeight: activeNav === item.key ? 700 : 500,
-                          textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden',
-                          transition: 'background 0.15s, color 0.15s',
-                        }}
-                        onMouseEnter={e => { if (activeNav !== item.key) { (e.currentTarget as HTMLElement).style.background = 'var(--nav-hover-bg)'; (e.currentTarget as HTMLElement).style.color = 'var(--nav-text-active)'; } }}
-                        onMouseLeave={e => { if (activeNav !== item.key) { (e.currentTarget as HTMLElement).style.background = 'none'; (e.currentTarget as HTMLElement).style.color = 'var(--nav-text)'; } }}
-                      >
-                        <span style={{ flexShrink: 0, color: activeNav === item.key ? 'var(--nav-active-bar)' : 'var(--nav-icon-dim)' }}>{item.icon}</span>
-                        <span>{item.label}</span>
-                      </button>
-                    ))}
+                  <div style={{ paddingLeft: '12px', marginTop: '2px' }}>
+                    <div style={{ borderLeft: '2px solid rgba(27,42,107,0.15)', paddingLeft: '8px' }}>
+                      {PIA_SUB_ITEMS.map(item => {
+                        const isSubActive = activeNav === item.key;
+                        return (
+                          <button
+                            key={item.key}
+                            onClick={() => handleSetActiveNav(item.key)}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: 8,
+                              width: '100%', padding: '8px 12px',
+                              background: isSubActive ? 'rgba(27,42,107,0.10)' : 'none',
+                              border: 'none', borderRadius: '8px',
+                              cursor: 'pointer',
+                              color: isSubActive ? '#1B2A6B' : 'rgba(27,42,107,0.60)',
+                              fontSize: '12px', fontWeight: isSubActive ? 700 : 500,
+                              textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden',
+                              transition: 'background 0.15s, color 0.15s',
+                              marginBottom: '1px',
+                            }}
+                            onMouseEnter={e => { if (!isSubActive) { (e.currentTarget as HTMLElement).style.background = 'rgba(27,42,107,0.06)'; (e.currentTarget as HTMLElement).style.color = '#1B2A6B'; } }}
+                            onMouseLeave={e => { if (!isSubActive) { (e.currentTarget as HTMLElement).style.background = 'none'; (e.currentTarget as HTMLElement).style.color = 'rgba(27,42,107,0.60)'; } }}
+                          >
+                            <span style={{ flexShrink: 0, color: isSubActive ? '#1B2A6B' : 'rgba(27,42,107,0.45)' }}>{item.icon}</span>
+                            <span>{item.label}</span>
+                            {isSubActive && <span style={{ marginLeft: 'auto', width: 6, height: 6, borderRadius: '50%', backgroundColor: '#2563EB', flexShrink: 0 }} />}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
@@ -952,15 +978,16 @@ export default function AdminDashboard() {
             {collapsed && (
               <button
                 title="PIA Recognition"
-                onClick={() => { setPiaExpanded(x => !x); }}
+                onClick={() => { setPiaExpanded(true); setCollapsed(false); }}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  width: '100%', padding: '12px 0',
-                  background: isPiaActive ? 'var(--nav-active-bg)' : 'none',
-                  border: 'none',
-                  borderLeft: isPiaActive ? '3px solid var(--nav-active-bar)' : '3px solid transparent',
+                  width: '100%', padding: '11px 0',
+                  background: isPiaActive ? 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)' : 'none',
+                  border: 'none', borderRadius: '10px',
                   cursor: 'pointer',
-                  color: isPiaActive ? 'var(--nav-text-active)' : 'var(--nav-icon-dim)',
+                  color: isPiaActive ? '#ffffff' : 'rgba(27,42,107,0.55)',
+                  boxShadow: isPiaActive ? '0 4px 14px rgba(27,42,107,0.30)' : 'none',
+                  marginBottom: '2px',
                 }}
               >
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -974,28 +1001,28 @@ export default function AdminDashboard() {
           {/* Scroll down button */}
           <button
             onClick={() => scroll('down')}
-            style={{ width: '100%', padding: '4px 0', background: 'none', border: 'none', borderTop: '1px solid var(--nav-border)', cursor: 'pointer', color: 'var(--nav-text-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-            onMouseEnter={e => (e.currentTarget.style.color = 'var(--nav-text-active)')}
-            onMouseLeave={e => (e.currentTarget.style.color = 'var(--nav-text-dim)')}
+            style={{ width: '100%', padding: '3px 0', background: 'none', border: 'none', borderTop: '1px solid rgba(27,42,107,0.07)', cursor: 'pointer', color: 'rgba(27,42,107,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#1B2A6B')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(27,42,107,0.35)')}
           >
-            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
+            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
           </button>
 
           {/* Bottom actions */}
-          <div style={{ borderTop: '1px solid var(--nav-border)', padding: '8px 0' }}>
+          <div style={{ borderTop: '1px solid rgba(27,42,107,0.08)', padding: '8px 8px' }}>
             <button
+              onClick={() => setShowChangePwd(true)}
+              title={collapsed ? 'Change Password' : undefined}
               style={{
                 display: 'flex', alignItems: 'center', gap: '10px',
-                width: '100%', padding: collapsed ? '11px 0' : '11px 20px',
+                width: '100%', padding: collapsed ? '10px 0' : '9px 14px',
                 justifyContent: collapsed ? 'center' : 'flex-start',
-                background: 'none', border: 'none', cursor: 'pointer',
-                color: 'var(--nav-text)', fontSize: '13px', fontWeight: 500,
+                background: 'none', border: 'none', borderRadius: '8px', cursor: 'pointer',
+                color: 'rgba(27,42,107,0.65)', fontSize: '13px', fontWeight: 500,
                 whiteSpace: 'nowrap', overflow: 'hidden', transition: 'color 0.15s, background 0.15s',
               }}
-              title={collapsed ? 'Change Password' : undefined}
-              onClick={() => setShowChangePwd(true)}
-              onMouseEnter={e => { (e.currentTarget.style.color = 'var(--nav-text-active)'); (e.currentTarget.style.background = 'var(--nav-hover-bg)'); }}
-              onMouseLeave={e => { (e.currentTarget.style.color = 'var(--nav-text)'); (e.currentTarget.style.background = 'none'); }}
+              onMouseEnter={e => { (e.currentTarget.style.color = '#1B2A6B'); (e.currentTarget.style.background = 'rgba(27,42,107,0.06)'); }}
+              onMouseLeave={e => { (e.currentTarget.style.color = 'rgba(27,42,107,0.65)'); (e.currentTarget.style.background = 'none'); }}
             >
               <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -1005,17 +1032,17 @@ export default function AdminDashboard() {
             </button>
             <button
               onClick={handleLogout}
+              title={collapsed ? 'Logout' : undefined}
               style={{
                 display: 'flex', alignItems: 'center', gap: '10px',
-                width: '100%', padding: collapsed ? '11px 0' : '11px 20px',
+                width: '100%', padding: collapsed ? '10px 0' : '9px 14px',
                 justifyContent: collapsed ? 'center' : 'flex-start',
-                background: 'none', border: 'none', cursor: 'pointer',
-                color: '#FCA5A5', fontSize: '13px', fontWeight: 500,
+                background: 'none', border: 'none', borderRadius: '8px', cursor: 'pointer',
+                color: '#DC2626', fontSize: '13px', fontWeight: 500,
                 whiteSpace: 'nowrap', overflow: 'hidden', transition: 'color 0.15s, background 0.15s',
               }}
-              title={collapsed ? 'Logout' : undefined}
-              onMouseEnter={e => { (e.currentTarget.style.color = '#FEE2E2'); (e.currentTarget.style.background = 'rgba(239,68,68,0.15)'); }}
-              onMouseLeave={e => { (e.currentTarget.style.color = '#FCA5A5'); (e.currentTarget.style.background = 'none'); }}
+              onMouseEnter={e => { (e.currentTarget.style.color = '#B91C1C'); (e.currentTarget.style.background = 'rgba(239,68,68,0.07)'); }}
+              onMouseLeave={e => { (e.currentTarget.style.color = '#DC2626'); (e.currentTarget.style.background = 'none'); }}
             >
               <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -1034,7 +1061,7 @@ export default function AdminDashboard() {
             padding: '6px 24px',
             borderBottom: '1px solid #d1d5db',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            backgroundColor: '#f8fafc',
+            backgroundColor: '#ffffff',
             boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
           }}>
             {/* Crumbs */}
@@ -1101,6 +1128,12 @@ export default function AdminDashboard() {
             {renderSection()}
           </div>
         </main>
+      </div>
+
+      {/* ── Sticky footer bar ─────────────────────────── */}
+      <div style={{ flexShrink: 0, padding: '7px 24px', background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11 }}>© 2026 Export Inspection Council. All Rights Reserved.</span>
+        <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11 }}>Last Updated : 28 Jan 2026 &nbsp;|&nbsp; Total Visitors : <span style={{ color: '#ffffff', fontWeight: 600 }}>2,195,193</span></span>
       </div>
 
       {showChangePwd && <ChangePasswordModal onClose={() => setShowChangePwd(false)} />}

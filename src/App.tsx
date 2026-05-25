@@ -40,6 +40,11 @@ export default function App() {
               <Dashboard />
             </RoleRoute>
           } />
+          <Route path="/dashboard/:section" element={
+            <RoleRoute roles={['USER']}>
+              <Dashboard />
+            </RoleRoute>
+          } />
           <Route path="/admin" element={<Navigate to="/admin/home" replace />} />
           <Route path="/admin/:section" element={
             <RoleRoute roles={['ADMIN', 'SUPER_ADMIN']}>

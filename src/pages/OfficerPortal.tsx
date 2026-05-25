@@ -31,24 +31,26 @@ function SidebarBtn({ item, active, collapsed, onClick }: { item: typeof NAV[num
   return (
     <button onClick={onClick} title={collapsed ? item.label : undefined} style={{
       display: 'flex', alignItems: 'center', gap: 10, width: '100%',
-      padding: collapsed ? '12px 0' : '11px 20px',
+      padding: collapsed ? '11px 0' : '10px 14px',
       justifyContent: collapsed ? 'center' : 'flex-start',
-      background: active ? 'rgba(255,255,255,0.12)' : 'none',
-      border: 'none', borderLeft: active ? '3px solid var(--accent)' : '3px solid transparent',
-      cursor: 'pointer', color: active ? '#fff' : 'rgba(255,255,255,0.55)',
-      fontSize: 13, fontWeight: active ? 600 : 400, textAlign: 'left',
-      transition: 'background 0.15s', whiteSpace: 'nowrap', overflow: 'hidden',
+      background: active ? 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)' : 'none',
+      border: 'none', borderRadius: '10px',
+      cursor: 'pointer', color: active ? '#fff' : 'rgba(27,42,107,0.70)',
+      fontSize: 13, fontWeight: active ? 600 : 500, textAlign: 'left',
+      transition: 'background 0.15s, color 0.15s, box-shadow 0.15s',
+      whiteSpace: 'nowrap', overflow: 'hidden', marginBottom: '2px',
+      boxShadow: active ? '0 4px 14px rgba(27,42,107,0.30)' : 'none',
     }}
-      onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
-      onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'none'; }}
+      onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'rgba(27,42,107,0.07)'; (e.currentTarget as HTMLElement).style.color = '#1B2A6B'; } }}
+      onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'none'; (e.currentTarget as HTMLElement).style.color = 'rgba(27,42,107,0.70)'; } }}
     >
-      <span style={{ flexShrink: 0 }}>{item.icon}</span>
+      <span style={{ flexShrink: 0, color: active ? '#fff' : 'rgba(27,42,107,0.55)' }}>{item.icon}</span>
       {!collapsed && <span>{item.label}</span>}
     </button>
   );
 }
 
-function StatCard({ label, value, iconBg, icon, loading }: { label: string; value: string | number; iconBg: string; icon: React.ReactNode; loading?: boolean }) {
+export function StatCard({ label, value, iconBg, icon, loading }: { label: string; value: string | number; iconBg: string; icon: React.ReactNode; loading?: boolean }) {
   return (
     <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 12, padding: '20px 22px', display: 'flex', alignItems: 'center', gap: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
       <div style={{ width: 50, height: 50, borderRadius: 12, backgroundColor: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{icon}</div>
@@ -61,7 +63,7 @@ function StatCard({ label, value, iconBg, icon, loading }: { label: string; valu
   );
 }
 
-function InfoRow({ label, value }: { label: string; value: string | null | undefined }) {
+export function InfoRow({ label, value }: { label: string; value: string | null | undefined }) {
   if (!value) return null;
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid var(--border-subtle)', fontSize: 13 }}>
@@ -86,27 +88,24 @@ function Overview({ officer, loading }: { officer: OfficerData | null | undefine
   const categoryCount = officer?.categories?.length ?? 0;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-      {/* ── Hero banner ── */}
-      <div style={{ position: 'relative', background: 'linear-gradient(135deg, #1B2A6B 0%, #243580 55%, #1e3a8a 100%)', borderRadius: 16, padding: '28px 32px', color: '#fff', overflow: 'hidden', boxShadow: '0 4px 20px rgba(27,42,107,0.3)' }}>
-        {/* Decorative circles */}
-        <div style={{ position: 'absolute', top: -40, right: -40, width: 180, height: 180, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.04)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: -30, right: 120, width: 120, height: 120, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.03)', pointerEvents: 'none' }} />
+      {/* ── Hero banner — compact, matches dashboard strip ── */}
+      <div style={{ position: 'relative', background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', borderRadius: 12, padding: '14px 20px', color: '#fff', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.05)', pointerEvents: 'none' }} />
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, position: 'relative' }}>
-          {/* Left: avatar + info */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-            <div style={{ width: 64, height: 64, borderRadius: 16, background: 'rgba(255,255,255,0.15)', border: '2px solid rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, backdropFilter: 'blur(4px)' }}>
-              <span style={{ fontSize: 22, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>{loading ? '…' : initials}</span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(255,255,255,0.15)', border: '1.5px solid rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span style={{ fontSize: 18, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>{loading ? '…' : initials}</span>
             </div>
             <div>
-              <p style={{ margin: '0 0 4px', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)' }}>Inspection Officer</p>
-              <h2 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+              <p style={{ margin: '0 0 2px', fontSize: 10, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)' }}>Inspection Officer</p>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1.2 }}>
                 {loading ? 'Loading…' : officer?.name ?? '—'}
               </h2>
               {officer && (
-                <p style={{ margin: '6px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.65)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <p style={{ margin: '3px 0 0', fontSize: 12, color: 'rgba(255,255,255,0.60)', display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span>{officer.designation}</span>
                   <span style={{ width: 3, height: 3, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.35)', display: 'inline-block' }} />
                   <span>{officer.qualification}</span>
@@ -115,40 +114,36 @@ function Overview({ officer, loading }: { officer: OfficerData | null | undefine
             </div>
           </div>
 
-          {/* Right: status + mini stats */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12, flexShrink: 0 }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, backgroundColor: officer?.isActive ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)', border: `1px solid ${officer?.isActive ? 'rgba(34,197,94,0.4)' : 'rgba(239,68,68,0.4)'}`, borderRadius: 20, padding: '5px 14px', fontSize: 12, fontWeight: 700, color: officer?.isActive ? '#86EFAC' : '#FCA5A5' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, backgroundColor: officer?.isActive ? 'rgba(34,197,94,0.20)' : 'rgba(239,68,68,0.20)', border: `1px solid ${officer?.isActive ? 'rgba(34,197,94,0.40)' : 'rgba(239,68,68,0.40)'}`, borderRadius: 20, padding: '4px 12px', fontSize: 11, fontWeight: 700, color: officer?.isActive ? '#86EFAC' : '#FCA5A5' }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: officer?.isActive ? '#22C55E' : '#EF4444' }} />
               {loading ? '…' : officer?.isActive ? 'Active' : 'Inactive'}
             </span>
-            {officer && (
-              <div style={{ display: 'flex', gap: 16 }}>
-                <div style={{ textAlign: 'center', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: '8px 16px' }}>
-                  <p style={{ margin: 0, fontSize: 20, fontWeight: 800, lineHeight: 1 }}>{officeCount}</p>
-                  <p style={{ margin: '3px 0 0', fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>Office{officeCount !== 1 ? 's' : ''}</p>
-                </div>
-                <div style={{ textAlign: 'center', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: '8px 16px' }}>
-                  <p style={{ margin: 0, fontSize: 20, fontWeight: 800, lineHeight: 1 }}>{categoryCount}</p>
-                  <p style={{ margin: '3px 0 0', fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>Cert. Categor{categoryCount !== 1 ? 'ies' : 'y'}</p>
-                </div>
+            {[
+              { v: officeCount, label: 'EIA / Sub-EIA Offices' },
+              { v: categoryCount, label: 'Cert. Categories' },
+            ].map(s => (
+              <div key={s.label} style={{ textAlign: 'center', backgroundColor: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 10, padding: '7px 14px', minWidth: 80 }}>
+                <p style={{ margin: 0, fontSize: 18, fontWeight: 800, lineHeight: 1 }}>{s.v}</p>
+                <p style={{ margin: '2px 0 0', fontSize: 10, color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}>{s.label}</p>
               </div>
-            )}
+            ))}
           </div>
         </div>
       </div>
 
       {/* ── Stat cards ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
         {[
-          { label: 'EIA / Sub-EIA Offices', value: loading ? '—' : officeCount, sub: 'EIA / Sub-EIA offices', accent: '#1B2A6B', iconBg: '#E0E7FF', icon: <svg width="20" height="20" fill="none" stroke="#1B2A6B" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg> },
-          { label: 'Certified Categories', value: loading ? '—' : categoryCount, sub: 'Certificate categories assigned', accent: '#065F46', iconBg: '#D1FAE5', icon: <svg width="20" height="20" fill="none" stroke="#065F46" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg> },
+          { label: 'EIA / Sub-EIA Offices', value: loading ? '—' : officeCount, sub: 'Assigned offices', accentColor: '#3B82F6', accentBg: '#EFF6FF', icon: <svg width="22" height="22" fill="none" stroke="#3B82F6" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg> },
+          { label: 'Certified Categories', value: loading ? '—' : categoryCount, sub: 'Certificate categories', accentColor: '#10B981', accentBg: '#ECFDF5', icon: <svg width="22" height="22" fill="none" stroke="#10B981" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg> },
         ].map(c => (
-          <div key={c.label} style={{ backgroundColor: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.05)', borderLeft: `3px solid ${c.accent}` }}>
-            <div style={{ width: 44, height: 44, borderRadius: 11, backgroundColor: c.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div key={c.label} style={{ backgroundColor: '#fff', border: '1px solid #E8EDF5', borderRadius: 12, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14, boxShadow: '0 2px 8px rgba(27,42,107,0.07)' }}>
+            <div style={{ width: 48, height: 48, borderRadius: 12, background: `linear-gradient(135deg, ${c.accentBg}, ${c.accentColor}18)`, border: `1.5px solid ${c.accentColor}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               {c.icon}
             </div>
             <div style={{ minWidth: 0 }}>
-              <p style={{ margin: 0, fontSize: 28, fontWeight: 800, color: '#111827', lineHeight: 1 }}>{c.value}</p>
+              <p style={{ margin: 0, fontSize: 26, fontWeight: 800, color: '#111827', lineHeight: 1 }}>{c.value}</p>
               <p style={{ margin: '3px 0 0', fontSize: 12, fontWeight: 600, color: '#374151' }}>{c.label}</p>
               <p style={{ margin: '1px 0 0', fontSize: 11, color: '#9CA3AF' }}>{c.sub}</p>
             </div>
@@ -156,31 +151,31 @@ function Overview({ officer, loading }: { officer: OfficerData | null | undefine
         ))}
       </div>
 
-      {/* ── Offices + Products ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      {/* ── Offices + Categories ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
 
         {/* Offices */}
-        <div style={{ backgroundColor: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-          <div style={{ padding: '13px 18px', borderBottom: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ backgroundColor: '#fff', border: '1px solid #E8EDF5', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 8px rgba(27,42,107,0.07)' }}>
+          <div style={{ padding: '11px 16px', borderBottom: '1px solid #F1F5F9', backgroundColor: '#FAFBFF', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#1B2A6B' }} />
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#1B2A6B', letterSpacing: '0.06em', textTransform: 'uppercase' }}>EIA / Sub-EIA Offices</span>
+              <div style={{ width: 4, height: 16, borderRadius: 2, backgroundColor: '#3B82F6' }} />
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#1B2A6B', letterSpacing: '0.07em', textTransform: 'uppercase' }}>EIA / Sub-EIA Offices</span>
             </div>
-            <span style={{ fontSize: 11, fontWeight: 700, backgroundColor: '#EEF2FF', color: '#1B2A6B', borderRadius: 20, padding: '2px 10px' }}>{officeCount}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, backgroundColor: '#EFF6FF', color: '#3B82F6', borderRadius: 20, padding: '2px 10px', border: '1px solid #BFDBFE' }}>{officeCount}</span>
           </div>
           {!officeCount ? (
-            <div style={{ padding: '40px 20px', textAlign: 'center' }}>
-              <svg width="32" height="32" fill="none" stroke="#D1D5DB" viewBox="0 0 24 24" style={{ margin: '0 auto 10px', display: 'block' }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-              <p style={{ margin: 0, fontSize: 13, color: '#9CA3AF' }}>No offices assigned yet</p>
+            <div style={{ padding: '36px 20px', textAlign: 'center' }}>
+              <svg width="28" height="28" fill="none" stroke="#D1D5DB" viewBox="0 0 24 24" style={{ margin: '0 auto 8px', display: 'block' }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+              <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF' }}>No offices assigned yet</p>
             </div>
           ) : (
-            <div style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
               {officer!.offices.map(({ office: o }) => {
                 const badge = TYPE_BADGE[o.type] ?? TYPE_BADGE.EIC;
                 return (
-                  <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 9, backgroundColor: '#F8FAFF', border: '1px solid #E8EEFF' }}>
-                    <div style={{ width: 34, height: 34, borderRadius: 8, backgroundColor: '#EEF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <svg width="16" height="16" fill="none" stroke="#1B2A6B" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                  <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 9, backgroundColor: '#F8FAFF', border: '1px solid #E8EEFF' }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg width="15" height="15" fill="none" stroke="#3B82F6" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ margin: 0, fontWeight: 600, fontSize: 13, color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{o.name}</p>
@@ -194,24 +189,24 @@ function Overview({ officer, loading }: { officer: OfficerData | null | undefine
           )}
         </div>
 
-        {/* Products */}
-        <div style={{ backgroundColor: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-          <div style={{ padding: '13px 18px', borderBottom: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {/* Categories */}
+        <div style={{ backgroundColor: '#fff', border: '1px solid #E8EDF5', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 8px rgba(27,42,107,0.07)' }}>
+          <div style={{ padding: '11px 16px', borderBottom: '1px solid #F1F5F9', backgroundColor: '#FAFBFF', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#C2410C' }} />
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#C2410C', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Certified Categories</span>
+              <div style={{ width: 4, height: 16, borderRadius: 2, backgroundColor: '#10B981' }} />
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#065F46', letterSpacing: '0.07em', textTransform: 'uppercase' }}>Certified Categories</span>
             </div>
-            <span style={{ fontSize: 11, fontWeight: 700, backgroundColor: '#FFF7ED', color: '#C2410C', borderRadius: 20, padding: '2px 10px' }}>{categoryCount}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, backgroundColor: '#ECFDF5', color: '#10B981', borderRadius: 20, padding: '2px 10px', border: '1px solid #A7F3D0' }}>{categoryCount}</span>
           </div>
           {!categoryCount ? (
-            <div style={{ padding: '40px 20px', textAlign: 'center' }}>
-              <svg width="32" height="32" fill="none" stroke="#D1D5DB" viewBox="0 0 24 24" style={{ margin: '0 auto 10px', display: 'block' }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
-              <p style={{ margin: 0, fontSize: 13, color: '#9CA3AF' }}>No categories assigned yet</p>
+            <div style={{ padding: '36px 20px', textAlign: 'center' }}>
+              <svg width="28" height="28" fill="none" stroke="#D1D5DB" viewBox="0 0 24 24" style={{ margin: '0 auto 8px', display: 'block' }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
+              <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF' }}>No categories assigned yet</p>
             </div>
           ) : (
-            <div style={{ padding: '10px 14px', display: 'flex', flexWrap: 'wrap', gap: 6, maxHeight: 320, overflowY: 'auto' }}>
+            <div style={{ padding: '12px 14px', display: 'flex', flexWrap: 'wrap', gap: 6, maxHeight: 300, overflowY: 'auto' }}>
               {officer!.categories.map(({ category }) => (
-                <span key={category} style={{ fontSize: 12, backgroundColor: '#FFF7ED', color: '#C2410C', border: '1px solid #FED7AA', borderRadius: 6, padding: '4px 12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{category}</span>
+                <span key={category} style={{ fontSize: 11, backgroundColor: '#ECFDF5', color: '#059669', border: '1px solid #A7F3D0', borderRadius: 6, padding: '4px 12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{category}</span>
               ))}
             </div>
           )}
@@ -387,8 +382,12 @@ export default function OfficerPortal() {
 
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
         {/* Sidebar */}
-        <aside style={{ width: collapsed ? 60 : 220, backgroundColor: 'var(--bg-nav)', display: 'flex', flexDirection: 'column', flexShrink: 0, transition: 'width 0.2s ease', position: 'relative', height: '100%', overflow: 'visible', borderRight: '1px solid var(--nav-border)' }}>
-          <button onClick={() => setCollapsed(c => !c)} style={{ position: 'absolute', top: 16, right: -12, width: 24, height: 24, borderRadius: '50%', backgroundColor: 'var(--bg-nav)', border: '1px solid var(--nav-border)', color: 'var(--nav-text)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, fontSize: 10 }}>
+        <aside style={{ width: collapsed ? 64 : 256, backgroundColor: '#ffffff', display: 'flex', flexDirection: 'column', flexShrink: 0, transition: 'width 0.22s cubic-bezier(.4,0,.2,1)', position: 'relative', height: '100%', overflow: 'visible', boxShadow: '4px 0 24px rgba(27,42,107,0.10)', zIndex: 10 }}>
+
+          {/* Collapse toggle */}
+          <button onClick={() => setCollapsed(c => !c)} style={{ position: 'absolute', top: 20, right: -14, width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg, #1B2A6B, #2563EB)', border: '2px solid #fff', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, fontSize: 11, fontWeight: 700, boxShadow: '0 2px 10px rgba(27,42,107,0.30)', transition: 'transform 0.15s' }}
+            onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.12)')}
+            onMouseLeave={e => (e.currentTarget.style.transform = 'none')}>
             {collapsed ? '›' : '‹'}
           </button>
 
@@ -400,27 +399,27 @@ export default function OfficerPortal() {
             {!collapsed && (
               <div style={{ overflow: 'hidden', minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                  <span style={{ color: '#fff', fontSize: 14, fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1, whiteSpace: 'nowrap' }}>e-Services</span>
-                  <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, fontWeight: 500 }}>PORTAL</span>
+                  <span style={{ color: '#1B2A6B', fontSize: 14, fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1, whiteSpace: 'nowrap' }}>e-Services</span>
+                  <span style={{ color: 'rgba(27,42,107,0.45)', fontSize: 10, fontWeight: 500 }}>PORTAL</span>
                 </div>
-                <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, margin: '3px 0 0', fontWeight: 400, letterSpacing: '0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Export Inspection Council</p>
+                <p style={{ color: 'rgba(27,42,107,0.55)', fontSize: 10, margin: '3px 0 0', fontWeight: 400, letterSpacing: '0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Export Inspection Council</p>
               </div>
             )}
           </div>
 
           {/* Nav */}
-          <nav style={{ flex: 1, padding: '10px 0', overflowY: 'auto', overflowX: 'hidden' }}>
+          <nav style={{ flex: 1, padding: '10px 8px', overflowY: 'auto', overflowX: 'hidden' }}>
             {NAV.map(item => (
               <SidebarBtn key={item.key} item={item} active={activeNav === item.key} collapsed={collapsed} onClick={() => setActiveNav(item.key)} />
             ))}
           </nav>
 
           {/* Bottom actions */}
-          <div style={{ borderTop: '1px solid var(--nav-border)', padding: '8px 0' }}>
+          <div style={{ borderTop: '1px solid rgba(27,42,107,0.08)', padding: '8px 8px' }}>
             <button onClick={handleLogout} title={collapsed ? 'Logout' : undefined}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: collapsed ? '11px 0' : '11px 20px', justifyContent: collapsed ? 'center' : 'flex-start', background: 'none', border: 'none', cursor: 'pointer', color: '#FCA5A5', fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', transition: 'color 0.15s, background 0.15s' }}
-              onMouseEnter={e => { (e.currentTarget.style.color = '#FEE2E2'); (e.currentTarget.style.background = 'rgba(239,68,68,0.15)'); }}
-              onMouseLeave={e => { (e.currentTarget.style.color = '#FCA5A5'); (e.currentTarget.style.background = 'none'); }}>
+              style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: collapsed ? '10px 0' : '9px 14px', justifyContent: collapsed ? 'center' : 'flex-start', background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer', color: '#DC2626', fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', transition: 'color 0.15s, background 0.15s' }}
+              onMouseEnter={e => { (e.currentTarget.style.color = '#B91C1C'); (e.currentTarget.style.background = 'rgba(239,68,68,0.07)'); }}
+              onMouseLeave={e => { (e.currentTarget.style.color = '#DC2626'); (e.currentTarget.style.background = 'none'); }}>
               <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
@@ -432,7 +431,7 @@ export default function OfficerPortal() {
         {/* Main content */}
         <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {/* Breadcrumb / topbar */}
-          <div style={{ padding: '6px 24px', borderBottom: '1px solid #d1d5db', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f8fafc', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', flexShrink: 0 }}>
+          <div style={{ padding: '6px 24px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#ffffff', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ color: '#6b7280', fontSize: 12 }}>Dashboard</span>
               <span style={{ color: '#9ca3af', fontSize: 12 }}>›</span>
@@ -460,6 +459,12 @@ export default function OfficerPortal() {
             {renderSection()}
           </div>
         </main>
+      </div>
+
+      {/* ── Sticky footer bar ─────────────────────────── */}
+      <div style={{ flexShrink: 0, padding: '7px 24px', background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11 }}>© 2026 Export Inspection Council. All Rights Reserved.</span>
+        <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11 }}>Last Updated : 28 Jan 2026 &nbsp;|&nbsp; Total Visitors : <span style={{ color: '#ffffff', fontWeight: 600 }}>2,195,193</span></span>
       </div>
     </div>
   );

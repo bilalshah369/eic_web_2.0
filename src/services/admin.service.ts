@@ -244,6 +244,14 @@ export const adminApi = {
   updateStatusMaster: (id: string, data: { label?: string; description?: string; isActive?: boolean; sortOrder?: number }) =>
     api.put<{ success: boolean; data: PIAStatusMaster }>(`/admin/pia/status-master/${id}`, data),
   deleteStatusMaster: (id: string) => api.delete(`/admin/pia/status-master/${id}`),
+
+  getDocumentMaster: () =>
+    api.get<{ success: boolean; data: PIADocumentMaster[] }>('/admin/pia/document-master'),
+  createDocumentMaster: (data: { code: string; label: string; description?: string; isRequired?: boolean; sortOrder?: number }) =>
+    api.post<{ success: boolean; data: PIADocumentMaster }>('/admin/pia/document-master', data),
+  updateDocumentMaster: (id: string, data: { code?: string; label?: string; description?: string; isRequired?: boolean; sortOrder?: number; isActive?: boolean }) =>
+    api.put<{ success: boolean; data: PIADocumentMaster }>(`/admin/pia/document-master/${id}`, data),
+  deleteDocumentMaster: (id: string) => api.delete(`/admin/pia/document-master/${id}`),
 };
 
 // ── PIA Master types ─────────────────────────────────────────────────────────
@@ -291,6 +299,18 @@ export interface PIAStatusMaster {
   label: string;
   description: string | null;
   phase: string;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PIADocumentMaster {
+  id: string;
+  code: string;
+  label: string;
+  description: string | null;
+  isRequired: boolean;
   sortOrder: number;
   isActive: boolean;
   createdAt: string;

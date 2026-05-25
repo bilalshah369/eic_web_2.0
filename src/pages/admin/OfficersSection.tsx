@@ -30,22 +30,22 @@ function TablePagination({ page, total, pageSize, onPage, onPageSize }: {
 
   const nb: React.CSSProperties = {
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    width: 28, height: 28, borderRadius: 6, border: '1px solid var(--border-subtle)',
-    backgroundColor: 'var(--bg-card)', cursor: 'pointer', fontSize: 12, color: 'var(--text-primary)',
+    width: 28, height: 28, borderRadius: 6, border: '1px solid #E2E8F0',
+    backgroundColor: '#ffffff', cursor: 'pointer', fontSize: 12, color: '#374151',
     fontWeight: 500, flexShrink: 0,
   };
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', borderTop: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-card)', flexWrap: 'wrap', gap: 8 }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', borderTop: '1px solid #E8EDF5', backgroundColor: '#ffffff', flexWrap: 'wrap', gap: 8 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Rows per page:</span>
+          <span style={{ fontSize: 12, color: '#6B7280' }}>Rows per page:</span>
           <select value={pageSize} onChange={e => { onPageSize(Number(e.target.value)); onPage(0); }}
-            style={{ fontSize: 12, padding: '3px 8px', borderRadius: 6, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 500 }}>
+            style={{ fontSize: 12, padding: '3px 8px', borderRadius: 6, border: '1px solid #E2E8F0', backgroundColor: '#ffffff', color: '#374151', cursor: 'pointer', fontWeight: 500 }}>
             {[5, 10, 25, 50].map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
-        <span style={{ fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: 12, color: '#6B7280', whiteSpace: 'nowrap' }}>
           {total === 0 ? 'No records' : `${from}–${to} of ${total} records`}
         </span>
       </div>
@@ -58,8 +58,8 @@ function TablePagination({ page, total, pageSize, onPage, onPageSize }: {
         </button>
         {getPages().map((pg, idx) =>
           pg === '...'
-            ? <span key={`e${idx}`} style={{ width: 28, textAlign: 'center', fontSize: 12, color: 'var(--text-muted)' }}>…</span>
-            : <button key={pg} onClick={() => onPage(pg as number)} style={{ ...nb, backgroundColor: pg === page ? 'var(--bg-nav)' : 'var(--bg-card)', color: pg === page ? '#fff' : 'var(--text-primary)', borderColor: pg === page ? 'var(--bg-nav)' : 'var(--border-subtle)', fontWeight: pg === page ? 700 : 500, cursor: 'pointer' }}>{(pg as number) + 1}</button>
+            ? <span key={`e${idx}`} style={{ width: 28, textAlign: 'center', fontSize: 12, color: '#6B7280' }}>…</span>
+            : <button key={pg} onClick={() => onPage(pg as number)} style={{ ...nb, backgroundColor: pg === page ? '#1B2A6B' : '#ffffff', color: pg === page ? '#fff' : '#374151', borderColor: pg === page ? '#1B2A6B' : '#E2E8F0', fontWeight: pg === page ? 700 : 500, cursor: 'pointer' }}>{(pg as number) + 1}</button>
         )}
         <button disabled={page >= totalPages - 1} onClick={() => onPage(page + 1)} title="Next" style={{ ...nb, opacity: page >= totalPages - 1 ? 0.35 : 1, cursor: page >= totalPages - 1 ? 'default' : 'pointer' }}>
           <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
@@ -718,10 +718,14 @@ function OfficerList(p: OfficerListProps) {
             />
           </div>
           <button onClick={p.onCreate} style={{
-            backgroundColor: 'var(--bg-nav)', color: '#fff', border: 'none',
+            background: 'linear-gradient(135deg, #1B2A6B, #2563EB)', color: '#fff', border: 'none',
             borderRadius: 8, padding: '9px 20px', fontWeight: 600, fontSize: 13, cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
-          }}>
+            boxShadow: '0 2px 8px rgba(27,42,107,0.30)',
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
+          >
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
             Add Officer
           </button>
@@ -729,7 +733,7 @@ function OfficerList(p: OfficerListProps) {
       </div>
 
       {/* table */}
-      <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 10, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+      <div style={{ backgroundColor: '#ffffff', border: '1px solid #E8EDF5', borderRadius: 14, overflow: 'hidden', boxShadow: '0 2px 8px rgba(27,42,107,0.07)' }}>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 760 }}>
             <colgroup>
@@ -743,7 +747,7 @@ function OfficerList(p: OfficerListProps) {
               <col style={{ width: 44 }} />
             </colgroup>
             <thead>
-              <tr style={{ backgroundColor: 'var(--bg-utility)' }}>
+              <tr style={{ background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)' }}>
                 {[
                   { label: 'Officer Name', sortable: true },
                   { label: 'Qualification', sortable: true },
@@ -765,16 +769,16 @@ function OfficerList(p: OfficerListProps) {
                   </th>
                 ))}
                 {/* sticky ⋮ column — no header */}
-                <th style={{ padding: 0, position: 'sticky', right: 0, zIndex: 3, backgroundColor: 'var(--bg-utility)', borderLeft: '1px solid rgba(255,255,255,0.08)', width: 44 }} />
+                <th style={{ padding: 0, position: 'sticky', right: 0, zIndex: 3, backgroundColor: '#1B2A6B', borderLeft: '1px solid rgba(255,255,255,0.08)', width: 44 }} />
               </tr>
             </thead>
             <tbody>
               {p.isLoading ? (
                 [...Array(5)].map((_, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                  <tr key={i} style={{ borderBottom: '1px solid #F0F4FF' }}>
                     {[...Array(9)].map((__, j) => (
                       <td key={j} style={{ padding: '9px 12px' }}>
-                        <div style={{ height: 13, borderRadius: 4, backgroundColor: 'var(--card-overlay)', width: j === 0 ? 130 : j === 6 ? 140 : 70 }} />
+                        <div style={{ height: 13, borderRadius: 4, backgroundColor: '#F1F5F9', width: j === 0 ? 130 : j === 6 ? 140 : 70 }} />
                       </td>
                     ))}
                   </tr>
@@ -791,12 +795,12 @@ function OfficerList(p: OfficerListProps) {
               ) : (
                 p.officers.map((o) => (
                   <tr key={o.id}
-                    style={{ borderBottom: '1px solid var(--border-subtle)', transition: 'background 0.12s' }}
-                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--card-overlay)')}
+                    style={{ borderBottom: '1px solid #F0F4FF', transition: 'background 0.12s' }}
+                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F8FAFF')}
                     onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
                   >
                     <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
-                      <span style={{ fontWeight: 600, color: 'var(--bg-nav)', fontSize: 13 }}>{o.name}</span>
+                      <span style={{ fontWeight: 600, color: '#1B2A6B', fontSize: 13 }}>{o.name}</span>
                     </td>
                     <td style={{ padding: '9px 12px', color: 'var(--text-primary)', fontSize: 12, whiteSpace: 'nowrap' }}>{o.qualification}</td>
                     <td style={{ padding: '9px 12px', color: 'var(--text-muted)', fontSize: 12, whiteSpace: 'nowrap' }}>{o.designation}</td>
@@ -804,9 +808,9 @@ function OfficerList(p: OfficerListProps) {
                       <button
                         onClick={() => onViewAssignments(o, 'offices')}
                         title="View assigned offices"
-                        style={{ display: 'inline-block', backgroundColor: 'var(--card-overlay)', color: 'var(--bg-nav)', borderRadius: 10, padding: '2px 8px', fontWeight: 700, fontSize: 12, border: '1px solid var(--border-subtle)', cursor: 'pointer', transition: 'all 0.12s' }}
+                        style={{ display: 'inline-block', backgroundColor: '#EFF6FF', color: '#1D4ED8', borderRadius: 10, padding: '2px 8px', fontWeight: 700, fontSize: 12, border: '1px solid #BFDBFE', cursor: 'pointer', transition: 'all 0.12s' }}
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '#DBEAFE'; (e.currentTarget as HTMLElement).style.borderColor = '#93C5FD'; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--card-overlay)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-subtle)'; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '#EFF6FF'; (e.currentTarget as HTMLElement).style.borderColor = '#BFDBFE'; }}
                       >
                         {o._count.offices}
                       </button>
@@ -829,8 +833,8 @@ function OfficerList(p: OfficerListProps) {
                         {/* Edit */}
                         <button onClick={() => p.onEdit(o)} title="Edit Officer" style={{
                           display: 'flex', alignItems: 'center', gap: 4,
-                          padding: '4px 10px', borderRadius: 6, border: '1px solid var(--border-subtle)',
-                          backgroundColor: 'var(--card-overlay)', color: 'var(--text-primary)',
+                          padding: '4px 10px', borderRadius: 6, border: '1px solid #E2E8F0',
+                          backgroundColor: '#F8FAFF', color: '#374151',
                           fontSize: 12, fontWeight: 600, cursor: 'pointer',
                         }}>
                           <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
@@ -859,9 +863,9 @@ function OfficerList(p: OfficerListProps) {
                     </td>
 
                     {/* Sticky ⋮ dropdown column */}
-                    <td style={{ padding: '4px 6px', whiteSpace: 'nowrap', position: 'sticky', right: 0, backgroundColor: 'var(--bg-card)', borderLeft: '1px solid var(--border-subtle)', zIndex: 1, textAlign: 'center' }}
-                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--card-overlay)')}
-                      onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'var(--bg-card)')}>
+                    <td style={{ padding: '4px 6px', whiteSpace: 'nowrap', position: 'sticky', right: 0, backgroundColor: '#ffffff', borderLeft: '1px solid #E8EDF5', zIndex: 1, textAlign: 'center' }}
+                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F8FAFF')}
+                      onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#ffffff')}>
                       <button
                         onClick={e => {
                           e.stopPropagation();
@@ -870,9 +874,9 @@ function OfficerList(p: OfficerListProps) {
                           setOpenDrop({ id: o.id, top: rect.bottom + 4, right: window.innerWidth - rect.right });
                         }}
                         title="More actions"
-                        style={{ width: 30, height: 30, borderRadius: 6, border: '1px solid var(--border-subtle)', backgroundColor: openDrop?.id === o.id ? 'var(--card-overlay)' : 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--card-overlay)'; }}
-                        onMouseLeave={e => { if (openDrop?.id !== o.id) (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; }}
+                        style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid #BFDBFE', backgroundColor: openDrop?.id === o.id ? '#1B2A6B' : '#EFF6FF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: openDrop?.id === o.id ? '#fff' : '#1D4ED8', transition: 'background 0.15s' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '#1B2A6B'; (e.currentTarget as HTMLElement).style.color = '#fff'; (e.currentTarget as HTMLElement).style.borderColor = '#1B2A6B'; }}
+                        onMouseLeave={e => { if (openDrop?.id !== o.id) { (e.currentTarget as HTMLElement).style.backgroundColor = '#EFF6FF'; (e.currentTarget as HTMLElement).style.color = '#1D4ED8'; (e.currentTarget as HTMLElement).style.borderColor = '#BFDBFE'; } }}
                       >
                         <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
                           <circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/>

@@ -1,12 +1,12 @@
-import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import Header, { UserMenu } from '../components/Header';
 import ChangePasswordModal from '../components/ChangePasswordModal';
 import PIAApplicationForm from './pia/PIAApplicationForm';
 import { piaApi, PIAApplicationSummary, PIASubType } from '../services/pia.service';
 
-type NavKey = 'home' | 'establishment' | 'pia-applications' | 'pia-fees' | 'pia-nc' | 'pia-alerts';
+type NavKey = 'home' | 'establishment' | 'pia-applications' | 'pia-fees' | 'pia-nc';
 
 const NAV_ITEMS = [
   {
@@ -59,15 +59,6 @@ const PIA_SUB_ITEMS: { key: NavKey; label: string; icon: React.ReactNode }[] = [
       </svg>
     ),
   },
-  {
-    key: 'pia-alerts',
-    label: 'Alerts',
-    icon: (
-      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-      </svg>
-    ),
-  },
 ];
 
 const SECTION_CRUMBS: Record<NavKey, string[]> = {
@@ -76,22 +67,41 @@ const SECTION_CRUMBS: Record<NavKey, string[]> = {
   'pia-applications':['Dashboard', 'PIA Recognition', 'My Applications'],
   'pia-fees':        ['Dashboard', 'PIA Recognition', 'Pending Fees'],
   'pia-nc':          ['Dashboard', 'PIA Recognition', 'Non-Conformities'],
-  'pia-alerts':      ['Dashboard', 'PIA Recognition', 'Alerts'],
 };
+
+const ALL_NAV_KEYS: NavKey[] = [
+  ...NAV_ITEMS.map(i => i.key),
+  ...PIA_SUB_ITEMS.map(i => i.key),
+];
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeNav, setActiveNav] = useState<NavKey>('home');
+  const { section } = useParams<{ section: string }>();
+
+  const resolvedNav = (ALL_NAV_KEYS.includes(section as NavKey) ? section : 'home') as NavKey;
+
+  const [activeNav, setActiveNav] = useState<NavKey>(resolvedNav);
   const [sectionKey, setSectionKey] = useState(0);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [piaExpanded, setPiaExpanded] = useState(false);
+  const [piaExpanded, setPiaExpanded] = useState(() => PIA_SUB_ITEMS.some(s => s.key === resolvedNav));
   const [showChangePwd, setShowChangePwd] = useState(false);
   const navRef = useRef<HTMLElement>(null);
+
+  // Sync when browser back/forward changes URL
+  useEffect(() => {
+    const key = (ALL_NAV_KEYS.includes(section as NavKey) ? section : 'home') as NavKey;
+    setActiveNav(key);
+    setSectionKey(k => k + 1);
+    if (PIA_SUB_ITEMS.some(s => s.key === key)) setPiaExpanded(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [section]);
 
   const isPiaActive = PIA_SUB_ITEMS.some(s => s.key === activeNav);
 
   const handleSetNav = (key: NavKey) => {
+    const url = key === 'home' ? '/dashboard' : `/dashboard/${key}`;
+    navigate(url);
     if (key === activeNav) { setSectionKey(k => k + 1); return; }
     setActiveNav(key);
     setSectionKey(k => k + 1);
@@ -117,26 +127,32 @@ export default function Dashboard() {
 
         {/* ── Sidebar ───────────────────────────────────── */}
         <aside style={{
-          width: sidebarCollapsed ? '60px' : '260px',
-          backgroundColor: 'var(--bg-nav)',
+          width: sidebarCollapsed ? '64px' : '256px',
+          backgroundColor: '#ffffff',
           display: 'flex', flexDirection: 'column', flexShrink: 0,
-          transition: 'width 0.2s ease',
+          transition: 'width 0.22s cubic-bezier(.4,0,.2,1)',
           position: 'relative',
           height: '100%', overflow: 'visible',
-          borderRight: '1px solid var(--nav-border)',
+          boxShadow: '4px 0 24px rgba(27,42,107,0.10)',
+          zIndex: 10,
         }}>
 
           {/* Collapse toggle */}
           <button
             onClick={() => setSidebarCollapsed(c => !c)}
             style={{
-              position: 'absolute', top: '16px', right: '-12px',
-              width: 24, height: 24, borderRadius: '50%',
-              backgroundColor: 'var(--bg-nav)', border: '1px solid var(--nav-border)',
-              color: 'var(--nav-text)', cursor: 'pointer',
+              position: 'absolute', top: '20px', right: '-14px',
+              width: 28, height: 28, borderRadius: '50%',
+              background: 'linear-gradient(135deg, #1B2A6B, #2563EB)',
+              border: '2px solid #fff',
+              color: '#fff', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              zIndex: 50, fontSize: '10px',
+              zIndex: 50, fontSize: '11px', fontWeight: 700,
+              boxShadow: '0 2px 10px rgba(27,42,107,0.30)',
+              transition: 'transform 0.15s',
             }}
+            onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.12)')}
+            onMouseLeave={e => (e.currentTarget.style.transform = 'none')}
           >
             {sidebarCollapsed ? '›' : '‹'}
           </button>
@@ -149,7 +165,6 @@ export default function Dashboard() {
             overflow: 'hidden', justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
             flexShrink: 0,
           }}>
-            {/* Monogram badge */}
             <div style={{
               width: 36, height: 36, borderRadius: '9px',
               background: 'linear-gradient(135deg, #2563EB 0%, #1B2A6B 100%)',
@@ -161,10 +176,10 @@ export default function Dashboard() {
             {!sidebarCollapsed && (
               <div style={{ overflow: 'hidden', minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                  <span style={{ color: '#fff', fontSize: 14, fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1, whiteSpace: 'nowrap' }}>e-Services</span>
-                  <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, fontWeight: 500 }}>PORTAL</span>
+                  <span style={{ color: '#1B2A6B', fontSize: 14, fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1, whiteSpace: 'nowrap' }}>e-Services</span>
+                  <span style={{ color: 'rgba(27,42,107,0.45)', fontSize: 10, fontWeight: 500 }}>PORTAL</span>
                 </div>
-                <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, margin: '3px 0 0', fontWeight: 400, letterSpacing: '0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Export Inspection Council</p>
+                <p style={{ color: 'rgba(27,42,107,0.55)', fontSize: 10, margin: '3px 0 0', fontWeight: 400, letterSpacing: '0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Export Inspection Council</p>
               </div>
             )}
           </div>
@@ -172,102 +187,113 @@ export default function Dashboard() {
           {/* Scroll up */}
           <button
             onClick={() => scroll('up')}
-            style={{ width: '100%', padding: '4px 0', background: 'none', border: 'none', borderBottom: '1px solid var(--nav-border)', cursor: 'pointer', color: 'var(--nav-text-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-            onMouseEnter={e => (e.currentTarget.style.color = 'var(--nav-text-active)')}
-            onMouseLeave={e => (e.currentTarget.style.color = 'var(--nav-text-dim)')}
+            style={{ width: '100%', padding: '3px 0', background: 'none', border: 'none', borderBottom: '1px solid rgba(27,42,107,0.07)', cursor: 'pointer', color: 'rgba(27,42,107,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#1B2A6B')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(27,42,107,0.35)')}
           >
-            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" /></svg>
+            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" /></svg>
           </button>
 
           {/* Navigation */}
-          <nav ref={navRef} className="scrollbar-none" style={{ flex: 1, padding: '10px 0', overflowY: 'auto', overflowX: 'hidden' }}>
-            {NAV_ITEMS.map(item => (
-              <button
-                key={item.key}
-                onClick={() => handleSetNav(item.key)}
-                title={sidebarCollapsed ? item.label : undefined}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '10px',
-                  width: '100%',
-                  padding: sidebarCollapsed ? '12px 0' : '11px 20px',
-                  justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
-                  background: activeNav === item.key ? 'var(--nav-active-bg)' : 'none',
-                  border: 'none',
-                  borderLeft: activeNav === item.key ? '3px solid var(--nav-active-bar)' : '3px solid transparent',
-                  cursor: 'pointer',
-                  color: activeNav === item.key ? 'var(--nav-text-active)' : 'var(--nav-text)',
-                  fontSize: '13px', fontWeight: activeNav === item.key ? 700 : 500,
-                  textAlign: 'left',
-                  transition: 'background 0.15s, color 0.15s',
-                  whiteSpace: 'nowrap', overflow: 'hidden',
-                }}
-                onMouseEnter={e => { if (activeNav !== item.key) { (e.currentTarget as HTMLElement).style.background = 'var(--nav-hover-bg)'; (e.currentTarget as HTMLElement).style.color = 'var(--nav-text-active)'; } }}
-                onMouseLeave={e => { if (activeNav !== item.key) { (e.currentTarget as HTMLElement).style.background = 'none'; (e.currentTarget as HTMLElement).style.color = 'var(--nav-text)'; } }}
-              >
-                <span style={{ flexShrink: 0, color: activeNav === item.key ? 'var(--nav-active-bar)' : 'var(--nav-icon-dim)' }}>{item.icon}</span>
-                {!sidebarCollapsed && <span>{item.label}</span>}
-              </button>
-            ))}
+          <nav ref={navRef} className="scrollbar-none" style={{ flex: 1, padding: '10px 8px', overflowY: 'auto', overflowX: 'hidden' }}>
+            {NAV_ITEMS.map(item => {
+              const isActive = activeNav === item.key;
+              return (
+                <button
+                  key={item.key}
+                  onClick={() => handleSetNav(item.key)}
+                  title={sidebarCollapsed ? item.label : undefined}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '10px',
+                    width: '100%',
+                    padding: sidebarCollapsed ? '11px 0' : '10px 14px',
+                    justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+                    background: isActive ? 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)' : 'none',
+                    border: 'none',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    color: isActive ? '#ffffff' : 'rgba(27,42,107,0.70)',
+                    fontSize: '13px', fontWeight: isActive ? 600 : 500,
+                    textAlign: 'left',
+                    transition: 'background 0.15s, color 0.15s, box-shadow 0.15s',
+                    whiteSpace: 'nowrap', overflow: 'hidden',
+                    boxShadow: isActive ? '0 4px 14px rgba(27,42,107,0.30)' : 'none',
+                    marginBottom: '2px',
+                  }}
+                  onMouseEnter={e => { if (!isActive) { (e.currentTarget as HTMLElement).style.background = 'rgba(27,42,107,0.07)'; (e.currentTarget as HTMLElement).style.color = '#1B2A6B'; } }}
+                  onMouseLeave={e => { if (!isActive) { (e.currentTarget as HTMLElement).style.background = 'none'; (e.currentTarget as HTMLElement).style.color = 'rgba(27,42,107,0.70)'; } }}
+                >
+                  <span style={{ flexShrink: 0, color: isActive ? '#ffffff' : 'rgba(27,42,107,0.55)' }}>{item.icon}</span>
+                  {!sidebarCollapsed && <span>{item.label}</span>}
+                </button>
+              );
+            })}
 
             {/* PIA Recognition collapsible group */}
             {!sidebarCollapsed && (
-              <div style={{ marginTop: 4 }}>
+              <div style={{ marginTop: 2 }}>
                 <button
                   onClick={() => setPiaExpanded(e => !e)}
-                  title="PIA Recognition"
                   style={{
                     display: 'flex', alignItems: 'center', gap: 10,
-                    width: '100%', padding: '11px 20px',
-                    background: isPiaActive ? 'var(--nav-active-bg)' : 'none',
-                    border: 'none',
-                    borderLeft: isPiaActive ? '3px solid var(--nav-active-bar)' : '3px solid transparent',
+                    width: '100%', padding: '10px 14px',
+                    background: isPiaActive ? 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)' : 'none',
+                    border: 'none', borderRadius: '10px',
                     cursor: 'pointer',
-                    color: isPiaActive ? 'var(--nav-text-active)' : 'var(--nav-text)',
-                    fontSize: '13px', fontWeight: isPiaActive ? 700 : 500,
+                    color: isPiaActive ? '#ffffff' : 'rgba(27,42,107,0.70)',
+                    fontSize: '13px', fontWeight: isPiaActive ? 600 : 500,
                     textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden',
-                    transition: 'background 0.15s, color 0.15s',
+                    transition: 'background 0.15s, color 0.15s, box-shadow 0.15s',
+                    boxShadow: isPiaActive ? '0 4px 14px rgba(27,42,107,0.30)' : 'none',
+                    marginBottom: '2px',
                   }}
-                  onMouseEnter={e => { if (!isPiaActive) { (e.currentTarget as HTMLElement).style.background = 'var(--nav-hover-bg)'; (e.currentTarget as HTMLElement).style.color = 'var(--nav-text-active)'; } }}
-                  onMouseLeave={e => { if (!isPiaActive) { (e.currentTarget as HTMLElement).style.background = 'none'; (e.currentTarget as HTMLElement).style.color = 'var(--nav-text)'; } }}
+                  onMouseEnter={e => { if (!isPiaActive) { (e.currentTarget as HTMLElement).style.background = 'rgba(27,42,107,0.07)'; (e.currentTarget as HTMLElement).style.color = '#1B2A6B'; } }}
+                  onMouseLeave={e => { if (!isPiaActive) { (e.currentTarget as HTMLElement).style.background = 'none'; (e.currentTarget as HTMLElement).style.color = 'rgba(27,42,107,0.70)'; } }}
                 >
-                  <span style={{ flexShrink: 0, color: isPiaActive ? 'var(--nav-active-bar)' : 'var(--nav-icon-dim)' }}>
+                  <span style={{ flexShrink: 0, color: isPiaActive ? '#ffffff' : 'rgba(27,42,107,0.55)' }}>
                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                     </svg>
                   </span>
                   <span style={{ flex: 1 }}>PIA Recognition</span>
-                  <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                  <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                     style={{ flexShrink: 0, transform: piaExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
 
                 {piaExpanded && (
-                  <div style={{ borderLeft: '1px solid var(--nav-border)', marginLeft: 28 }}>
-                    {PIA_SUB_ITEMS.map(sub => (
-                      <button
-                        key={sub.key}
-                        onClick={() => handleSetNav(sub.key)}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: '8px',
-                          width: '100%', padding: '9px 16px',
-                          background: activeNav === sub.key ? 'var(--nav-active-bg)' : 'none',
-                          border: 'none',
-                          borderLeft: activeNav === sub.key ? '2px solid var(--nav-active-bar)' : '2px solid transparent',
-                          cursor: 'pointer',
-                          color: activeNav === sub.key ? 'var(--nav-text-active)' : 'var(--nav-text)',
-                          fontSize: '12px', fontWeight: activeNav === sub.key ? 700 : 500,
-                          textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden',
-                          transition: 'background 0.15s, color 0.15s',
-                        }}
-                        onMouseEnter={e => { if (activeNav !== sub.key) { (e.currentTarget as HTMLElement).style.background = 'var(--nav-hover-bg)'; (e.currentTarget as HTMLElement).style.color = 'var(--nav-text-active)'; } }}
-                        onMouseLeave={e => { if (activeNav !== sub.key) { (e.currentTarget as HTMLElement).style.background = 'none'; (e.currentTarget as HTMLElement).style.color = 'var(--nav-text)'; } }}
-                      >
-                        <span style={{ flexShrink: 0, color: activeNav === sub.key ? 'var(--nav-active-bar)' : 'var(--nav-icon-dim)' }}>{sub.icon}</span>
-                        <span>{sub.label}</span>
-                      </button>
-                    ))}
+                  <div style={{ paddingLeft: '12px', marginTop: '2px' }}>
+                    <div style={{ borderLeft: '2px solid rgba(27,42,107,0.15)', paddingLeft: '8px' }}>
+                      {PIA_SUB_ITEMS.map(sub => {
+                        const isSubActive = activeNav === sub.key;
+                        return (
+                          <button
+                            key={sub.key}
+                            onClick={() => handleSetNav(sub.key)}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: '8px',
+                              width: '100%', padding: '8px 12px',
+                              background: isSubActive ? 'rgba(27,42,107,0.10)' : 'none',
+                              border: 'none', borderRadius: '8px',
+                              cursor: 'pointer',
+                              color: isSubActive ? '#1B2A6B' : 'rgba(27,42,107,0.60)',
+                              fontSize: '12px', fontWeight: isSubActive ? 700 : 500,
+                              textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden',
+                              transition: 'background 0.15s, color 0.15s',
+                              marginBottom: '1px',
+                            }}
+                            onMouseEnter={e => { if (!isSubActive) { (e.currentTarget as HTMLElement).style.background = 'rgba(27,42,107,0.06)'; (e.currentTarget as HTMLElement).style.color = '#1B2A6B'; } }}
+                            onMouseLeave={e => { if (!isSubActive) { (e.currentTarget as HTMLElement).style.background = 'none'; (e.currentTarget as HTMLElement).style.color = 'rgba(27,42,107,0.60)'; } }}
+                          >
+                            <span style={{ flexShrink: 0, color: isSubActive ? '#1B2A6B' : 'rgba(27,42,107,0.45)' }}>{sub.icon}</span>
+                            <span>{sub.label}</span>
+                            {isSubActive && <span style={{ marginLeft: 'auto', width: 6, height: 6, borderRadius: '50%', backgroundColor: '#2563EB', flexShrink: 0 }} />}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
@@ -280,12 +306,13 @@ export default function Dashboard() {
                 onClick={() => { setPiaExpanded(true); setSidebarCollapsed(false); handleSetNav('pia-applications'); }}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  width: '100%', padding: '12px 0',
-                  background: isPiaActive ? 'var(--nav-active-bg)' : 'none',
-                  border: 'none',
-                  borderLeft: isPiaActive ? '3px solid var(--nav-active-bar)' : '3px solid transparent',
+                  width: '100%', padding: '11px 0',
+                  background: isPiaActive ? 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)' : 'none',
+                  border: 'none', borderRadius: '10px',
                   cursor: 'pointer',
-                  color: isPiaActive ? 'var(--nav-text-active)' : 'var(--nav-icon-dim)',
+                  color: isPiaActive ? '#ffffff' : 'rgba(27,42,107,0.55)',
+                  boxShadow: isPiaActive ? '0 4px 14px rgba(27,42,107,0.30)' : 'none',
+                  marginBottom: '2px',
                 }}
               >
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -299,28 +326,28 @@ export default function Dashboard() {
           {/* Scroll down */}
           <button
             onClick={() => scroll('down')}
-            style={{ width: '100%', padding: '4px 0', background: 'none', border: 'none', borderTop: '1px solid var(--nav-border)', cursor: 'pointer', color: 'var(--nav-text-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-            onMouseEnter={e => (e.currentTarget.style.color = 'var(--nav-text-active)')}
-            onMouseLeave={e => (e.currentTarget.style.color = 'var(--nav-text-dim)')}
+            style={{ width: '100%', padding: '3px 0', background: 'none', border: 'none', borderTop: '1px solid rgba(27,42,107,0.07)', cursor: 'pointer', color: 'rgba(27,42,107,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#1B2A6B')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(27,42,107,0.35)')}
           >
-            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
+            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
           </button>
 
           {/* Bottom actions */}
-          <div style={{ borderTop: '1px solid var(--nav-border)', padding: '8px 0' }}>
+          <div style={{ borderTop: '1px solid rgba(27,42,107,0.08)', padding: '8px 8px' }}>
             <button
               onClick={() => setShowChangePwd(true)}
               title={sidebarCollapsed ? 'Change Password' : undefined}
               style={{
                 display: 'flex', alignItems: 'center', gap: '10px',
-                width: '100%', padding: sidebarCollapsed ? '11px 0' : '11px 20px',
+                width: '100%', padding: sidebarCollapsed ? '10px 0' : '9px 14px',
                 justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
-                background: 'none', border: 'none', cursor: 'pointer',
-                color: 'var(--nav-text)', fontSize: '13px', fontWeight: 500,
+                background: 'none', border: 'none', borderRadius: '8px', cursor: 'pointer',
+                color: 'rgba(27,42,107,0.65)', fontSize: '13px', fontWeight: 500,
                 whiteSpace: 'nowrap', overflow: 'hidden', transition: 'color 0.15s, background 0.15s',
               }}
-              onMouseEnter={e => { (e.currentTarget.style.color = 'var(--nav-text-active)'); (e.currentTarget.style.background = 'var(--nav-hover-bg)'); }}
-              onMouseLeave={e => { (e.currentTarget.style.color = 'var(--nav-text)'); (e.currentTarget.style.background = 'none'); }}
+              onMouseEnter={e => { (e.currentTarget.style.color = '#1B2A6B'); (e.currentTarget.style.background = 'rgba(27,42,107,0.06)'); }}
+              onMouseLeave={e => { (e.currentTarget.style.color = 'rgba(27,42,107,0.65)'); (e.currentTarget.style.background = 'none'); }}
             >
               <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -333,14 +360,14 @@ export default function Dashboard() {
               title={sidebarCollapsed ? 'Logout' : undefined}
               style={{
                 display: 'flex', alignItems: 'center', gap: '10px',
-                width: '100%', padding: sidebarCollapsed ? '11px 0' : '11px 20px',
+                width: '100%', padding: sidebarCollapsed ? '10px 0' : '9px 14px',
                 justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
-                background: 'none', border: 'none', cursor: 'pointer',
-                color: '#FCA5A5', fontSize: '13px', fontWeight: 500,
+                background: 'none', border: 'none', borderRadius: '8px', cursor: 'pointer',
+                color: '#DC2626', fontSize: '13px', fontWeight: 500,
                 whiteSpace: 'nowrap', overflow: 'hidden', transition: 'color 0.15s, background 0.15s',
               }}
-              onMouseEnter={e => { (e.currentTarget.style.color = '#FEE2E2'); (e.currentTarget.style.background = 'rgba(239,68,68,0.15)'); }}
-              onMouseLeave={e => { (e.currentTarget.style.color = '#FCA5A5'); (e.currentTarget.style.background = 'none'); }}
+              onMouseEnter={e => { (e.currentTarget.style.color = '#B91C1C'); (e.currentTarget.style.background = 'rgba(239,68,68,0.07)'); }}
+              onMouseLeave={e => { (e.currentTarget.style.color = '#DC2626'); (e.currentTarget.style.background = 'none'); }}
             >
               <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -360,7 +387,7 @@ export default function Dashboard() {
             padding: '6px 24px',
             borderBottom: '1px solid #d1d5db',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            backgroundColor: '#f8fafc',
+            backgroundColor: '#ffffff',
             boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
             flexShrink: 0,
           }}>
@@ -425,6 +452,12 @@ export default function Dashboard() {
             {activeNav === 'pia-alerts' && <PIAEmptySection title="Alerts" desc="No alerts or notifications at this time." icon="alerts" />}
           </div>
         </main>
+      </div>
+
+      {/* ── Sticky footer bar ─────────────────────────── */}
+      <div style={{ flexShrink: 0, padding: '7px 24px', background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11 }}>© 2026 Export Inspection Council. All Rights Reserved.</span>
+        <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11 }}>Last Updated : 28 Jan 2026 &nbsp;|&nbsp; Total Visitors : <span style={{ color: '#ffffff', fontWeight: 600 }}>2,195,193</span></span>
       </div>
 
       {showChangePwd && <ChangePasswordModal onClose={() => setShowChangePwd(false)} />}
@@ -502,120 +535,179 @@ const SERVICES = [
 ];
 
 function DashboardHome({ onNavigate }: { onNavigate: (key: NavKey) => void }) {
+  const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
   return (
     <div>
-      <div style={{ marginBottom: '18px' }}>
-        <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0 }}>
+      {/* ── Hero Welcome Strip ── */}
+      <div style={{
+        background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)',
+        borderRadius: '12px',
+        padding: '14px 20px',
+        marginBottom: '20px',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', pointerEvents: 'none' }} />
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
+          <div>
+            <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '11px', fontWeight: 500, margin: '0 0 3px', letterSpacing: '0.02em' }}>{today}</p>
+            <h1 style={{ color: '#ffffff', fontSize: '17px', fontWeight: 700, margin: '0 0 2px', lineHeight: 1.2 }}>
+              Welcome to EIC e-Services Portal
+            </h1>
+            <p style={{ color: 'rgba(255,255,255,0.60)', fontSize: '12px', margin: 0 }}>
+              Manage approvals, PIA recognition, and export certificates — all in one place.
+            </p>
+          </div>
+          <div style={{ flexShrink: 0, display: 'flex', gap: '8px' }}>
+            {[
+              { label: 'Active Applications', value: '0', icon: '📋' },
+              { label: 'Pending Actions', value: '0', icon: '⏳' },
+            ].map(stat => (
+              <div key={stat.label} style={{
+                background: 'rgba(255,255,255,0.12)',
+                border: '1px solid rgba(255,255,255,0.18)',
+                borderRadius: '10px',
+                padding: '8px 14px',
+                textAlign: 'center',
+                minWidth: '90px',
+              }}>
+                <div style={{ color: '#fff', fontSize: '18px', fontWeight: 800, lineHeight: 1 }}>{stat.value}</div>
+                <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: '10px', fontWeight: 500, marginTop: '2px' }}>{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Section heading ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+        <div style={{ width: '4px', height: '20px', borderRadius: '2px', backgroundColor: '#1B2A6B' }} />
+        <p style={{ color: '#1B2A6B', fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0 }}>
           Available Services
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '14px' }}>
-        {SERVICES.map(svc => (
-          <div
-            key={svc.key}
-            style={{
-              borderRadius: '12px',
-              border: '1px solid var(--border-subtle)',
-              backgroundColor: 'var(--bg-card)',
-              overflow: 'hidden',
-              display: 'flex', flexDirection: 'column',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-              transition: 'box-shadow 0.15s, transform 0.15s',
-            }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 16px rgba(0,0,0,0.12)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 4px rgba(0,0,0,0.06)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
-          >
-            <div style={{ height: '3px', backgroundColor: svc.accentColor }} />
+      {/* ── Service Cards ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
+        {SERVICES.map(svc => {
+          const active = svc.key === 'establishment' || svc.key === 'pia';
+          return (
+            <div
+              key={svc.key}
+              style={{
+                borderRadius: '14px',
+                border: '1px solid #E8EDF5',
+                backgroundColor: '#ffffff',
+                overflow: 'hidden',
+                display: 'flex', flexDirection: 'column',
+                boxShadow: '0 2px 8px rgba(27,42,107,0.07)',
+                transition: 'box-shadow 0.18s, transform 0.18s',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = `0 8px 28px rgba(27,42,107,0.14)`; (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 8px rgba(27,42,107,0.07)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
+            >
+              {/* Accent top bar */}
+              <div style={{ height: '5px', background: `linear-gradient(90deg, ${svc.accentColor}, ${svc.accentColor}99)` }} />
 
-            <div style={{ padding: '16px 18px', flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: '10px', flexShrink: 0,
-                  backgroundColor: svc.accentBg,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: svc.accentColor,
-                }}>
-                  {svc.icon}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ color: 'var(--text-primary)', fontSize: '14px', fontWeight: 700, margin: 0, lineHeight: 1.2 }}>
-                    {svc.label}
-                  </p>
-                  <span style={{
-                    display: 'inline-block', marginTop: '4px',
-                    fontSize: '10px', fontWeight: 600, letterSpacing: '0.05em',
-                    padding: '2px 7px', borderRadius: '20px',
-                    backgroundColor: svc.accentBg, color: svc.accentColor,
-                    border: `1px solid ${svc.accentColor}30`,
+              <div style={{ padding: '20px 20px 16px', flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {/* Icon + Title */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+                  <div style={{
+                    width: 52, height: 52, borderRadius: '12px', flexShrink: 0,
+                    background: `linear-gradient(135deg, ${svc.accentBg}, ${svc.accentColor}18)`,
+                    border: `1.5px solid ${svc.accentColor}25`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: svc.accentColor,
                   }}>
-                    {svc.tag}
+                    {svc.icon}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ color: '#111827', fontSize: '15px', fontWeight: 700, margin: '0 0 5px', lineHeight: 1.2 }}>
+                      {svc.label}
+                    </p>
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '4px',
+                      fontSize: '10px', fontWeight: 600, letterSpacing: '0.04em',
+                      padding: '3px 8px', borderRadius: '20px',
+                      backgroundColor: svc.accentBg, color: svc.accentColor,
+                      border: `1px solid ${svc.accentColor}35`,
+                    }}>
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: svc.accentColor, flexShrink: 0 }} />
+                      {svc.tag}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <p style={{ color: '#4B5563', fontSize: '12.5px', lineHeight: 1.65, margin: 0 }}>
+                  {svc.desc}
+                </p>
+
+                {/* Steps */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexWrap: 'wrap', padding: '8px 10px', backgroundColor: '#F8FAFC', borderRadius: '8px' }}>
+                  {svc.steps.map((step, i) => (
+                    <div key={step} style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                      <span style={{ fontSize: '10px', color: '#64748B', fontWeight: 500, whiteSpace: 'nowrap' }}>{step}</span>
+                      {i < svc.steps.length - 1 && (
+                        <svg width="9" height="9" fill="none" stroke="#CBD5E1" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                        </svg>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div style={{
+                padding: '12px 20px',
+                borderTop: '1px solid #F1F5F9',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                backgroundColor: '#FAFBFF',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: active ? '#10B981' : '#94A3B8' }} />
+                  <span style={{ fontSize: '11px', color: active ? '#059669' : '#94A3B8', fontWeight: 500 }}>
+                    {active ? 'Open for applications' : 'Available'}
                   </span>
                 </div>
-              </div>
-
-              <p style={{ color: 'var(--text-secondary)', fontSize: '12px', lineHeight: 1.6, margin: 0 }}>
-                {svc.desc}
-              </p>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-                {svc.steps.map((step, i) => (
-                  <div key={step} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{step}</span>
-                    {i < svc.steps.length - 1 && (
-                      <svg width="10" height="10" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div style={{
-              padding: '10px 18px',
-              borderTop: '1px solid var(--border-subtle)',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            }}>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                {svc.key === 'establishment' || svc.key === 'pia' ? 'Open for applications' : 'Available'}
-              </span>
-              {svc.key === 'establishment' || svc.key === 'pia' ? (
-                <button
-                  onClick={() => onNavigate(svc.key === 'pia' ? 'pia-applications' : 'establishment')}
-                  style={{
+                {active ? (
+                  <button
+                    onClick={() => onNavigate(svc.key === 'pia' ? 'pia-applications' : 'establishment')}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '5px',
+                      padding: '7px 16px', borderRadius: '8px',
+                      background: 'linear-gradient(135deg, #1B2A6B, #2563EB)',
+                      border: 'none', color: '#fff', fontSize: '12px', fontWeight: 600,
+                      cursor: 'pointer', letterSpacing: '0.01em',
+                      boxShadow: '0 2px 8px rgba(27,42,107,0.30)',
+                      transition: 'opacity 0.15s, transform 0.15s',
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88'; (e.currentTarget as HTMLElement).style.transform = 'scale(1.03)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
+                  >
+                    Apply Now
+                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                ) : (
+                  <button disabled style={{
                     display: 'flex', alignItems: 'center', gap: '5px',
-                    padding: '6px 14px', borderRadius: '6px',
-                    backgroundColor: '#1B2A6B', border: 'none',
-                    color: '#fff', fontSize: '12px', fontWeight: 600,
-                    cursor: 'pointer',
-                    transition: 'background 0.15s',
-                  }}
-                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.backgroundColor = '#142057'}
-                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.backgroundColor = '#1B2A6B'}
-                >
-                  Apply Now
-                  <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              ) : (
-                <button
-                  disabled
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '5px',
-                    padding: '6px 14px', borderRadius: '6px',
-                    backgroundColor: '#f1f5f9', border: '1px solid #e2e8f0',
-                    color: '#94a3b8', fontSize: '12px', fontWeight: 600,
+                    padding: '7px 14px', borderRadius: '8px',
+                    backgroundColor: '#F1F5F9', border: '1px solid #E2E8F0',
+                    color: '#94A3B8', fontSize: '12px', fontWeight: 600,
                     cursor: 'default',
-                  }}
-                >
-                  Coming Soon
-                </button>
-              )}
+                  }}>
+                    Coming Soon
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -711,6 +803,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function PIAApplicationsSection() {
+  const { user } = useAuth();
   const [tab, setTab] = useState('all');
   const [view, setView] = useState<'list' | 'form'>('list');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -718,10 +811,8 @@ function PIAApplicationsSection() {
   const [loadingList, setLoadingList] = useState(true);
   const [creating, setCreating] = useState(false);
   const [createModal, setCreateModal] = useState(false);
-  const [modalStep, setModalStep] = useState<'type' | 'name'>('type');
-  const [selectedSubType, setSelectedSubType] = useState<PIASubType | null>(null);
-  const [newAgencyName, setNewAgencyName] = useState('');
-  const [createError, setCreateError] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<PIAApplicationSummary | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Load list
   const loadApps = () => {
@@ -729,6 +820,15 @@ function PIAApplicationsSection() {
     piaApi.list().then(data => { setApps(data); setLoadingList(false); }).catch(() => setLoadingList(false));
   };
   useState(() => { loadApps(); });
+
+  const handleDeleteConfirm = () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    piaApi.deleteApplication(deleteTarget.id)
+      .then(() => { setDeleteTarget(null); loadApps(); })
+      .catch(() => {})
+      .finally(() => setDeleting(false));
+  };
 
   const filtered = apps.filter(a => {
     if (tab === 'all') return true;
@@ -741,24 +841,19 @@ function PIAApplicationsSection() {
 
   const closeCreateModal = () => {
     setCreateModal(false);
-    setModalStep('type');
-    setSelectedSubType(null);
-    setNewAgencyName('');
-    setCreateError('');
   };
 
-  const handleCreateNew = async () => {
-    if (!newAgencyName.trim()) { setCreateError('Agency name is required'); return; }
+  const handleCreateNew = async (subType: PIASubType) => {
+    const agencyName = user?.orgName ?? user?.name ?? '';
     setCreating(true);
-    setCreateError('');
     try {
-      const app = await piaApi.createDraft(newAgencyName.trim(), selectedSubType ?? 'NEW_RECOGNITION');
+      const app = await piaApi.createDraft(agencyName, subType);
       setApps(prev => [app as any, ...prev]);
       closeCreateModal();
       setEditingId(app.id);
       setView('form');
-    } catch (err: any) {
-      setCreateError(err?.response?.data?.message ?? 'Could not create application. Try again.');
+    } catch {
+      // silently fail — user can retry
     } finally {
       setCreating(false);
     }
@@ -790,10 +885,10 @@ function PIAApplicationsSection() {
       {/* ── Page header ── */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px', gap: 16 }}>
         <div>
-          <h2 style={{ color: '#0f172a', fontSize: '18px', fontWeight: 700, margin: 0, letterSpacing: '-0.01em' }}>
+          <h2 style={{ color: '#1B2A6B', fontSize: '18px', fontWeight: 700, margin: 0, letterSpacing: '-0.01em' }}>
             PIA Recognition
           </h2>
-          <p style={{ color: '#64748b', fontSize: '13px', margin: '3px 0 0' }}>
+          <p style={{ color: '#6B7280', fontSize: '13px', margin: '3px 0 0' }}>
             My Applications &mdash; track and manage your recognition requests
           </p>
         </div>
@@ -801,14 +896,14 @@ function PIAApplicationsSection() {
           onClick={() => setCreateModal(true)}
           style={{
             display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0,
-            padding: '9px 18px', borderRadius: '8px',
-            backgroundColor: '#1B2A6B', border: 'none',
+            padding: '9px 20px', borderRadius: '9px',
+            background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', border: 'none',
             color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(27,42,107,0.3)',
-            transition: 'background 0.15s, box-shadow 0.15s',
+            boxShadow: '0 4px 14px rgba(27,42,107,0.30)',
+            transition: 'box-shadow 0.15s, transform 0.15s',
           }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '#142057'; (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 14px rgba(27,42,107,0.4)'; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '#1B2A6B'; (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 8px rgba(27,42,107,0.3)'; }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 20px rgba(27,42,107,0.40)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 14px rgba(27,42,107,0.30)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
         >
           <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
@@ -821,31 +916,39 @@ function PIAApplicationsSection() {
       {!loadingList && apps.length > 0 && (
         <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
           {[
-            { label: 'Total', value: apps.length, color: '#1B2A6B', bg: '#EEF2FF' },
-            { label: 'Draft', value: tabCounts['draft'], color: '#475569', bg: '#F1F5F9' },
-            { label: 'In Progress', value: tabCounts['under-review'], color: '#D97706', bg: '#FEF3C7' },
-            { label: 'Approved', value: tabCounts['approved'], color: '#059669', bg: '#D1FAE5' },
+            { label: 'Total',       value: apps.length,                 color: '#1D4ED8', bg: '#DBEAFE', accent: '#1B2A6B' },
+            { label: 'Draft',       value: tabCounts['draft'],          color: '#475569', bg: '#F1F5F9', accent: '#64748B' },
+            { label: 'In Progress', value: tabCounts['under-review'],   color: '#D97706', bg: '#FEF3C7', accent: '#D97706' },
+            { label: 'Approved',    value: tabCounts['approved'],       color: '#059669', bg: '#D1FAE5', accent: '#059669' },
           ].map(s => (
             <div key={s.label} style={{
-              display: 'flex', alignItems: 'center', gap: '10px',
-              padding: '10px 16px', borderRadius: '10px',
-              backgroundColor: s.bg, border: `1px solid ${s.color}20`,
+              display: 'flex', alignItems: 'center', gap: '12px',
+              padding: '12px 18px', borderRadius: '12px',
+              backgroundColor: '#ffffff', border: '1px solid #E8EDF5',
+              boxShadow: '0 2px 8px rgba(27,42,107,0.06)',
             }}>
-              <span style={{ fontSize: '20px', fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.value}</span>
-              <span style={{ fontSize: '11px', fontWeight: 600, color: s.color, opacity: 0.75, lineHeight: 1.3 }}>{s.label}</span>
+              <div style={{
+                width: 42, height: 42, borderRadius: 10, flexShrink: 0,
+                background: `linear-gradient(135deg, ${s.bg}, ${s.accent}18)`,
+                border: `1.5px solid ${s.accent}30`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <span style={{ fontSize: '17px', fontWeight: 800, color: s.accent }}>{s.value}</span>
+              </div>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: '#374151' }}>{s.label}</span>
             </div>
           ))}
         </div>
       )}
 
       {/* ── Tabs ── */}
-      <div style={{ display: 'flex', gap: '2px', marginBottom: '16px', borderBottom: '2px solid #e2e8f0' }}>
+      <div style={{ display: 'flex', gap: '2px', marginBottom: '16px', borderBottom: '2px solid #E8EDF5', backgroundColor: '#F8FAFF', padding: '4px 6px 0', borderRadius: '10px 10px 0 0' }}>
         {APP_TABS.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{
             display: 'flex', alignItems: 'center', gap: '6px',
             padding: '8px 14px', background: 'none', border: 'none', cursor: 'pointer',
             fontSize: '12px', fontWeight: tab === t.key ? 700 : 500,
-            color: tab === t.key ? '#1B2A6B' : '#64748b',
+            color: tab === t.key ? '#1B2A6B' : '#6B7280',
             borderBottom: tab === t.key ? '2px solid #1B2A6B' : '2px solid transparent',
             marginBottom: '-2px', transition: 'color 0.15s',
             whiteSpace: 'nowrap',
@@ -853,9 +956,10 @@ function PIAApplicationsSection() {
             {t.label}
             {!loadingList && (
               <span style={{
-                fontSize: '10px', fontWeight: 700, padding: '1px 6px', borderRadius: '10px',
-                backgroundColor: tab === t.key ? '#1B2A6B' : '#f1f5f9',
-                color: tab === t.key ? '#fff' : '#64748b',
+                fontSize: '10px', fontWeight: 700, padding: '1px 7px', borderRadius: '10px',
+                background: tab === t.key ? 'linear-gradient(135deg, #1B2A6B, #2563EB)' : 'none',
+                backgroundColor: tab === t.key ? undefined : '#E8EDF5',
+                color: tab === t.key ? '#fff' : '#6B7280',
               }}>{tabCounts[t.key] ?? 0}</span>
             )}
           </button>
@@ -866,7 +970,7 @@ function PIAApplicationsSection() {
       {loadingList ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {[1, 2, 3].map(i => (
-            <div key={i} style={{ height: 84, borderRadius: '12px', backgroundColor: '#f1f5f9', border: '1px solid #e2e8f0', animation: 'pulse 1.5s ease-in-out infinite' }} />
+            <div key={i} style={{ height: 84, borderRadius: '14px', backgroundColor: '#F1F5F9', border: '1px solid #E8EDF5', boxShadow: '0 2px 8px rgba(27,42,107,0.05)', animation: 'pulse 1.5s ease-in-out infinite' }} />
           ))}
         </div>
       ) : filtered.length === 0 ? (
@@ -899,9 +1003,9 @@ function PIAApplicationsSection() {
             <button onClick={() => setCreateModal(true)} style={{
               marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px',
               padding: '9px 20px', borderRadius: '8px',
-              backgroundColor: '#1B2A6B', border: 'none',
+              background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', border: 'none',
               color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(27,42,107,0.3)',
+              boxShadow: '0 4px 14px rgba(27,42,107,0.30)',
             }}>
               <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
@@ -919,27 +1023,29 @@ function PIAApplicationsSection() {
             return (
               <div key={app.id} style={{
                 display: 'flex', alignItems: 'stretch',
-                borderRadius: '12px',
-                border: '1px solid #e2e8f0',
+                borderRadius: '14px',
+                border: '1px solid #E8EDF5',
                 backgroundColor: '#fff',
-                boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+                boxShadow: '0 2px 8px rgba(27,42,107,0.07)',
                 overflow: 'hidden',
-                transition: 'box-shadow 0.15s, transform 0.1s',
+                transition: 'box-shadow 0.18s, transform 0.15s',
               }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 16px rgba(0,0,0,0.10)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 4px rgba(0,0,0,0.06)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 20px rgba(27,42,107,0.12)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 8px rgba(27,42,107,0.07)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
               >
                 {/* Left accent bar */}
-                <div style={{ width: 4, backgroundColor: subCfg.accent, flexShrink: 0 }} />
+                <div style={{ width: 5, backgroundColor: subCfg.accent, flexShrink: 0 }} />
 
                 {/* Main content */}
                 <div style={{ flex: 1, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: '16px', minWidth: 0 }}>
                   {/* Icon */}
                   <div style={{
-                    width: 42, height: 42, borderRadius: '10px', flexShrink: 0,
-                    backgroundColor: subCfg.bg, border: `1px solid ${subCfg.accent}30`,
+                    width: 44, height: 44, borderRadius: '11px', flexShrink: 0,
+                    background: `linear-gradient(135deg, ${subCfg.bg}, ${subCfg.accent}18)`,
+                    border: `1.5px solid ${subCfg.accent}30`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     color: subCfg.accent,
+                    boxShadow: `0 2px 8px ${subCfg.accent}18`,
                   }}>
                     <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
@@ -950,12 +1056,12 @@ function PIAApplicationsSection() {
                   {/* Info */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '5px' }}>
-                      <span style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>{app.organisation}</span>
+                      <span style={{ fontSize: '14px', fontWeight: 700, color: '#1B2A6B' }}>{app.organisation}</span>
                       <span style={{
                         fontSize: '10px', fontWeight: 700, fontFamily: 'monospace',
-                        padding: '2px 7px', borderRadius: '4px',
-                        backgroundColor: '#f1f5f9', color: '#475569',
-                        border: '1px solid #e2e8f0', letterSpacing: '0.04em',
+                        padding: '2px 8px', borderRadius: '5px',
+                        backgroundColor: '#EFF6FF', color: '#1D4ED8',
+                        border: '1px solid #BFDBFE', letterSpacing: '0.04em',
                       }}>{app.appNo}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
@@ -980,21 +1086,22 @@ function PIAApplicationsSection() {
                 {/* Actions */}
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: '8px',
-                  padding: '14px 18px', borderLeft: '1px solid #f1f5f9', flexShrink: 0,
+                  padding: '14px 20px', borderLeft: '1px solid #E8EDF5', flexShrink: 0,
+                  backgroundColor: '#F8FAFF',
                 }}>
                   {isDraft && (
                     <button
                       onClick={() => { setEditingId(app.id); setView('form'); }}
                       style={{
                         display: 'flex', alignItems: 'center', gap: '5px',
-                        padding: '7px 16px', borderRadius: '7px',
-                        backgroundColor: '#1B2A6B', border: 'none',
+                        padding: '7px 18px', borderRadius: '8px',
+                        background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', border: 'none',
                         color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
-                        boxShadow: '0 1px 4px rgba(27,42,107,0.25)',
-                        transition: 'background 0.15s',
+                        boxShadow: '0 4px 12px rgba(27,42,107,0.28)',
+                        transition: 'box-shadow 0.15s, transform 0.15s',
                       }}
-                      onMouseEnter={e => (e.currentTarget as HTMLElement).style.backgroundColor = '#142057'}
-                      onMouseLeave={e => (e.currentTarget as HTMLElement).style.backgroundColor = '#1B2A6B'}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 18px rgba(27,42,107,0.38)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 12px rgba(27,42,107,0.28)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
                     >
                       <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
@@ -1006,23 +1113,74 @@ function PIAApplicationsSection() {
                     onClick={() => { setEditingId(app.id); setView('form'); }}
                     style={{
                       display: 'flex', alignItems: 'center', gap: '5px',
-                      padding: '7px 14px', borderRadius: '7px',
-                      border: '1px solid #e2e8f0', backgroundColor: '#f8fafc',
-                      color: '#475569', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
-                      transition: 'background 0.15s, border-color 0.15s',
+                      padding: '7px 14px', borderRadius: '8px',
+                      border: '1px solid #E2E8F0', backgroundColor: '#ffffff',
+                      color: '#374151', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
+                      transition: 'background 0.15s, border-color 0.15s, box-shadow 0.15s',
                     }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '#f1f5f9'; (e.currentTarget as HTMLElement).style.borderColor = '#cbd5e1'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '#f8fafc'; (e.currentTarget as HTMLElement).style.borderColor = '#e2e8f0'; }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '#F0F4FF'; (e.currentTarget as HTMLElement).style.borderColor = '#BFDBFE'; (e.currentTarget as HTMLElement).style.color = '#1B2A6B'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '#ffffff'; (e.currentTarget as HTMLElement).style.borderColor = '#E2E8F0'; (e.currentTarget as HTMLElement).style.color = '#374151'; }}
                   >
                     <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
                     View
                   </button>
+                  {isDraft && (
+                    <button
+                      onClick={() => setDeleteTarget(app)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '5px',
+                        padding: '7px 14px', borderRadius: '8px',
+                        border: '1px solid #FEE2E2', backgroundColor: '#FFF5F5',
+                        color: '#DC2626', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
+                        transition: 'background 0.15s, border-color 0.15s',
+                      }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '#FEE2E2'; (e.currentTarget as HTMLElement).style.borderColor = '#FCA5A5'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '#FFF5F5'; (e.currentTarget as HTMLElement).style.borderColor = '#FEE2E2'; }}
+                    >
+                      <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Delete
+                    </button>
+                  )}
                 </div>
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Delete Confirm Modal */}
+      {deleteTarget && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 200, backgroundColor: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={e => { if (e.target === e.currentTarget && !deleting) setDeleteTarget(null); }}>
+          <div style={{ width: 420, backgroundColor: '#fff', borderRadius: 14, border: '1px solid #E2E8F0', boxShadow: '0 20px 60px rgba(0,0,0,0.18)', padding: '28px 28px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+              <div style={{ width: 42, height: 42, borderRadius: 10, backgroundColor: '#FEF2F2', border: '1px solid #FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width="20" height="20" fill="none" stroke="#DC2626" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </div>
+              <div>
+                <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827' }}>Delete Application?</p>
+                <p style={{ margin: '4px 0 0', fontSize: 13, color: '#6B7280', lineHeight: 1.5 }}>
+                  This will permanently delete <strong>{deleteTarget.appNo}</strong>. This action cannot be undone.
+                </p>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button onClick={() => setDeleteTarget(null)} disabled={deleting}
+                style={{ padding: '8px 18px', borderRadius: 8, border: '1px solid #D1D5DB', backgroundColor: '#F3F4F6', color: '#374151', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
+                Cancel
+              </button>
+              <button onClick={handleDeleteConfirm} disabled={deleting}
+                style={{ padding: '8px 20px', borderRadius: 8, border: 'none', backgroundColor: deleting ? '#FCA5A5' : '#DC2626', color: '#fff', fontSize: 13, fontWeight: 600, cursor: deleting ? 'default' : 'pointer' }}>
+                {deleting ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1040,8 +1198,8 @@ function PIAApplicationsSection() {
             boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
             padding: '28px',
           }}>
-            {/* Step 1 — Application Type Selection */}
-            {modalStep === 'type' && (
+            {/* Application Type Selection */}
+            {!creating && (
               <>
                 <h3 style={{ color: '#0f172a', fontSize: '16px', fontWeight: 700, margin: '0 0 4px' }}>PIA Application</h3>
                 <p style={{ color: '#64748b', fontSize: '12px', margin: '0 0 20px' }}>
@@ -1094,7 +1252,7 @@ function PIAApplicationsSection() {
                   ] as const).map(opt => (
                     <button
                       key={opt.value}
-                      onClick={() => { setSelectedSubType(opt.value); setModalStep('name'); }}
+                      onClick={() => handleCreateNew(opt.value)}
                       style={{
                         display: 'flex', alignItems: 'flex-start', gap: '14px',
                         padding: '14px 16px', borderRadius: '10px', cursor: 'pointer', textAlign: 'left',
@@ -1137,68 +1295,11 @@ function PIAApplicationsSection() {
               </>
             )}
 
-            {/* Step 2 — Agency Name */}
-            {modalStep === 'name' && (
-              <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                  <button onClick={() => setModalStep('type')} style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    width: 28, height: 28, borderRadius: '7px', flexShrink: 0,
-                    border: '1px solid #e2e8f0', background: '#f8fafc',
-                    color: '#64748b', cursor: 'pointer',
-                  }}>
-                    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                  <h3 style={{ color: '#0f172a', fontSize: '16px', fontWeight: 700, margin: 0 }}>PIA Application</h3>
-                </div>
-                <p style={{ color: '#64748b', fontSize: '12px', margin: '0 0 16px 38px' }}>
-                  {selectedSubType === 'NEW_RECOGNITION' && 'New Recognition — Fresh application for recognition as PIA'}
-                  {selectedSubType === 'RENEWAL' && 'Renewal — Continuation of existing recognition before expiry'}
-                  {selectedSubType === 'MODIFICATION' && 'Modification / Extension of Scope — Add or change approved scope'}
-                </p>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
-                  Name of the Applicant / Inspection Agency <span style={{ color: '#EF4444' }}>*</span>
-                </label>
-                <input
-                  type="text"
-                  value={newAgencyName}
-                  onChange={e => { setNewAgencyName(e.target.value); setCreateError(''); }}
-                  onKeyDown={e => { if (e.key === 'Enter') handleCreateNew(); }}
-                  placeholder="Enter the full registered name of the applicant / inspection agency"
-                  autoFocus
-                  style={{
-                    width: '100%', padding: '10px 12px',
-                    borderRadius: '7px', border: `1px solid ${createError ? '#EF4444' : '#d1d5db'}`,
-                    backgroundColor: '#f9fafb',
-                    color: '#0f172a', fontSize: '13px', outline: 'none', boxSizing: 'border-box',
-                  }}
-                />
-                {createError && <p style={{ color: '#EF4444', fontSize: '11px', margin: '6px 0 0' }}>{createError}</p>}
-                <div style={{ display: 'flex', gap: '10px', marginTop: '20px', justifyContent: 'flex-end' }}>
-                  <button onClick={closeCreateModal} style={{
-                    padding: '8px 18px', borderRadius: '7px',
-                    border: '1px solid #e2e8f0',
-                    background: '#f8fafc', color: '#64748b',
-                    fontSize: '13px', cursor: 'pointer',
-                  }}>Cancel</button>
-                  <button onClick={handleCreateNew} disabled={creating} style={{
-                    display: 'flex', alignItems: 'center', gap: '6px',
-                    padding: '8px 20px', borderRadius: '7px',
-                    backgroundColor: '#1B2A6B', border: 'none',
-                    color: '#fff', fontSize: '13px', fontWeight: 600,
-                    cursor: creating ? 'wait' : 'pointer', opacity: creating ? 0.7 : 1,
-                  }}>
-                    {creating ? 'Creating…' : 'Start Application'}
-                    {!creating && (
-                      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    )}
-                  </button>
-                </div>
-              </>
+            {creating && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', gap: '12px' }}>
+                <div style={{ width: 18, height: 18, border: '2px solid rgba(27,42,107,0.2)', borderTopColor: '#1B2A6B', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+                <span style={{ fontSize: '13px', color: '#64748b' }}>Creating application…</span>
+              </div>
             )}
           </div>
         </div>

@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import PaletteButton from './PaletteButton';
 import ChangePasswordModal from './ChangePasswordModal';
 import { User } from '../types';
 
@@ -276,8 +275,6 @@ export default function Header({ onLoginClick, user, onLogout, pageTitle, sideba
                 <path d="M12 2a14.5 14.5 0 010 20M12 2a14.5 14.5 0 000 20M2 12h20" strokeLinecap="round" />
               </svg>
             </button>
-            <span className="text-white/30 text-sm leading-none select-none">|</span>
-            <PaletteButton />
           </div>
         </div>
       </div>}
@@ -304,7 +301,7 @@ export default function Header({ onLoginClick, user, onLogout, pageTitle, sideba
       </div>}
 
       {/* ── Nav bar ── */}
-      {!hideNav && <nav style={{ backgroundColor: 'var(--bg-nav)', display: 'flex', alignItems: 'stretch' }}>
+      {!hideNav && <nav style={{ backgroundColor: user ? 'var(--bg-nav)' : '#1B2A6B', display: 'flex', alignItems: 'stretch' }}>
 
         {user ? (
           /* ── DASHBOARD NAV — sidebar spacer + page title + actions ── */

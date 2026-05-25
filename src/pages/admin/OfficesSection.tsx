@@ -108,9 +108,9 @@ function FormLabel({ text, required }: { text: string; required?: boolean }) {
 
 function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
-    <div style={{ padding: '10px 20px', backgroundColor: '#EEF2FF', borderBottom: '1px solid #C7D2FE', display: 'flex', alignItems: 'center', gap: '8px' }}>
-      <span style={{ color: '#1B2A6B' }}>{icon}</span>
-      <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.09em', color: '#1B2A6B', textTransform: 'uppercase' as const }}>{title}</span>
+    <div style={{ padding: '10px 20px', background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <span style={{ color: 'rgba(255,255,255,0.85)' }}>{icon}</span>
+      <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.09em', color: '#ffffff', textTransform: 'uppercase' as const }}>{title}</span>
     </div>
   );
 }
@@ -143,22 +143,22 @@ function TablePagination({ page, total, pageSize, onPage, onPageSize }: {
 
   const nb: React.CSSProperties = {
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    width: 28, height: 28, borderRadius: 6, border: '1px solid var(--border-subtle)',
-    backgroundColor: 'var(--bg-card)', cursor: 'pointer', fontSize: 12, color: 'var(--text-primary)',
+    width: 28, height: 28, borderRadius: 6, border: '1px solid #E2E8F0',
+    backgroundColor: '#ffffff', cursor: 'pointer', fontSize: 12, color: '#374151',
     fontWeight: 500, flexShrink: 0,
   };
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', borderTop: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-card)', flexWrap: 'wrap', gap: 8 }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', borderTop: '1px solid #E8EDF5', backgroundColor: '#ffffff', flexWrap: 'wrap', gap: 8 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Rows per page:</span>
+          <span style={{ fontSize: 12, color: '#6B7280' }}>Rows per page:</span>
           <select value={pageSize} onChange={e => { onPageSize(Number(e.target.value)); onPage(0); }}
-            style={{ fontSize: 12, padding: '3px 8px', borderRadius: 6, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 500 }}>
+            style={{ fontSize: 12, padding: '3px 8px', borderRadius: 6, border: '1px solid #E2E8F0', backgroundColor: '#ffffff', color: '#374151', cursor: 'pointer', fontWeight: 500 }}>
             {[5, 10, 25, 50].map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
-        <span style={{ fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: 12, color: '#6B7280', whiteSpace: 'nowrap' }}>
           {total === 0 ? 'No records' : `${from}–${to} of ${total} records`}
         </span>
       </div>
@@ -171,8 +171,8 @@ function TablePagination({ page, total, pageSize, onPage, onPageSize }: {
         </button>
         {getPages().map((pg, idx) =>
           pg === '...'
-            ? <span key={`e${idx}`} style={{ width: 28, textAlign: 'center', fontSize: 12, color: 'var(--text-muted)' }}>…</span>
-            : <button key={pg} onClick={() => onPage(pg as number)} style={{ ...nb, backgroundColor: pg === page ? 'var(--bg-nav)' : 'var(--bg-card)', color: pg === page ? '#fff' : 'var(--text-primary)', borderColor: pg === page ? 'var(--bg-nav)' : 'var(--border-subtle)', fontWeight: pg === page ? 700 : 500, cursor: 'pointer' }}>{(pg as number) + 1}</button>
+            ? <span key={`e${idx}`} style={{ width: 28, textAlign: 'center', fontSize: 12, color: '#6B7280' }}>…</span>
+            : <button key={pg} onClick={() => onPage(pg as number)} style={{ ...nb, backgroundColor: pg === page ? '#1B2A6B' : '#ffffff', color: pg === page ? '#fff' : '#374151', borderColor: pg === page ? '#1B2A6B' : '#E2E8F0', fontWeight: pg === page ? 700 : 500, cursor: 'pointer' }}>{(pg as number) + 1}</button>
         )}
         <button disabled={page >= totalPages - 1} onClick={() => onPage(page + 1)} title="Next" style={{ ...nb, opacity: page >= totalPages - 1 ? 0.35 : 1, cursor: page >= totalPages - 1 ? 'default' : 'pointer' }}>
           <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
@@ -247,7 +247,7 @@ function OfficeForm({
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
       {/* Form card */}
-      <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '12px', overflow: 'hidden' }}>
+      <div style={{ backgroundColor: '#ffffff', border: '1px solid #E8EDF5', borderRadius: '14px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(27,42,107,0.07)' }}>
 
         {error && (
           <div style={{ margin: '20px 24px 0', backgroundColor: '#FEE2E2', border: '1px solid #FECACA', borderRadius: '7px', padding: '10px 14px', color: '#DC2626', fontSize: '13px' }}>
@@ -259,7 +259,7 @@ function OfficeForm({
         <SectionHeader title="Classification" icon={
           <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" /></svg>
         } />
-        <div style={{ padding: '12px 16px', borderBottom: '1px solid #E5E7EB', backgroundColor: '#FAFBFF' }}>
+        <div style={{ padding: '14px 20px', borderBottom: '1px solid #F0F4FF', backgroundColor: '#F8FAFF' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <div>
               <FormLabel text="Office Type" required />
@@ -290,7 +290,7 @@ function OfficeForm({
         <SectionHeader title="Basic Details" icon={
           <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
         } />
-        <div style={{ padding: '12px 16px', borderBottom: '1px solid #E5E7EB' }}>
+        <div style={{ padding: '14px 20px', borderBottom: '1px solid #F0F4FF' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px' }}>
             <div>
               <FormLabel text="Office Name" required />
@@ -307,7 +307,7 @@ function OfficeForm({
         <SectionHeader title="Location" icon={
           <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
         } />
-        <div style={{ padding: '12px 16px', borderBottom: '1px solid #E5E7EB', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ padding: '14px 20px', borderBottom: '1px solid #F0F4FF', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <div>
             <FormLabel text="Address" />
             <textarea value={form.address ?? ''} onChange={e => set('address', e.target.value)} placeholder="Full postal address" rows={2} style={{ ...inp, resize: 'vertical' }} />
@@ -352,7 +352,7 @@ function OfficeForm({
         <SectionHeader title="Contact" icon={
           <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
         } />
-        <div style={{ padding: '12px 16px', borderBottom: '1px solid #E5E7EB' }}>
+        <div style={{ padding: '14px 20px', borderBottom: '1px solid #F0F4FF' }}>
           <div>
             <FormLabel text="Email" />
             <input value={form.email ?? ''} onChange={e => set('email', e.target.value)} placeholder="Office email address" type="email" style={{ ...inp, maxWidth: 400 }} />
@@ -363,7 +363,7 @@ function OfficeForm({
         <SectionHeader title="Facilities & Status" icon={
           <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
         } />
-        <div style={{ padding: '18px 20px', display: 'grid', gridTemplateColumns: editId ? '1fr 1fr' : '1fr', gap: '12px' }}>
+        <div style={{ padding: '14px 20px', borderBottom: '1px solid #F0F4FF', display: 'grid', gridTemplateColumns: editId ? '1fr 1fr' : '1fr', gap: '12px' }}>
           {(() => {
             const labAllowed = form.type === 'EIA' || form.type === 'SUB_EIA';
             return (
@@ -390,11 +390,11 @@ function OfficeForm({
         </div>
 
         {/* ── Footer: Buttons ── */}
-        <div style={{ padding: '14px 20px', borderTop: '1px solid #E5E7EB', backgroundColor: '#F9FAFB', display: 'flex', gap: '10px' }}>
-          <button onClick={handleSubmit} disabled={saving} style={{ padding: '9px 24px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, backgroundColor: saving ? '#94A3B8' : '#1B2A6B', color: '#fff', border: 'none', cursor: saving ? 'default' : 'pointer' }}>
+        <div style={{ padding: '14px 20px', borderTop: '1px solid #E8EDF5', backgroundColor: '#F8FAFF', display: 'flex', gap: '10px' }}>
+          <button onClick={handleSubmit} disabled={saving} style={{ padding: '9px 24px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, background: saving ? '#94A3B8' : 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', color: '#fff', border: 'none', cursor: saving ? 'default' : 'pointer', boxShadow: saving ? 'none' : '0 4px 14px rgba(27,42,107,0.30)' }}>
             {saving ? 'Saving…' : editId ? 'Update Office' : 'Create Office'}
           </button>
-          <button onClick={onCancel} style={{ padding: '9px 24px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, backgroundColor: '#fff', color: '#374151', border: '1.5px solid #D1D5DB', cursor: 'pointer' }}>
+          <button onClick={onCancel} style={{ padding: '9px 24px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, backgroundColor: '#ffffff', color: '#374151', border: '1.5px solid #E2E8F0', cursor: 'pointer' }}>
             Cancel
           </button>
         </div>
@@ -580,8 +580,11 @@ export default function OfficesSection() {
             style={{
               display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0,
               padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-              backgroundColor: '#1B2A6B', color: '#fff', border: 'none', cursor: 'pointer',
+              background: 'linear-gradient(135deg, #1B2A6B, #2563EB)', color: '#fff', border: 'none', cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(27,42,107,0.30)',
             }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
           >
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
@@ -592,7 +595,7 @@ export default function OfficesSection() {
       </div>
 
       {/* Table */}
-      <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+      <div style={{ backgroundColor: '#ffffff', border: '1px solid #E8EDF5', borderRadius: '14px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(27,42,107,0.07)' }}>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 780 }}>
             <colgroup>
@@ -606,7 +609,7 @@ export default function OfficesSection() {
               <col style={{ width: 44, minWidth: 44 }} />
             </colgroup>
             <thead>
-              <tr style={{ backgroundColor: 'var(--bg-utility)' }}>
+              <tr style={{ background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)' }}>
                 {[
                   { label: 'Office', sortable: true },
                   { label: 'Code', sortable: true },
@@ -627,7 +630,7 @@ export default function OfficesSection() {
                     </div>
                   </th>
                 ))}
-                <th style={{ padding: '10px 6px', position: 'sticky', right: 0, backgroundColor: 'var(--bg-utility)', zIndex: 3, width: 44 }} />
+                <th style={{ padding: '10px 6px', position: 'sticky', right: 0, backgroundColor: '#1B2A6B', zIndex: 3, width: 44 }} />
               </tr>
             </thead>
             <tbody>
@@ -636,7 +639,7 @@ export default function OfficesSection() {
                   <tr key={i}>
                     {Array.from({ length: 8 }).map((__, j) => (
                       <td key={j} style={{ padding: '9px 12px' }}>
-                        <div style={{ height: 14, borderRadius: 4, backgroundColor: 'var(--card-overlay)', width: j === 0 ? '75%' : '55%' }} />
+                        <div style={{ height: 14, borderRadius: 4, backgroundColor: '#F1F5F9', width: j === 0 ? '75%' : '55%' }} />
                       </td>
                     ))}
                   </tr>
@@ -663,27 +666,27 @@ export default function OfficesSection() {
                     return (
                       <tr
                         key={office.id}
-                        style={{ borderBottom: i < offices.length - 1 ? '1px solid var(--border-subtle)' : 'none', transition: 'background 0.12s' }}
-                        onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--card-overlay)')}
+                        style={{ borderBottom: i < offices.length - 1 ? '1px solid #F0F4FF' : 'none', transition: 'background 0.12s' }}
+                        onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F8FAFF')}
                         onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
                       >
                         {/* OFFICE */}
                         <td style={{ padding: '9px 12px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <div style={{ width: 28, height: 28, borderRadius: 6, backgroundColor: 'var(--card-overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                              <svg width="15" height="15" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24">
+                            <div style={{ width: 28, height: 28, borderRadius: 6, backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              <svg width="15" height="15" fill="none" stroke="#1D4ED8" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                               </svg>
                             </div>
                             <div style={{ minWidth: 0 }}>
-                              <div title={office.name} style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 200 }}>{office.name}</div>
-                              {office.email && <div title={office.email} style={{ color: 'var(--text-muted)', fontSize: 11, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 200 }}>{office.email}</div>}
+                              <div title={office.name} style={{ color: '#111827', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 200 }}>{office.name}</div>
+                              {office.email && <div title={office.email} style={{ color: '#6B7280', fontSize: 11, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 200 }}>{office.email}</div>}
                             </div>
                           </div>
                         </td>
                         {/* CODE */}
                         <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: 11, backgroundColor: 'var(--card-overlay)', padding: '3px 7px', borderRadius: 5, color: 'var(--text-primary)', fontWeight: 700, border: '1px solid var(--border-subtle)' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: 11, backgroundColor: '#F1F5F9', padding: '3px 7px', borderRadius: 5, color: '#1B2A6B', fontWeight: 700, border: '1px solid #E2E8F0' }}>
                             {office.code}
                           </span>
                         </td>
@@ -698,7 +701,7 @@ export default function OfficesSection() {
                           {office.address ? (
                             <div
                               title={[office.address, ...locationParts, office.pincode].filter(Boolean).join(', ')}
-                              style={{ color: 'var(--text-primary)', fontSize: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 190 }}
+                              style={{ color: '#374151', fontSize: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 190 }}
                             >
                               {office.address}
                             </div>
@@ -752,7 +755,7 @@ export default function OfficesSection() {
                           </div>
                         </td>
                         {/* STICKY ⋮ */}
-                        <td style={{ padding: '4px 6px', position: 'sticky', right: 0, backgroundColor: 'var(--bg-card)', borderLeft: '1px solid var(--border-subtle)', zIndex: 1, textAlign: 'center' }}>
+                        <td style={{ padding: '4px 6px', position: 'sticky', right: 0, backgroundColor: '#ffffff', borderLeft: '1px solid #E8EDF5', zIndex: 1, textAlign: 'center' }}>
                           <button
                             title="More actions"
                             onClick={e => {
@@ -760,9 +763,9 @@ export default function OfficesSection() {
                               const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
                               setOpenDrop(d => d?.id === office.id ? null : { id: office.id, top: rect.bottom + 4, right: window.innerWidth - rect.right });
                             }}
-                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, border: '1px solid var(--border-subtle)', backgroundColor: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 16, fontWeight: 700, lineHeight: 1 }}
-                            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--card-overlay)')}
-                            onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 6, border: '1px solid #BFDBFE', backgroundColor: '#EFF6FF', cursor: 'pointer', color: '#1D4ED8', fontSize: 16, fontWeight: 700, lineHeight: 1, transition: 'background 0.15s, border-color 0.15s' }}
+                            onMouseEnter={e => { (e.currentTarget.style.backgroundColor = '#1B2A6B'); (e.currentTarget.style.color = '#fff'); (e.currentTarget.style.borderColor = '#1B2A6B'); }}
+                            onMouseLeave={e => { (e.currentTarget.style.backgroundColor = '#EFF6FF'); (e.currentTarget.style.color = '#1D4ED8'); (e.currentTarget.style.borderColor = '#BFDBFE'); }}
                           >⋮</button>
                         </td>
                       </tr>

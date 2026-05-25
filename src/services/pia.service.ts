@@ -17,6 +17,23 @@ export type QMSType = 'ISO_17020' | 'ISO_9001' | 'BOTH' | 'NONE';
 export interface PIAPortMaster    { id: string; name: string; code: string | null; state: string | null; isActive: boolean }
 export interface PIAMineralMaster { id: string; name: string; code: string | null; hsCode: string | null; isActive: boolean }
 export interface PIAEIAOffice     { id: string; name: string; code: string | null; state: string | null; city: string | null }
+export interface PIADocChecklistItem {
+  id: string; subType: PIASubType; documentType: string; documentLabel: string;
+  description: string | null; isMandatory: boolean; sortOrder: number; isActive: boolean;
+}
+
+export type PIAFeeType = 'APPLICATION_FEE' | 'ADDITIONAL_PORT_FEE' | 'INSPECTION_FEE' | 'ANNUAL_FEE';
+export interface PIAFeeConfigItem {
+  id: string; feeType: PIAFeeType; label: string;
+  amount: number; description: string | null; isActive: boolean;
+}
+
+export interface PIADocumentItem {
+  id: string; piaApplicationId: string; documentType: string;
+  documentName: string; fileName: string; filePath: string;
+  fileSize: number | null; mimeType: string | null; version: number;
+  status: string; uploadedAt: string;
+}
 
 // ─── Part I ───────────────────────────────────────────────────────────────────
 
@@ -170,5 +187,32 @@ export const piaApi = {
   getMasterMinerals: async () => {
     const { data } = await api.get('/pia/masters/minerals');
     return data.data as PIAMineralMaster[];
+  },
+  getMasterDocumentChecklist: async (subType: PIASubType) => {
+    const { data } = await api.get('/pia/masters/document-checklist', { params: { subType } });
+    return data.data as PIADocChecklistItem[];
+  },
+  getMasterFeeConfig: async () => {
+    const { data } = await api.get('/pia/masters/fee-config');
+    return data.data as PIAFeeConfigItem[];
+  },
+  listDocuments: async (appId: string) => {
+    const { data } = await api.get(`/pia/applications/${appId}/documents`);
+    return data.data as PIADocumentItem[];
+  },
+  uploadDocument: async (appId: string, documentType: string, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('documentType', documentType);
+    const { data } = await api.post(`/pia/applications/${appId}/documents`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data.data as PIADocumentItem;
+  },
+  deleteDocument: async (appId: string, docId: string) => {
+    await api.delete(`/pia/applications/${appId}/documents/${docId}`);
+  },
+  deleteApplication: async (id: string) => {
+    await api.delete(`/pia/applications/${id}`);
   },
 };

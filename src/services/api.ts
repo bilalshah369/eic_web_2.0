@@ -42,3 +42,20 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export const signupApi = {
+  verifyPan: (data: unknown) => api.post('/signup/verify-pan', data),
+  saveContact: (data: unknown) => api.post('/signup/save-contact', data),
+  verifyOtp: (sessionId: string, otp: string) => api.post('/signup/verify-otp', { sessionId, otp }),
+  resendOtp: (sessionId: string) => api.post('/signup/resend-otp', { sessionId }),
+};
+
+export const lgdApi = {
+  states: () => api.get('/lgd/states'),
+  districts: (stateId: number) => api.get(`/lgd/districts/${stateId}`),
+  subDistricts: (districtId: number) => api.get(`/lgd/sub-districts/${districtId}`),
+};
+
+export const registrationTypesApi = {
+  list: () => api.get('/registration-types'),
+};

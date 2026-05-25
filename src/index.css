@@ -11,233 +11,93 @@
   display: none;
 }
 
-/* ── EIC Theme CSS Variables (Clean White default) ── */
+/* ══════════════════════════════════════════════
+   EIC Design System — single fixed scheme
+══════════════════════════════════════════════ */
 :root {
-  --bg-page:            #f8fafc;
-  --bg-nav:             #1B2A6B;
+  /* Backgrounds */
+  --bg-page:            #ffffff;
+  --bg-nav:             #ffffff;
   --bg-utility:         #0F1640;
   --bg-footer:          #1B2A6B;
   --bg-footer-bar:      #0F1640;
   --bg-card:            #ffffff;
   --bg-modal:           #ffffff;
   --bg-input:           #f1f5f9;
+
+  /* Accent */
   --accent:             #F97316;
   --accent-hover:       #EA6C0A;
   --accent-muted:       #FEE2CC;
   --accent-muted-hover: #FDD0AA;
 
-  /* Text tokens — default WHITE (for dark themes).
-     Light themes override these via [data-theme-mode="light"] */
-  --text-primary:   #ffffff;
-  --text-secondary: rgba(255,255,255,0.65);
-  --text-muted:     rgba(255,255,255,0.38);
-  --border-subtle:  rgba(255,255,255,0.10);
-  --card-overlay:   rgba(255,255,255,0.05);
-
-  /* Sidebar / nav bar color tokens — always dark nav by default */
-  --nav-text:        rgba(255,255,255,0.78);
-  --nav-text-active: #ffffff;
-  --nav-text-dim:    rgba(255,255,255,0.45);
-  --nav-icon-dim:    rgba(255,255,255,0.65);
-  --nav-border:      rgba(255,255,255,0.08);
-  --nav-hover-bg:    rgba(255,255,255,0.10);
-  --nav-active-bg:   rgba(255,255,255,0.15);
-  --nav-active-bar:  #60A5FA;
-}
-
-/* ══════════════════════════════════════════════
-   LIGHT THEME — text token overrides
-   (header / footer / sidebar always stay dark,
-    so we only touch the page-content layer)
-══════════════════════════════════════════════ */
-[data-theme-mode="light"] {
-  --text-primary:   #111827;
-  --text-secondary: rgba(17,24,39,0.65);
-  --text-muted:     rgba(17,24,39,0.40);
-  --border-subtle:  rgba(17,24,39,0.10);
-  --card-overlay:   rgba(17,24,39,0.04);
-}
-
-/* ── Override Tailwind white-text classes on bg-page content ── */
-[data-theme-mode="light"] .text-white {
-  color: var(--text-primary) !important;
-}
-[data-theme-mode="light"] [class*="text-white\/"] {
-  color: var(--text-secondary) !important;
-}
-[data-theme-mode="light"] .text-white\/40,
-[data-theme-mode="light"] .text-white\/35,
-[data-theme-mode="light"] .text-white\/30,
-[data-theme-mode="light"] .text-white\/25 {
-  color: var(--text-muted) !important;
-}
-
-/* ── Override borders / overlays ── */
-[data-theme-mode="light"] [class*="border-white\/"] {
-  border-color: var(--border-subtle) !important;
-}
-[data-theme-mode="light"] [class*="bg-white\/"] {
-  background-color: var(--card-overlay) !important;
-}
-[data-theme-mode="light"] [class*="placeholder-white\/"]::placeholder {
-  color: var(--text-muted) !important;
-}
-
-/* ══════════════════════════════════════════════
-   RESTORE white text in always-dark areas:
-   header, footer, aside (sidebar), and any
-   element that carries a --bg-nav background.
-══════════════════════════════════════════════ */
-[data-theme-mode="light"] header .text-white,
-[data-theme-mode="light"] footer .text-white,
-[data-theme-mode="light"] aside  .text-white {
-  color: #ffffff !important;
-}
-[data-theme-mode="light"] header [class*="text-white\/"],
-[data-theme-mode="light"] footer [class*="text-white\/"],
-[data-theme-mode="light"] aside  [class*="text-white\/"] {
-  color: rgba(255,255,255,0.65) !important;
-}
-[data-theme-mode="light"] header .text-white\/40,
-[data-theme-mode="light"] header .text-white\/35,
-[data-theme-mode="light"] header .text-white\/30,
-[data-theme-mode="light"] header .text-white\/25,
-[data-theme-mode="light"] footer .text-white\/40,
-[data-theme-mode="light"] footer .text-white\/35,
-[data-theme-mode="light"] footer .text-white\/30,
-[data-theme-mode="light"] footer .text-white\/25,
-[data-theme-mode="light"] aside  .text-white\/40,
-[data-theme-mode="light"] aside  .text-white\/35,
-[data-theme-mode="light"] aside  .text-white\/30,
-[data-theme-mode="light"] aside  .text-white\/25 {
-  color: rgba(255,255,255,0.38) !important;
-}
-
-[data-theme-mode="light"] header [class*="border-white\/"],
-[data-theme-mode="light"] footer [class*="border-white\/"],
-[data-theme-mode="light"] aside  [class*="border-white\/"] {
-  border-color: rgba(255,255,255,0.12) !important;
-}
-[data-theme-mode="light"] header [class*="bg-white\/"],
-[data-theme-mode="light"] footer [class*="bg-white\/"],
-[data-theme-mode="light"] aside  [class*="bg-white\/"] {
-  background-color: rgba(255,255,255,0.06) !important;
-}
-
-/* ── Dark modal override — restore white text inside .modal-dark ──
-   Prefixed with [data-theme-mode="light"] to beat the light-mode
-   attribute-selector specificity (0,1,1,0 → 0,1,2,0).
-   The non-prefixed rules still apply in default/dark themes.      ── */
-.modal-dark .text-white,
-[data-theme-mode="light"] .modal-dark .text-white               { color: #ffffff !important; }
-.modal-dark [class*="text-white\/"],
-[data-theme-mode="light"] .modal-dark [class*="text-white\/"]   { color: rgba(255,255,255,0.65) !important; }
-.modal-dark .text-white\/70,
-[data-theme-mode="light"] .modal-dark .text-white\/70           { color: rgba(255,255,255,0.70) !important; }
-.modal-dark .text-white\/50,
-[data-theme-mode="light"] .modal-dark .text-white\/50           { color: rgba(255,255,255,0.50) !important; }
-.modal-dark .text-white\/40,
-[data-theme-mode="light"] .modal-dark .text-white\/40           { color: rgba(255,255,255,0.40) !important; }
-.modal-dark .text-white\/30,
-[data-theme-mode="light"] .modal-dark .text-white\/30           { color: rgba(255,255,255,0.30) !important; }
-.modal-dark .text-white\/25,
-[data-theme-mode="light"] .modal-dark .text-white\/25           { color: rgba(255,255,255,0.25) !important; }
-.modal-dark [class*="border-white\/"],
-[data-theme-mode="light"] .modal-dark [class*="border-white\/"] { border-color: rgba(255,255,255,0.15) !important; }
-.modal-dark [class*="bg-white\/"],
-[data-theme-mode="light"] .modal-dark [class*="bg-white\/"]     { background-color: rgba(255,255,255,0.07) !important; }
-.modal-dark [class*="placeholder-white\/"]::placeholder,
-[data-theme-mode="light"] .modal-dark [class*="placeholder-white\/"]::placeholder { color: rgba(255,255,255,0.28) !important; }
-
-/* ══════════════════════════════════════════════
-   CLEAN mode — white sidebar + white page
-   All text (including sidebar) is dark.
-══════════════════════════════════════════════ */
-[data-theme-mode="clean"] {
+  /* Page content text */
   --text-primary:   #111827;
   --text-secondary: rgba(17,24,39,0.65);
   --text-muted:     rgba(17,24,39,0.40);
   --border-subtle:  rgba(17,24,39,0.10);
   --card-overlay:   rgba(17,24,39,0.04);
 
-  /* Sidebar tokens — dark text on white nav background */
-  --nav-text:        rgba(31,41,55,0.80);
-  --nav-text-active: #111827;
-  --nav-text-dim:    rgba(31,41,55,0.42);
-  --nav-icon-dim:    rgba(31,41,55,0.52);
-  --nav-border:      rgba(31,41,55,0.10);
-  --nav-hover-bg:    rgba(31,41,55,0.06);
-  --nav-active-bg:   rgba(31,41,55,0.09);
+  /* Sidebar — white bg, EIC blue text/icons */
+  --nav-text:        rgba(27,42,107,0.78);
+  --nav-text-active: #1B2A6B;
+  --nav-text-dim:    rgba(27,42,107,0.45);
+  --nav-icon-dim:    rgba(27,42,107,0.60);
+  --nav-border:      rgba(27,42,107,0.10);
+  --nav-hover-bg:    rgba(27,42,107,0.06);
+  --nav-active-bg:   rgba(27,42,107,0.10);
   --nav-active-bar:  #1B2A6B;
 }
 
-[data-theme-mode="clean"] .text-white {
-  color: var(--text-primary) !important;
-}
-[data-theme-mode="clean"] [class*="text-white\/"] {
-  color: var(--text-secondary) !important;
-}
-[data-theme-mode="clean"] .text-white\/40,
-[data-theme-mode="clean"] .text-white\/35,
-[data-theme-mode="clean"] .text-white\/30,
-[data-theme-mode="clean"] .text-white\/25 {
-  color: var(--text-muted) !important;
-}
+/* ══════════════════════════════════════════════
+   Convert Tailwind white-text utilities to dark
+   (page content is light — white text is invisible)
+══════════════════════════════════════════════ */
+.text-white               { color: var(--text-primary)   !important; }
+[class*="text-white\/"]   { color: var(--text-secondary) !important; }
+.text-white\/40,
+.text-white\/35,
+.text-white\/30,
+.text-white\/25           { color: var(--text-muted)     !important; }
 
-[data-theme-mode="clean"] [class*="border-white\/"] {
-  border-color: var(--border-subtle) !important;
-}
-[data-theme-mode="clean"] [class*="bg-white\/"] {
-  background-color: var(--card-overlay) !important;
-}
-[data-theme-mode="clean"] [class*="placeholder-white\/"]::placeholder {
-  color: var(--text-muted) !important;
-}
+[class*="border-white\/"] { border-color:      var(--border-subtle) !important; }
+[class*="bg-white\/"]     { background-color:  var(--card-overlay)  !important; }
+[class*="placeholder-white\/"]::placeholder { color: var(--text-muted) !important; }
 
-/* ── Sidebar / header / footer: also dark text (light bg) ── */
-[data-theme-mode="clean"] header .text-white,
-[data-theme-mode="clean"] footer .text-white,
-[data-theme-mode="clean"] aside  .text-white {
-  color: #1f2937 !important;
-}
-[data-theme-mode="clean"] header [class*="text-white\/"],
-[data-theme-mode="clean"] footer [class*="text-white\/"],
-[data-theme-mode="clean"] aside  [class*="text-white\/"] {
-  color: rgba(31,41,55,0.65) !important;
-}
-[data-theme-mode="clean"] header .text-white\/40,
-[data-theme-mode="clean"] header .text-white\/35,
-[data-theme-mode="clean"] header .text-white\/30,
-[data-theme-mode="clean"] header .text-white\/25,
-[data-theme-mode="clean"] footer .text-white\/40,
-[data-theme-mode="clean"] footer .text-white\/35,
-[data-theme-mode="clean"] footer .text-white\/30,
-[data-theme-mode="clean"] footer .text-white\/25,
-[data-theme-mode="clean"] aside  .text-white\/40,
-[data-theme-mode="clean"] aside  .text-white\/35,
-[data-theme-mode="clean"] aside  .text-white\/30,
-[data-theme-mode="clean"] aside  .text-white\/25 {
-  color: rgba(31,41,55,0.38) !important;
-}
+/* ══════════════════════════════════════════════
+   Restore white text inside always-dark areas
+   (header utility bar & footer stay dark navy)
+══════════════════════════════════════════════ */
+header .text-white,
+footer .text-white { color: #ffffff !important; }
 
-[data-theme-mode="clean"] header [class*="border-white\/"],
-[data-theme-mode="clean"] footer [class*="border-white\/"],
-[data-theme-mode="clean"] aside  [class*="border-white\/"] {
-  border-color: rgba(31,41,55,0.12) !important;
-}
-[data-theme-mode="clean"] header [class*="bg-white\/"],
-[data-theme-mode="clean"] footer [class*="bg-white\/"],
-[data-theme-mode="clean"] aside  [class*="bg-white\/"] {
-  background-color: rgba(31,41,55,0.05) !important;
-}
+header [class*="text-white\/"],
+footer [class*="text-white\/"] { color: rgba(255,255,255,0.65) !important; }
 
-[data-theme-mode="clean"] .modal-dark .text-white               { color: #ffffff !important; }
-[data-theme-mode="clean"] .modal-dark [class*="text-white\/"]   { color: rgba(255,255,255,0.65) !important; }
-[data-theme-mode="clean"] .modal-dark .text-white\/70           { color: rgba(255,255,255,0.70) !important; }
-[data-theme-mode="clean"] .modal-dark .text-white\/50           { color: rgba(255,255,255,0.50) !important; }
-[data-theme-mode="clean"] .modal-dark .text-white\/40           { color: rgba(255,255,255,0.40) !important; }
-[data-theme-mode="clean"] .modal-dark .text-white\/30           { color: rgba(255,255,255,0.30) !important; }
-[data-theme-mode="clean"] .modal-dark .text-white\/25           { color: rgba(255,255,255,0.25) !important; }
-[data-theme-mode="clean"] .modal-dark [class*="border-white\/"] { border-color: rgba(255,255,255,0.15) !important; }
-[data-theme-mode="clean"] .modal-dark [class*="bg-white\/"]     { background-color: rgba(255,255,255,0.07) !important; }
-[data-theme-mode="clean"] .modal-dark [class*="placeholder-white\/"]::placeholder { color: rgba(255,255,255,0.28) !important; }
+header .text-white\/40, header .text-white\/35,
+header .text-white\/30, header .text-white\/25,
+footer .text-white\/40, footer .text-white\/35,
+footer .text-white\/30, footer .text-white\/25 { color: rgba(255,255,255,0.38) !important; }
+
+header [class*="border-white\/"],
+footer [class*="border-white\/"] { border-color:     rgba(255,255,255,0.12) !important; }
+
+header [class*="bg-white\/"],
+footer [class*="bg-white\/"]     { background-color: rgba(255,255,255,0.06) !important; }
+
+/* ══════════════════════════════════════════════
+   Dark modal — always white text regardless of context
+══════════════════════════════════════════════ */
+.modal-dark .text-white               { color: #ffffff                    !important; }
+.modal-dark [class*="text-white\/"]   { color: rgba(255,255,255,0.65)     !important; }
+.modal-dark .text-white\/75           { color: rgba(255,255,255,0.75)     !important; }
+.modal-dark .text-white\/70           { color: rgba(255,255,255,0.70)     !important; }
+.modal-dark .text-white\/55           { color: rgba(255,255,255,0.55)     !important; }
+.modal-dark .text-white\/50           { color: rgba(255,255,255,0.50)     !important; }
+.modal-dark .text-white\/45           { color: rgba(255,255,255,0.45)     !important; }
+.modal-dark .text-white\/40           { color: rgba(255,255,255,0.40)     !important; }
+.modal-dark .text-white\/30           { color: rgba(255,255,255,0.30)     !important; }
+.modal-dark .text-white\/25           { color: rgba(255,255,255,0.25)     !important; }
+.modal-dark [class*="border-white\/"] { border-color:     rgba(255,255,255,0.15) !important; }
+.modal-dark [class*="bg-white\/"]     { background-color: rgba(255,255,255,0.08) !important; }
+.modal-dark [class*="placeholder-white\/"]::placeholder { color: rgba(255,255,255,0.28) !important; }
