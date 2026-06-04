@@ -198,6 +198,53 @@ function formFromApp(app: PIAApplicationFull): CombinedFormState {
   };
 }
 
+// ─── Validation ───────────────────────────────────────────────────────────────
+
+function validateStep(
+  stepIndex: number,
+  form: CombinedFormState,
+  declarantName: string,
+  declarantDesignation: string,
+  declarantDate: string,
+  declarantPlace: string,
+  declarationAccepted: boolean,
+): Record<string, string> {
+  const e: Record<string, string> = {};
+  if (stepIndex === 0) {
+    if (!form.submittingOfficeId)            e.submittingOfficeId   = 'Please select an EIA office';
+    if (!form.agencyName.trim())             e.agencyName           = 'Agency name is required';
+    if (!form.headOfficeAddress.trim())      e.headOfficeAddress    = 'Address is required';
+    if (!form.headOfficeState)               e.headOfficeState      = 'State is required';
+    if (!form.headOfficeCity.trim())         e.headOfficeCity       = 'City is required';
+    if (!form.headOfficePincode.trim())      e.headOfficePincode    = 'PIN code is required';
+    if (!form.headOfficePhone.trim())        e.headOfficePhone      = 'Phone number is required';
+    if (!form.headOfficeEmail.trim())        e.headOfficeEmail      = 'Email is required';
+    if (!form.headOfOrgName.trim())          e.headOfOrgName        = 'Name is required';
+    if (!form.headOfOrgDesignation.trim())   e.headOfOrgDesignation = 'Designation is required';
+    if (!form.headOfOrgContact.trim())       e.headOfOrgContact     = 'Contact details are required';
+    if (!form.legalStatus)                   e.legalStatus          = 'Legal status is required';
+    if (form.legalStatus === 'OTHER' && !form.legalStatusDetails.trim())
+                                             e.legalStatusDetails   = 'Please specify details';
+  }
+  if (stepIndex === 7) {
+    if (!declarantName.trim())        e.declarantName        = 'Required';
+    if (!declarantDesignation.trim()) e.declarantDesignation = 'Required';
+    if (!declarantDate)               e.declarantDate        = 'Required';
+    if (!declarantPlace.trim())       e.declarantPlace       = 'Required';
+    if (!declarationAccepted)         e.declarationAccepted  = 'You must accept the declaration to proceed';
+  }
+  return e;
+}
+
+function focusFirstError(errs: Record<string, string>) {
+  const key = Object.keys(errs)[0];
+  if (!key) return;
+  requestAnimationFrame(() => {
+    const el = document.getElementById(`field-${key}`);
+    if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.focus(); }
+  });
+}
+
 // ─── UI primitives ────────────────────────────────────────────────────────────
 
 const inp: React.CSSProperties = {
@@ -217,14 +264,20 @@ const STEP_CARD: React.CSSProperties = {
   gap: '28px',
 };
 
-function Field({ label, required, hint, children }: { label: string; required?: boolean; hint?: string; children: React.ReactNode }) {
+function Field({ label, required, hint, children, error }: { label: string; required?: boolean; hint?: string; children: React.ReactNode; error?: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
       <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)' }}>
         {label}{required && <span style={{ color: '#EF4444', marginLeft: '3px' }}>*</span>}
       </label>
       {children}
-      {hint && <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{hint}</span>}
+      {error
+        ? <span style={{ fontSize: '11px', color: '#EF4444', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3 }}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            {error}
+          </span>
+        : hint && <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{hint}</span>
+      }
     </div>
   );
 }
@@ -233,15 +286,16 @@ function Grid({ cols = 2, children }: { cols?: number; children: React.ReactNode
   return <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: '16px' }}>{children}</div>;
 }
 
-function TI({ value, onChange, placeholder, type = 'text', disabled, readOnly }: { value: string; onChange: (v: string) => void; placeholder?: string; type?: string; disabled?: boolean; readOnly?: boolean }) {
-  return <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} disabled={disabled} readOnly={readOnly} style={{ ...inp, opacity: disabled ? 0.5 : 1, backgroundColor: readOnly ? 'var(--bg-page)' : undefined, cursor: readOnly ? 'default' : undefined }} />;
+const errInp: React.CSSProperties = { border: '1.5px solid #EF4444', backgroundColor: '#FFF5F5' };
+function TI({ value, onChange, placeholder, type = 'text', disabled, readOnly, id, hasError }: { value: string; onChange: (v: string) => void; placeholder?: string; type?: string; disabled?: boolean; readOnly?: boolean; id?: string; hasError?: boolean }) {
+  return <input id={id} type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} disabled={disabled} readOnly={readOnly} style={{ ...inp, ...(hasError ? errInp : {}), opacity: disabled ? 0.5 : 1, backgroundColor: hasError ? '#FFF5F5' : readOnly ? 'var(--bg-page)' : undefined, cursor: readOnly ? 'default' : undefined }} />;
 }
-function TA({ value, onChange, placeholder, rows = 3 }: { value: string; onChange: (v: string) => void; placeholder?: string; rows?: number }) {
-  return <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={rows} style={{ ...inp, resize: 'vertical', lineHeight: 1.5 }} />;
+function TA({ value, onChange, placeholder, rows = 3, id, hasError }: { value: string; onChange: (v: string) => void; placeholder?: string; rows?: number; id?: string; hasError?: boolean }) {
+  return <textarea id={id} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={rows} style={{ ...inp, ...(hasError ? errInp : {}), resize: 'vertical', lineHeight: 1.5 }} />;
 }
-function Sel({ value, onChange, options, placeholder }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; placeholder?: string }) {
+function Sel({ value, onChange, options, placeholder, id, hasError }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; placeholder?: string; id?: string; hasError?: boolean }) {
   return (
-    <select value={value} onChange={e => onChange(e.target.value)} style={{ ...inp, cursor: 'pointer' }}>
+    <select id={id} value={value} onChange={e => onChange(e.target.value)} style={{ ...inp, ...(hasError ? errInp : {}), cursor: 'pointer' }}>
       {placeholder && <option value="">{placeholder}</option>}
       {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
     </select>
@@ -294,14 +348,16 @@ function DecRow({ label, value, onChange, children }: { label: string; value: bo
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface Props {
-  applicationId: string;
+  applicationId: string | null;  // null = brand-new, not yet persisted
+  newSubType?: PIASubType;       // used only when applicationId is null
+  newAgencyName?: string;        // pre-fills agency name for new apps
   onBack: () => void;
   onSaved?: (app: PIAApplicationFull) => void;
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function PIAApplicationForm({ applicationId, onBack, onSaved }: Props) {
+export default function PIAApplicationForm({ applicationId, newSubType, newAgencyName, onBack, onSaved }: Props) {
   const [form, setForm]         = useState<CombinedFormState>(EMPTY);
   const [appNo, setAppNo]       = useState('');
   const [step, setStep]         = useState(0);
@@ -315,45 +371,70 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
   const [deletingDocId, setDeletingDocId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const pendingDocTypeRef = useRef<string>('');
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+  const [submittedApp, setSubmittedApp] = useState<PIAApplicationFull | null>(null);
   const [paymentRef, setPaymentRef] = useState('');
+  const [isPayingRef, setIsPayingRef] = useState(false);
+  const [paymentDone, setPaymentDone] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
   const [declarantName, setDeclarantName] = useState('');
   const [declarantDesignation, setDeclarantDesignation] = useState('');
   const [declarantDate, setDeclarantDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [declarantPlace, setDeclarantPlace] = useState('');
   const [declarationAccepted, setDeclarationAccepted] = useState(false);
+  // resolvedId is null for brand-new apps until the first save creates the DB record
+  const [resolvedId, setResolvedId] = useState<string | null>(applicationId);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving]   = useState(false);
   const [isDirty, setIsDirty]     = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [saveError, setSaveError] = useState('');
+  const [errors, setErrors]       = useState<Record<string, string>>({});
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    Promise.all([
-      piaApi.getById(applicationId),
+    const mastersFetch = Promise.all([
       piaApi.getMasterPorts(),
       piaApi.getMasterMinerals(),
       piaApi.getMasterEIAOffices(),
-    ]).then(([app, pts, mins, offices]) => {
-      const f = formFromApp(app);
-      setForm(f);
-      setAppNo(app.appNo);
-      setPorts(pts.filter(p => p.isActive));
-      setMinerals(mins.filter(m => m.isActive));
-      setEiaOffices(offices);
-      setIsLoading(false);
-      piaApi.getMasterDocumentChecklist(f.subType).then(setDocChecklist).catch(() => {});
-      piaApi.listDocuments(applicationId).then(setUploadedDocs).catch(() => {});
-      piaApi.getMasterFeeConfig().then(setFeeConfig).catch(() => {});
-    }).catch(() => setIsLoading(false));
+    ]);
+
+    if (applicationId === null) {
+      // New application: only load master data, show blank form
+      mastersFetch.then(([pts, mins, offices]) => {
+        setPorts(pts.filter(p => p.isActive));
+        setMinerals(mins.filter(m => m.isActive));
+        setEiaOffices(offices);
+        const sub = newSubType ?? 'NEW_RECOGNITION';
+        setForm(prev => ({ ...prev, subType: sub, agencyName: newAgencyName ?? '' }));
+        setIsLoading(false);
+        piaApi.getMasterDocumentChecklist(sub).then(setDocChecklist).catch(() => {});
+        piaApi.getMasterFeeConfig().then(setFeeConfig).catch(() => {});
+      }).catch(() => setIsLoading(false));
+      return;
+    }
+
+    Promise.all([piaApi.getById(applicationId), mastersFetch])
+      .then(([app, [pts, mins, offices]]) => {
+        const f = formFromApp(app);
+        setForm(f);
+        setAppNo(app.appNo);
+        setPorts(pts.filter(p => p.isActive));
+        setMinerals(mins.filter(m => m.isActive));
+        setEiaOffices(offices);
+        setIsLoading(false);
+        piaApi.getMasterDocumentChecklist(f.subType).then(setDocChecklist).catch(() => {});
+        piaApi.listDocuments(applicationId).then(setUploadedDocs).catch(() => {});
+        piaApi.getMasterFeeConfig().then(setFeeConfig).catch(() => {});
+      }).catch(() => setIsLoading(false));
   }, [applicationId]);
 
   useEffect(() => {
-    if (!isDirty || isLoading) return;
+    if (!isDirty || isLoading || !resolvedId) return;  // never auto-save a brand-new unsaved app
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     autoSaveTimer.current = setTimeout(() => doSave(false), 3000);
     return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
-  }, [form, isDirty, isLoading]);
+  }, [form, isDirty, isLoading, resolvedId]);
 
   // Auto-transliterate English agency name → Hindi using Google Input Tools
   useEffect(() => {
@@ -378,6 +459,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
   const set = useCallback(<K extends keyof CombinedFormState>(key: K, value: CombinedFormState[K]) => {
     setForm(prev => ({ ...prev, [key]: value }));
     setIsDirty(true); setSaveError('');
+    setErrors(prev => { const n = { ...prev }; delete n[key as string]; return n; });
   }, []);
 
   const uploadBaseUrl = (import.meta.env.VITE_API_URL as string).replace(/\/api\/v1\/?$/, '') + '/uploads';
@@ -389,20 +471,21 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
 
   const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !pendingDocTypeRef.current) return;
+    if (!file || !pendingDocTypeRef.current || !resolvedId) return;
     const docType = pendingDocTypeRef.current;
     setUploadingType(docType);
     try {
-      const doc = await piaApi.uploadDocument(applicationId, docType, file);
+      const doc = await piaApi.uploadDocument(resolvedId, docType, file);
       setUploadedDocs(prev => [...prev.filter(d => d.documentType !== docType), doc]);
     } catch { /* ignore */ }
     finally { setUploadingType(null); }
   };
 
   const handleDeleteDoc = async (docId: string) => {
+    if (!resolvedId) return;
     setDeletingDocId(docId);
     try {
-      await piaApi.deleteDocument(applicationId, docId);
+      await piaApi.deleteDocument(resolvedId, docId);
       setUploadedDocs(prev => prev.filter(d => d.id !== docId));
     } catch { /* ignore */ }
     finally { setDeletingDocId(null); }
@@ -415,66 +498,115 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  const partIPayload = () => ({
+    officeId: form.submittingOfficeId || null,
+    agencyName: form.agencyName, agencyNameHindi: form.agencyNameHindi,
+    headOfficeAddress: form.headOfficeAddress, headOfficeState: form.headOfficeState,
+    headOfficeDistrict: form.headOfficeDistrict, headOfficeCity: form.headOfficeCity,
+    headOfficePincode: form.headOfficePincode, headOfficeCountry: form.headOfficeCountry,
+    headOfficePhone: form.headOfficePhone, headOfficeFax: form.headOfficeFax,
+    headOfficeEmail: form.headOfficeEmail,
+    headOfOrgName: form.headOfOrgName, headOfOrgDesignation: form.headOfOrgDesignation,
+    headOfOrgContact: form.headOfOrgContact,
+    legalStatus: form.legalStatus, legalStatusDetails: form.legalStatusDetails,
+    inspectionDivHeadName: form.inspectionDivHeadName,
+    inspectionDivHeadDesignation: form.inspectionDivHeadDesignation,
+    inspectionDivPhone: form.inspectionDivPhone, inspectionDivFax: form.inspectionDivFax,
+    inspectionDivEmail: form.inspectionDivEmail,
+    labDivHeadName: form.labDivHeadName, labDivHeadDesignation: form.labDivHeadDesignation,
+    labDivPhone: form.labDivPhone, labDivFax: form.labDivFax, labDivEmail: form.labDivEmail,
+    recognitionValidityDate: form.recognitionValidityDate,
+    recognitionPeriod: form.recognitionPeriod,
+    existingRecognitionNo: form.existingRecognitionNo,
+    hasCriminalProceedings: form.hasCriminalProceedings,
+    criminalProceedingsDetails: form.criminalProceedingsDetails,
+    mineralScopes: form.mineralScopes, branches: form.branches,
+  });
+
+  const partIIPayload = () => ({
+    seniorMgmtCount: form.seniorMgmtCount ? parseInt(form.seniorMgmtCount) : null,
+    inspectingStaffCount: form.inspectingStaffCount ? parseInt(form.inspectingStaffCount) : null,
+    qmsImplemented: form.qmsImplemented, qmsType: form.qmsType || undefined,
+    isAccredited: form.isAccredited, accreditationScope: form.accreditationScope,
+    accreditationBody: form.accreditationBody, consultancyDetails: form.consultancyDetails,
+    hasDomesticExperience: form.hasDomesticExperience, hasExportExperience: form.hasExportExperience,
+    hasLaboratory: form.hasLabAccreditation || !!form.labConsultancyDetails || form.labEquipment.length > 0 || form.labProducts.length > 0 || form.labManpower.length > 0,
+    hasLabAccreditation: form.hasLabAccreditation,
+    labAccreditationType: form.labAccreditationType, labAccreditationScope: form.labAccreditationScope,
+    labConsultancyDetails: form.labConsultancyDetails,
+    hasOtherActivities: form.hasOtherActivities, otherActivitiesDetails: form.otherActivitiesDetails,
+    hasLinkedOrganization: form.hasLinkedOrganization, linkedOrgDetails: form.linkedOrgDetails,
+    hasRelatedActivities: form.hasRelatedActivities, relatedActivitiesDetails: form.relatedActivitiesDetails,
+    hasDisputesWithClients: form.hasDisputesWithClients, disputesDetails: form.disputesDetails,
+    hasCriminalProceedings: form.hasCriminalProceedings,
+    criminalProceedingsDetails: form.criminalProceedingsDetails,
+    portIds: form.selectedPortIds, mineralScopes: form.mineralScopes,
+    manpower: form.manpower, labManpower: form.labManpower,
+    labEquipment: form.labEquipment, labProducts: form.labProducts,
+  });
+
+  const tryNavigate = useCallback((targetStep: number) => {
+    if (targetStep <= step) { setErrors({}); setStep(targetStep); return; }
+    const errs = validateStep(step, form, declarantName, declarantDesignation, declarantDate, declarantPlace, declarationAccepted);
+    if (Object.keys(errs).length > 0) { setErrors(errs); focusFirstError(errs); return; }
+    setErrors({}); setStep(targetStep);
+  }, [step, form, declarantName, declarantDesignation, declarantDate, declarantPlace, declarationAccepted]);
+
   const doSave = useCallback(async (feedback = true) => {
     if (isSaving) return;
     setIsSaving(true); setSaveError('');
     try {
-      await Promise.all([
-        piaApi.savePartI(applicationId, {
-          officeId: form.submittingOfficeId || null,
-          agencyName: form.agencyName, agencyNameHindi: form.agencyNameHindi,
-          headOfficeAddress: form.headOfficeAddress, headOfficeState: form.headOfficeState,
-          headOfficeDistrict: form.headOfficeDistrict, headOfficeCity: form.headOfficeCity,
-          headOfficePincode: form.headOfficePincode, headOfficeCountry: form.headOfficeCountry,
-          headOfficePhone: form.headOfficePhone, headOfficeFax: form.headOfficeFax,
-          headOfficeEmail: form.headOfficeEmail,
-          headOfOrgName: form.headOfOrgName, headOfOrgDesignation: form.headOfOrgDesignation,
-          headOfOrgContact: form.headOfOrgContact,
-          legalStatus: form.legalStatus, legalStatusDetails: form.legalStatusDetails,
-          inspectionDivHeadName: form.inspectionDivHeadName,
-          inspectionDivHeadDesignation: form.inspectionDivHeadDesignation,
-          inspectionDivPhone: form.inspectionDivPhone, inspectionDivFax: form.inspectionDivFax,
-          inspectionDivEmail: form.inspectionDivEmail,
-          labDivHeadName: form.labDivHeadName, labDivHeadDesignation: form.labDivHeadDesignation,
-          labDivPhone: form.labDivPhone, labDivFax: form.labDivFax, labDivEmail: form.labDivEmail,
-          recognitionValidityDate: form.recognitionValidityDate,
-          recognitionPeriod: form.recognitionPeriod,
-          existingRecognitionNo: form.existingRecognitionNo,
-          hasCriminalProceedings: form.hasCriminalProceedings,
-          criminalProceedingsDetails: form.criminalProceedingsDetails,
-          mineralScopes: form.mineralScopes, branches: form.branches,
-        }),
-        piaApi.savePartII(applicationId, {
-          seniorMgmtCount: form.seniorMgmtCount ? parseInt(form.seniorMgmtCount) : null,
-          inspectingStaffCount: form.inspectingStaffCount ? parseInt(form.inspectingStaffCount) : null,
-          qmsImplemented: form.qmsImplemented, qmsType: form.qmsType || undefined,
-          isAccredited: form.isAccredited, accreditationScope: form.accreditationScope,
-          accreditationBody: form.accreditationBody, consultancyDetails: form.consultancyDetails,
-          hasDomesticExperience: form.hasDomesticExperience, hasExportExperience: form.hasExportExperience,
-          hasLaboratory: form.hasLabAccreditation || !!form.labConsultancyDetails || form.labEquipment.length > 0 || form.labProducts.length > 0 || form.labManpower.length > 0,
-          hasLabAccreditation: form.hasLabAccreditation,
-          labAccreditationType: form.labAccreditationType, labAccreditationScope: form.labAccreditationScope,
-          labConsultancyDetails: form.labConsultancyDetails,
-          hasOtherActivities: form.hasOtherActivities, otherActivitiesDetails: form.otherActivitiesDetails,
-          hasLinkedOrganization: form.hasLinkedOrganization, linkedOrgDetails: form.linkedOrgDetails,
-          hasRelatedActivities: form.hasRelatedActivities, relatedActivitiesDetails: form.relatedActivitiesDetails,
-          hasDisputesWithClients: form.hasDisputesWithClients, disputesDetails: form.disputesDetails,
-          hasCriminalProceedings: form.hasCriminalProceedings,
-          criminalProceedingsDetails: form.criminalProceedingsDetails,
-          portIds: form.selectedPortIds, mineralScopes: form.mineralScopes,
-          manpower: form.manpower, labManpower: form.labManpower,
-          labEquipment: form.labEquipment, labProducts: form.labProducts,
-        }),
-      ]);
+      let id = resolvedId;
+      if (!id) {
+        // First save for a brand-new application: create the draft record first
+        if (!form.agencyName.trim()) {
+          setSaveError('Agency name is required before saving.');
+          setIsSaving(false);
+          return;
+        }
+        const newApp = await piaApi.createDraft(form.agencyName.trim(), form.subType);
+        id = newApp.id;
+        setResolvedId(id);
+        setAppNo(newApp.appNo);
+      }
+      await Promise.all([piaApi.savePartI(id, partIPayload()), piaApi.savePartII(id, partIIPayload())]);
       setIsDirty(false); setLastSaved(new Date());
       if (feedback) {
-        const saved = await piaApi.getById(applicationId);
+        const saved = await piaApi.getById(id);
         onSaved?.(saved as any);
       }
     } catch (err: any) {
       setSaveError(err?.response?.data?.message ?? 'Save failed. Please try again.');
     } finally { setIsSaving(false); }
-  }, [applicationId, form, isSaving]);
+  }, [resolvedId, form, isSaving]);
+
+  const doSubmit = useCallback(async () => {
+    if (!resolvedId) { setSaveError('Please save your draft first before submitting.'); return; }
+    // Dummy required-fields check
+    const missing: string[] = [];
+    if (!form.agencyName.trim())         missing.push('Agency Name');
+    if (!form.submittingOfficeId)        missing.push('Concerned EIA Office');
+    if (!form.headOfficeAddress.trim())  missing.push('Head Office Address');
+    if (!form.headOfficeState.trim())    missing.push('Head Office State');
+    if (!form.headOfOrgName.trim())      missing.push('Head of Organisation');
+    if (!declarationAccepted)            missing.push('Declaration (must be accepted)');
+    if (missing.length) {
+      setSaveError(`Please complete required fields: ${missing.join(', ')}.`);
+      setShowSubmitConfirm(false);
+      return;
+    }
+    if (isSaving) return;
+    setIsSaving(true); setSaveError('');
+    try {
+      await Promise.all([piaApi.savePartI(resolvedId, partIPayload()), piaApi.savePartII(resolvedId, partIIPayload())]);
+      const result = await piaApi.submit(resolvedId);
+      setSubmittedApp(result);
+      setShowSubmitConfirm(false);
+      if (onSaved) onSaved(result);
+    } catch (err: any) {
+      setSaveError(err?.response?.data?.message ?? 'Submission failed. Please try again.');
+    } finally { setIsSaving(false); }
+  }, [resolvedId, form, isSaving, declarationAccepted, onSaved]);
 
   // ── Branch helpers ──
   const updBranch = (idx: number, key: keyof PIABranchPayload, val: string) =>
@@ -524,18 +656,21 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
           </button>
           <span style={{ color: 'var(--border-subtle)' }}>|</span>
           <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>{subTypeLabel}</span>
-          <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', backgroundColor: 'rgba(0,0,0,0.05)', color: 'var(--grad-to)' }}>{appNo}</span>
+          {appNo
+            ? <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', backgroundColor: 'rgba(0,0,0,0.05)', color: 'var(--grad-to)' }}>{appNo}</span>
+            : <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', backgroundColor: '#FEF9C3', color: '#92400E', border: '1px solid #FDE68A' }}>Not saved yet</span>
+          }
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <span style={{ fontSize: '11px', color: saveError ? '#EF4444' : 'var(--text-muted)' }}>
             {saveError || (isSaving ? 'Saving…' : lastSaved ? `Saved ${lastSaved.toLocaleTimeString()}` : isDirty ? 'Unsaved changes' : '')}
           </span>
-          <button onClick={() => doSave(true)} disabled={isSaving || (!isDirty && !saveError)} style={{
+          <button onClick={() => doSave(true)} disabled={isSaving} style={{
             display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 16px', borderRadius: '7px',
-            backgroundColor: isDirty ? 'rgba(59,130,246,0.15)' : 'transparent',
-            border: `1px solid ${isDirty ? 'var(--grad-to)' : 'var(--border-subtle)'}`,
-            color: isDirty ? 'var(--grad-to)' : 'var(--text-muted)', fontSize: '12px', fontWeight: 600,
-            cursor: isSaving ? 'wait' : 'pointer', opacity: (!isDirty && !saveError) ? 0.5 : 1,
+            backgroundColor: (isDirty || !resolvedId) ? 'rgba(59,130,246,0.15)' : 'transparent',
+            border: `1px solid ${(isDirty || !resolvedId) ? 'var(--grad-to)' : 'var(--border-subtle)'}`,
+            color: (isDirty || !resolvedId) ? 'var(--grad-to)' : 'var(--text-muted)', fontSize: '12px', fontWeight: 600,
+            cursor: isSaving ? 'wait' : 'pointer', opacity: isSaving ? 0.6 : 1,
           }}>
             <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
             Save Draft
@@ -576,7 +711,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
             return (
               <button
                 key={s.key}
-                onClick={() => setStep(i)}
+                onClick={() => tryNavigate(i)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '8px',
                   padding: '8px 11px', borderRadius: '7px', cursor: 'pointer', border: 'none',
@@ -623,11 +758,12 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <Field label="Submit Application To" required>
+                <Field label="Submit Application To" required error={errors.submittingOfficeId}>
                   <select
+                    id="field-submittingOfficeId"
                     value={form.submittingOfficeId}
                     onChange={e => set('submittingOfficeId', e.target.value)}
-                    style={{ ...inp, cursor: 'pointer' }}
+                    style={{ ...inp, cursor: 'pointer', ...(errors.submittingOfficeId ? errInp : {}) }}
                   >
                     <option value="">— Select EIA Office —</option>
                     {eiaOffices.map(o => (
@@ -655,8 +791,9 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
           <div>
             <SecHead num="1" title="Name of the Applicant / Inspection Agency" subtitle="As registered — English and Hindi" />
             <Grid>
-              <Field label="Name (English)" required>
+              <Field label="Name (English)" required error={errors.agencyName}>
                 <TI
+                  id="field-agencyName" hasError={!!errors.agencyName}
                   value={form.agencyName}
                   onChange={v => set('agencyName', v)}
                   placeholder="Full registered name"
@@ -675,19 +812,19 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
           <div>
             <SecHead num="1.1" title="Head Office Address" subtitle="Full address with state, district, city, PIN, country" />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <Field label="Address of Head Office" required>
-                <TA value={form.headOfficeAddress} onChange={v => set('headOfficeAddress', v)} placeholder="Building no., street, locality…" rows={3} />
+              <Field label="Address of Head Office" required error={errors.headOfficeAddress}>
+                <TA id="field-headOfficeAddress" hasError={!!errors.headOfficeAddress} value={form.headOfficeAddress} onChange={v => set('headOfficeAddress', v)} placeholder="Building no., street, locality…" rows={3} />
                 <InfoBadge text="Address proof upload required" />
               </Field>
               <Grid cols={3}>
-                <Field label="State / UT" required>
-                  <Sel value={form.headOfficeState} onChange={v => set('headOfficeState', v)} options={INDIAN_STATES.map(s => ({ value: s, label: s }))} placeholder="— Select State —" />
+                <Field label="State / UT" required error={errors.headOfficeState}>
+                  <Sel id="field-headOfficeState" hasError={!!errors.headOfficeState} value={form.headOfficeState} onChange={v => set('headOfficeState', v)} options={INDIAN_STATES.map(s => ({ value: s, label: s }))} placeholder="— Select State —" />
                 </Field>
                 <Field label="District"><TI value={form.headOfficeDistrict} onChange={v => set('headOfficeDistrict', v)} placeholder="District" /></Field>
-                <Field label="City / Town" required><TI value={form.headOfficeCity} onChange={v => set('headOfficeCity', v)} placeholder="City" /></Field>
+                <Field label="City / Town" required error={errors.headOfficeCity}><TI id="field-headOfficeCity" hasError={!!errors.headOfficeCity} value={form.headOfficeCity} onChange={v => set('headOfficeCity', v)} placeholder="City" /></Field>
               </Grid>
               <Grid cols={3}>
-                <Field label="PIN Code" required><TI value={form.headOfficePincode} onChange={v => set('headOfficePincode', v)} placeholder="6-digit PIN" /></Field>
+                <Field label="PIN Code" required error={errors.headOfficePincode}><TI id="field-headOfficePincode" hasError={!!errors.headOfficePincode} value={form.headOfficePincode} onChange={v => set('headOfficePincode', v)} placeholder="6-digit PIN" /></Field>
                 <Field label="Country"><TI value={form.headOfficeCountry} onChange={v => set('headOfficeCountry', v)} placeholder="India" /></Field>
               </Grid>
             </div>
@@ -695,18 +832,18 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
           <div>
             <SecHead num="1.2" title="Phone No. / Fax / E-mail" />
             <Grid cols={3}>
-              <Field label="Phone No. / Mobile" required><TI value={form.headOfficePhone} onChange={v => set('headOfficePhone', v)} placeholder="+91 XXXXX XXXXX" /></Field>
+              <Field label="Phone No. / Mobile" required error={errors.headOfficePhone}><TI id="field-headOfficePhone" hasError={!!errors.headOfficePhone} value={form.headOfficePhone} onChange={v => set('headOfficePhone', v)} placeholder="+91 XXXXX XXXXX" /></Field>
               <Field label="Fax"><TI value={form.headOfficeFax} onChange={v => set('headOfficeFax', v)} placeholder="Fax number" /></Field>
-              <Field label="E-mail" required><TI value={form.headOfficeEmail} onChange={v => set('headOfficeEmail', v)} placeholder="office@agency.com" /></Field>
+              <Field label="E-mail" required error={errors.headOfficeEmail}><TI id="field-headOfficeEmail" hasError={!!errors.headOfficeEmail} value={form.headOfficeEmail} onChange={v => set('headOfficeEmail', v)} placeholder="office@agency.com" /></Field>
             </Grid>
             <InfoBadge text="Email / mobile validation required" />
           </div>
           <div>
             <SecHead num="1.3" title="Name of Head of Organization and Designation" />
             <Grid cols={3}>
-              <Field label="Name" required><TI value={form.headOfOrgName} onChange={v => set('headOfOrgName', v)} placeholder="Full name" /></Field>
-              <Field label="Designation" required><TI value={form.headOfOrgDesignation} onChange={v => set('headOfOrgDesignation', v)} placeholder="e.g. Managing Director" /></Field>
-              <Field label="Contact Details" required><TI value={form.headOfOrgContact} onChange={v => set('headOfOrgContact', v)} placeholder="+91 XXXXX XXXXX" /></Field>
+              <Field label="Name" required error={errors.headOfOrgName}><TI id="field-headOfOrgName" hasError={!!errors.headOfOrgName} value={form.headOfOrgName} onChange={v => set('headOfOrgName', v)} placeholder="Full name" /></Field>
+              <Field label="Designation" required error={errors.headOfOrgDesignation}><TI id="field-headOfOrgDesignation" hasError={!!errors.headOfOrgDesignation} value={form.headOfOrgDesignation} onChange={v => set('headOfOrgDesignation', v)} placeholder="e.g. Managing Director" /></Field>
+              <Field label="Contact Details" required error={errors.headOfOrgContact}><TI id="field-headOfOrgContact" hasError={!!errors.headOfOrgContact} value={form.headOfOrgContact} onChange={v => set('headOfOrgContact', v)} placeholder="+91 XXXXX XXXXX" /></Field>
             </Grid>
           </div>
           <div>
@@ -793,12 +930,12 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
           <div>
             <SecHead num="5" title="Legal Status" subtitle="Documentary evidence required — CoI, MOA, etc." />
             <Grid>
-              <Field label="Legal Status / Constitution" required>
-                <Sel value={form.legalStatus} onChange={v => set('legalStatus', v)} options={LEGAL_STATUS_OPTIONS} placeholder="— Select Legal Status —" />
+              <Field label="Legal Status / Constitution" required error={errors.legalStatus}>
+                <Sel id="field-legalStatus" hasError={!!errors.legalStatus} value={form.legalStatus} onChange={v => set('legalStatus', v)} options={LEGAL_STATUS_OPTIONS} placeholder="— Select Legal Status —" />
               </Field>
               {form.legalStatus === 'OTHER' && (
-                <Field label="Specify Details" required>
-                  <TI value={form.legalStatusDetails} onChange={v => set('legalStatusDetails', v)} placeholder="Describe legal constitution" />
+                <Field label="Specify Details" required error={errors.legalStatusDetails}>
+                  <TI id="field-legalStatusDetails" hasError={!!errors.legalStatusDetails} value={form.legalStatusDetails} onChange={v => set('legalStatusDetails', v)} placeholder="Describe legal constitution" />
                 </Field>
               )}
             </Grid>
@@ -1437,25 +1574,29 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     <div>
                       <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Name of Authorized Signatory <span style={{ color: '#EF4444' }}>*</span></label>
-                      <input value={declarantName} onChange={e => setDeclarantName(e.target.value)} placeholder="Full name"
-                        style={{ width: '100%', padding: '7px 10px', borderRadius: '6px', border: '1.5px solid rgba(59,130,246,0.35)', backgroundColor: '#f0f9ff', fontSize: '13px', color: 'var(--text-primary)', outline: 'none', boxSizing: 'border-box' }} />
+                      <input id="field-declarantName" value={declarantName} onChange={e => { setDeclarantName(e.target.value); setErrors(p => { const n = { ...p }; delete n.declarantName; return n; }); }} placeholder="Full name"
+                        style={{ width: '100%', padding: '7px 10px', borderRadius: '6px', border: errors.declarantName ? '1.5px solid #EF4444' : '1.5px solid rgba(59,130,246,0.35)', backgroundColor: errors.declarantName ? '#FFF5F5' : '#f0f9ff', fontSize: '13px', color: 'var(--text-primary)', outline: 'none', boxSizing: 'border-box' }} />
+                      {errors.declarantName && <span style={{ fontSize: '11px', color: '#EF4444', fontWeight: 600 }}>{errors.declarantName}</span>}
                     </div>
                     <div>
                       <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Designation <span style={{ color: '#EF4444' }}>*</span></label>
-                      <input value={declarantDesignation} onChange={e => setDeclarantDesignation(e.target.value)} placeholder="e.g. Managing Director"
-                        style={{ width: '100%', padding: '7px 10px', borderRadius: '6px', border: '1.5px solid rgba(59,130,246,0.35)', backgroundColor: '#f0f9ff', fontSize: '13px', color: 'var(--text-primary)', outline: 'none', boxSizing: 'border-box' }} />
+                      <input id="field-declarantDesignation" value={declarantDesignation} onChange={e => { setDeclarantDesignation(e.target.value); setErrors(p => { const n = { ...p }; delete n.declarantDesignation; return n; }); }} placeholder="e.g. Managing Director"
+                        style={{ width: '100%', padding: '7px 10px', borderRadius: '6px', border: errors.declarantDesignation ? '1.5px solid #EF4444' : '1.5px solid rgba(59,130,246,0.35)', backgroundColor: errors.declarantDesignation ? '#FFF5F5' : '#f0f9ff', fontSize: '13px', color: 'var(--text-primary)', outline: 'none', boxSizing: 'border-box' }} />
+                      {errors.declarantDesignation && <span style={{ fontSize: '11px', color: '#EF4444', fontWeight: 600 }}>{errors.declarantDesignation}</span>}
                     </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     <div>
                       <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Date <span style={{ color: '#EF4444' }}>*</span></label>
-                      <input type="date" value={declarantDate} onChange={e => setDeclarantDate(e.target.value)}
-                        style={{ width: '100%', padding: '7px 10px', borderRadius: '6px', border: '1.5px solid rgba(59,130,246,0.35)', backgroundColor: '#f0f9ff', fontSize: '13px', color: 'var(--text-primary)', outline: 'none', boxSizing: 'border-box' }} />
+                      <input id="field-declarantDate" type="date" value={declarantDate} onChange={e => { setDeclarantDate(e.target.value); setErrors(p => { const n = { ...p }; delete n.declarantDate; return n; }); }}
+                        style={{ width: '100%', padding: '7px 10px', borderRadius: '6px', border: errors.declarantDate ? '1.5px solid #EF4444' : '1.5px solid rgba(59,130,246,0.35)', backgroundColor: errors.declarantDate ? '#FFF5F5' : '#f0f9ff', fontSize: '13px', color: 'var(--text-primary)', outline: 'none', boxSizing: 'border-box' }} />
+                      {errors.declarantDate && <span style={{ fontSize: '11px', color: '#EF4444', fontWeight: 600 }}>{errors.declarantDate}</span>}
                     </div>
                     <div>
                       <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Place <span style={{ color: '#EF4444' }}>*</span></label>
-                      <input value={declarantPlace} onChange={e => setDeclarantPlace(e.target.value)} placeholder="City / Location"
-                        style={{ width: '100%', padding: '7px 10px', borderRadius: '6px', border: '1.5px solid rgba(59,130,246,0.35)', backgroundColor: '#f0f9ff', fontSize: '13px', color: 'var(--text-primary)', outline: 'none', boxSizing: 'border-box' }} />
+                      <input id="field-declarantPlace" value={declarantPlace} onChange={e => { setDeclarantPlace(e.target.value); setErrors(p => { const n = { ...p }; delete n.declarantPlace; return n; }); }} placeholder="City / Location"
+                        style={{ width: '100%', padding: '7px 10px', borderRadius: '6px', border: errors.declarantPlace ? '1.5px solid #EF4444' : '1.5px solid rgba(59,130,246,0.35)', backgroundColor: errors.declarantPlace ? '#FFF5F5' : '#f0f9ff', fontSize: '13px', color: 'var(--text-primary)', outline: 'none', boxSizing: 'border-box' }} />
+                      {errors.declarantPlace && <span style={{ fontSize: '11px', color: '#EF4444', fontWeight: 600 }}>{errors.declarantPlace}</span>}
                     </div>
                   </div>
                   {/* Signature placeholder */}
@@ -1470,14 +1611,15 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
               </div>
 
               {/* Acceptance checkbox */}
-              <div style={{ padding: '14px 24px 18px', borderTop: '1px solid rgba(0,0,0,0.05)', backgroundColor: declarationAccepted ? 'rgba(34,197,94,0.05)' : 'rgba(59,130,246,0.03)' }}>
-                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={declarationAccepted} onChange={e => setDeclarationAccepted(e.target.checked)}
+              <div style={{ padding: '14px 24px 18px', borderTop: `1px solid ${errors.declarationAccepted ? 'rgba(239,68,68,0.4)' : 'rgba(0,0,0,0.05)'}`, backgroundColor: declarationAccepted ? 'rgba(34,197,94,0.05)' : errors.declarationAccepted ? 'rgba(239,68,68,0.04)' : 'rgba(59,130,246,0.03)' }}>
+                <label id="field-declarationAccepted" style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={declarationAccepted} onChange={e => { setDeclarationAccepted(e.target.checked); setErrors(p => { const n = { ...p }; delete n.declarationAccepted; return n; }); }}
                     style={{ accentColor: '#16A34A', width: 16, height: 16, marginTop: '1px', flexShrink: 0 }} />
-                  <span style={{ fontSize: '12px', fontWeight: 600, color: declarationAccepted ? '#16A34A' : 'var(--text-primary)', lineHeight: 1.5 }}>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: declarationAccepted ? '#16A34A' : errors.declarationAccepted ? '#EF4444' : 'var(--text-primary)', lineHeight: 1.5 }}>
                     I/We have read, understood and accept the above declaration. I/We confirm that all information furnished in this application and documents enclosed is true, complete and correct to the best of my/our knowledge.
                   </span>
                 </label>
+                {errors.declarationAccepted && <p style={{ margin: '8px 0 0 26px', fontSize: '11px', color: '#EF4444', fontWeight: 600 }}>{errors.declarationAccepted}</p>}
               </div>
             </div>
           </div>
@@ -1575,18 +1717,6 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
               </div>
             </div>
 
-            {/* ── Payment Reference ── */}
-            <div style={{ borderRadius: '10px', border: '1.5px solid rgba(59,130,246,0.25)', padding: '20px', backgroundColor: 'rgba(59,130,246,0.03)' }}>
-              <p style={{ margin: '0 0 4px', fontSize: '13px', fontWeight: 700, color: '#1e3a8a' }}>Payment Reference Number</p>
-              <p style={{ margin: '0 0 12px', fontSize: '12px', color: 'var(--text-muted)' }}>Enter the transaction / DD / UTR reference number after making the payment.</p>
-              <input
-                type="text"
-                value={paymentRef}
-                onChange={e => setPaymentRef(e.target.value)}
-                placeholder="e.g. UTR123456789012 or DD No."
-                style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 500, border: `1.5px solid ${paymentRef ? 'rgba(29,78,216,0.5)' : 'rgba(59,130,246,0.25)'}`, backgroundColor: '#fff', color: 'var(--text-primary)', outline: 'none', boxSizing: 'border-box' }}
-              />
-            </div>
           </div>;
         })()}
 
@@ -1606,7 +1736,11 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
             }}>{isSaving ? 'Saving…' : 'Save Draft'}</button>
             {step < STEPS.length - 1
               ? (
-                <button type="button" onClick={async () => { await doSave(false); setStep(s => s + 1); }} disabled={isSaving} style={{
+                <button type="button" onClick={async () => {
+                  const errs = validateStep(step, form, declarantName, declarantDesignation, declarantDate, declarantPlace, declarationAccepted);
+                  if (Object.keys(errs).length > 0) { setErrors(errs); focusFirstError(errs); return; }
+                  setErrors({}); await doSave(false); setStep(s => s + 1);
+                }} disabled={isSaving} style={{
                   display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 20px', borderRadius: '7px',
                   background: 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)', border: 'none', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
                 }}>
@@ -1615,7 +1749,7 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
                 </button>
               )
               : (
-                <button type="button" onClick={() => doSave(true)} disabled={isSaving} style={{
+                <button type="button" onClick={() => setShowSubmitConfirm(true)} disabled={isSaving} style={{
                   display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 20px', borderRadius: '7px',
                   backgroundColor: '#10B981', border: 'none', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
                 }}>
@@ -1626,6 +1760,259 @@ export default function PIAApplicationForm({ applicationId, onBack, onSaved }: P
           </div>
         </div>
       </div>
+
+      {/* ══ Submission Confirmation Modal ══ */}
+      {showSubmitConfirm && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(3px)' }}>
+          <div style={{ width: 420, backgroundColor: '#fff', borderRadius: 16, boxShadow: '0 24px 60px rgba(0,0,0,0.20)', overflow: 'hidden' }}>
+            {/* Header */}
+            <div style={{ background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', padding: '20px 24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <svg width="18" height="18" fill="none" stroke="#fff" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                </div>
+                <div>
+                  <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#fff' }}>Submit Application?</p>
+                  <p style={{ margin: '2px 0 0', fontSize: 12, color: 'rgba(255,255,255,0.70)' }}>{appNo || 'New Application'}</p>
+                </div>
+              </div>
+            </div>
+            {/* Body */}
+            <div style={{ padding: '22px 24px' }}>
+              <div style={{ padding: '14px 16px', borderRadius: 10, backgroundColor: '#FEF3C7', border: '1px solid #FDE68A', marginBottom: 16 }}>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#92400E' }}>You will not be able to edit this application after submission.</p>
+                <p style={{ margin: '5px 0 0', fontSize: 12, color: '#B45309', lineHeight: 1.5 }}>Please review all information carefully before proceeding. After submission, you will be directed to complete the application fee payment.</p>
+              </div>
+              {saveError && (
+                <div style={{ padding: '10px 14px', borderRadius: 8, backgroundColor: '#FEF2F2', border: '1px solid #FECACA', marginBottom: 14 }}>
+                  <p style={{ margin: 0, fontSize: 12, color: '#DC2626', fontWeight: 600 }}>{saveError}</p>
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                <button type="button" onClick={() => { setShowSubmitConfirm(false); setSaveError(''); }} style={{ padding: '9px 18px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#F9FAFB', color: '#374151', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                  Cancel
+                </button>
+                <button type="button" onClick={doSubmit} disabled={isSaving} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 20px', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: isSaving ? 'not-allowed' : 'pointer', opacity: isSaving ? 0.7 : 1 }}>
+                  {isSaving
+                    ? <><span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} /> Submitting…</>
+                    : <><svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg> Yes, Submit</>
+                  }
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══ Post-Submit: Payment Required ══ */}
+      {submittedApp && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(15,23,42,0.60)', backdropFilter: 'blur(4px)' }}>
+          <div style={{ width: 520, maxWidth: '95vw', maxHeight: '92vh', backgroundColor: '#fff', borderRadius: 18, boxShadow: '0 28px 80px rgba(0,0,0,0.25)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+
+            {/* Header */}
+            <div style={{ background: 'linear-gradient(135deg, #1B2A6B 0%, #1E40AF 60%, #2563EB 100%)', padding: '24px 28px', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                <div style={{ width: 42, height: 42, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <svg width="22" height="22" fill="none" stroke="#fff" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
+                <div>
+                  <p style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#fff' }}>Application Submitted Successfully</p>
+                  <p style={{ margin: '3px 0 0', fontSize: 12, color: 'rgba(255,255,255,0.65)' }}>Complete payment to proceed with your application</p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <div style={{ backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 8, padding: '7px 14px' }}>
+                  <p style={{ margin: 0, fontSize: 9, color: 'rgba(255,255,255,0.55)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Application No.</p>
+                  <p style={{ margin: '2px 0 0', fontSize: 13, color: '#fff', fontWeight: 800, fontFamily: 'monospace' }}>{submittedApp.appNo}</p>
+                </div>
+                <div style={{ backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 8, padding: '7px 14px' }}>
+                  <p style={{ margin: 0, fontSize: 9, color: 'rgba(255,255,255,0.55)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Status</p>
+                  <p style={{ margin: '2px 0 0', fontSize: 13, color: '#86EFAC', fontWeight: 700 }}>Submitted</p>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 18, overflowY: 'auto', flex: 1 }}>
+
+              {!paymentDone ? (
+                <>
+                  {/* Info notice */}
+                  <div style={{ padding: '12px 16px', borderRadius: 10, backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE' }}>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#1D4ED8' }}>Application Fee Payment Required</p>
+                    <p style={{ margin: '5px 0 0', fontSize: 12, color: '#3B82F6', lineHeight: 1.5 }}>Your application has been submitted. Please complete the application fee payment to enable EIA review. Choose your preferred payment method below.</p>
+                  </div>
+
+                  {/* Fee summary */}
+                  {feeConfig.length > 0 && (() => {
+                    const appFeeConf  = feeConfig.find(f => f.feeType === 'APPLICATION_FEE');
+                    const portFeeConf = feeConfig.find(f => f.feeType === 'ADDITIONAL_PORT_FEE');
+                    const appAmt  = appFeeConf  ? Number(appFeeConf.amount)  : 0;
+                    const portAmt = portFeeConf ? Number(portFeeConf.amount) : 0;
+                    const extraPorts = Math.max(0, form.selectedPortIds.length - 1);
+                    const portTotal  = portAmt * extraPorts;
+                    const total      = appAmt + portTotal;
+                    const subTypeNote = form.subType === 'NEW_RECOGNITION' ? 'New Recognition' : form.subType === 'RENEWAL' ? 'Renewal' : 'Modification';
+                    const fmtAmt = (n: number) => `Rs. ${n.toLocaleString('en-IN')}.00`;
+                    return total > 0 ? (
+                      <div style={{ borderRadius: 10, border: '1px solid #E0E8FF', overflow: 'hidden' }}>
+                        {/* Application fee row */}
+                        <div style={{ padding: '12px 18px', backgroundColor: '#F8FAFF', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div>
+                            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#1B2A6B' }}>{appFeeConf?.label ?? 'Application Processing Fee'}</p>
+                            <p style={{ margin: '2px 0 0', fontSize: 11, color: '#6B7280' }}>Non-refundable · {subTypeNote}</p>
+                          </div>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: '#1D4ED8' }}>{fmtAmt(appAmt)}</span>
+                        </div>
+                        {/* Additional port fee row (only if applicable) */}
+                        {extraPorts > 0 && portAmt > 0 && (
+                          <div style={{ padding: '10px 18px', backgroundColor: '#fff', borderTop: '1px solid #E0E8FF', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div>
+                              <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: '#374151' }}>{portFeeConf?.label ?? 'Additional Port Fee'}</p>
+                              <p style={{ margin: '2px 0 0', fontSize: 11, color: '#6B7280' }}>{extraPorts} extra port{extraPorts > 1 ? 's' : ''} × {fmtAmt(portAmt)}</p>
+                            </div>
+                            <span style={{ fontSize: 14, fontWeight: 700, color: '#1D4ED8' }}>{fmtAmt(portTotal)}</span>
+                          </div>
+                        )}
+                        {/* Total row */}
+                        <div style={{ padding: '12px 18px', backgroundColor: 'rgba(29,78,216,0.06)', borderTop: '2px solid rgba(29,78,216,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: '#1e3a8a' }}>Total Amount Due</span>
+                          <span style={{ fontSize: 20, fontWeight: 800, color: '#1D4ED8' }}>{fmtAmt(total)}</span>
+                        </div>
+                      </div>
+                    ) : null;
+                  })()}
+
+                  {/* Option 1 — UTR / Bank Reference */}
+                  <div style={{ borderRadius: 12, border: '1.5px solid #E5E7EB', overflow: 'hidden' }}>
+                    <div style={{ padding: '12px 18px', backgroundColor: '#F8FAFF', borderBottom: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="14" height="14" fill="none" stroke="#fff" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                      </div>
+                      <div>
+                        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#1B2A6B' }}>Pay via Bank Transfer / DD / NEFT</p>
+                        <p style={{ margin: '1px 0 0', fontSize: 11, color: '#6B7280' }}>Enter your UTR / Transaction / DD reference number after payment</p>
+                      </div>
+                    </div>
+                    <div style={{ padding: '16px 18px' }}>
+                      <div style={{ padding: '10px 14px', borderRadius: 8, backgroundColor: '#FFFBEB', border: '1px solid #FDE68A', marginBottom: 12, fontSize: 11, color: '#92400E', lineHeight: 1.5 }}>
+                        <strong>Bank Details:</strong> Pay to EIC A/c No. 1234567890 · IFSC: SBIN0012345 · State Bank of India, Kolkata
+                      </div>
+                      <input
+                        type="text"
+                        value={paymentRef}
+                        onChange={e => { setPaymentRef(e.target.value); setPaymentError(''); }}
+                        placeholder="e.g. UTR123456789012 or DD No. / NEFT Ref."
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, border: `1.5px solid ${paymentRef ? '#3B82F6' : '#D1D5DB'}`, backgroundColor: '#fff', outline: 'none', boxSizing: 'border-box', marginBottom: 10 }}
+                      />
+                      {paymentError && <p style={{ margin: '0 0 8px', fontSize: 12, color: '#DC2626', fontWeight: 600 }}>{paymentError}</p>}
+                      <button
+                        type="button"
+                        disabled={isPayingRef || !paymentRef.trim()}
+                        onClick={async () => {
+                          if (!paymentRef.trim()) { setPaymentError('Please enter the transaction reference number.'); return; }
+                          setIsPayingRef(true); setPaymentError('');
+                          try {
+                            await piaApi.recordPayment(submittedApp.id, paymentRef.trim());
+                            setPaymentDone(true);
+                          } catch (err: any) {
+                            setPaymentError(err?.response?.data?.message ?? 'Failed to record payment. Please try again.');
+                          } finally { setIsPayingRef(false); }
+                        }}
+                        style={{ width: '100%', padding: '10px 0', borderRadius: 8, border: 'none', background: (!paymentRef.trim() || isPayingRef) ? '#E5E7EB' : 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', color: (!paymentRef.trim() || isPayingRef) ? '#9CA3AF' : '#fff', fontSize: 13, fontWeight: 700, cursor: (!paymentRef.trim() || isPayingRef) ? 'not-allowed' : 'pointer' }}
+                      >
+                        {isPayingRef ? 'Recording Payment…' : 'Confirm Payment'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ flex: 1, height: 1, backgroundColor: '#E5E7EB' }} />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>or</span>
+                    <div style={{ flex: 1, height: 1, backgroundColor: '#E5E7EB' }} />
+                  </div>
+
+                  {/* Option 2 — Online Payment */}
+                  <div style={{ borderRadius: 12, border: '1.5px solid #E5E7EB', overflow: 'hidden' }}>
+                    <div style={{ padding: '12px 18px', backgroundColor: '#F0FDF4', borderBottom: '1px solid #BBF7D0', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="14" height="14" fill="none" stroke="#fff" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" /></svg>
+                      </div>
+                      <div>
+                        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#065F46' }}>Pay Online</p>
+                        <p style={{ margin: '1px 0 0', fontSize: 11, color: '#6B7280' }}>Secure payment gateway — UPI, Net Banking, Debit/Credit Card</p>
+                      </div>
+                    </div>
+                    <div style={{ padding: '16px 18px' }}>
+                      <button
+                        type="button"
+                        onClick={() => window.open(`https://pay.eic.gov.in/?ref=${submittedApp.appNo}`, '_blank')}
+                        style={{ width: '100%', padding: '11px 0', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
+                      >
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                        Proceed to Payment Gateway
+                      </button>
+                      <p style={{ margin: '10px 0 0', fontSize: 11, color: '#9CA3AF', textAlign: 'center' }}>After completing payment at the gateway, return here and enter your transaction reference above to confirm.</p>
+                    </div>
+                  </div>
+
+                  {/* Skip for now */}
+                  <button type="button" onClick={onBack} style={{ background: 'none', border: 'none', color: '#9CA3AF', fontSize: 12, cursor: 'pointer', textDecoration: 'underline', textAlign: 'center', padding: '4px 0' }}>
+                    Complete payment later — Go to Dashboard
+                  </button>
+                </>
+              ) : (
+                /* ── Payment Confirmed State ── */
+                <>
+                  <div style={{ padding: '18px 20px', borderRadius: 12, backgroundColor: '#ECFDF5', border: '1px solid #6EE7B7', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: '#D1FAE5', border: '2px solid #6EE7B7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
+                      <svg width="20" height="20" fill="none" stroke="#059669" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                    </div>
+                    <div>
+                      <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: '#065F46' }}>Payment Recorded Successfully</p>
+                      <p style={{ margin: '5px 0 0', fontSize: 12, color: '#059669', lineHeight: 1.5 }}>Your payment reference has been recorded. Your application is now under review by the concerned EIA office.</p>
+                    </div>
+                  </div>
+
+                  {/* Payment Receipt */}
+                  <div style={{ borderRadius: 12, border: '1px solid #E5E7EB', overflow: 'hidden' }}>
+                    <div style={{ padding: '12px 18px', backgroundColor: '#F8FAFF', borderBottom: '1px solid #E5E7EB' }}>
+                      <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: '#1B2A6B', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Payment Receipt</p>
+                    </div>
+                    <div style={{ padding: '16px 18px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 24px' }}>
+                      {[
+                        { label: 'Application No.',  value: submittedApp.appNo, mono: true },
+                        { label: 'Organisation',      value: submittedApp.organisation },
+                        { label: 'Payment Type',      value: 'Application Processing Fee' },
+                        { label: 'Payment Method',    value: 'Bank Transfer / UTR' },
+                        { label: 'Reference No.',     value: paymentRef, mono: true },
+                        { label: 'Date',              value: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) },
+                      ].map(f => (
+                        <div key={f.label} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{f.label}</span>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: '#111827', fontFamily: f.mono ? 'monospace' : undefined }}>{f.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '12px 16px', borderRadius: 10, backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', fontSize: 12, color: '#1D4ED8', lineHeight: 1.5 }}>
+                    <strong>Next Steps:</strong> The EIA office will review your application and payment. You will be notified about the status. You can track your application from the Dashboard.
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={onBack}
+                    style={{ width: '100%', padding: '11px 0', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    Go to Dashboard
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../services/api';
-import Header from '../components/Header';
+import Header, { UserMenu } from '../components/Header';
+import PaletteButton from '../components/PaletteButton';
 import EIAApplications from './admin/EIAApplications';
 import { INDIA_STATES, getDistricts } from '../data/india-geo';
 
@@ -140,18 +141,22 @@ function SidebarBtn({ item, active, collapsed, onClick }: { item: typeof NAV_ALL
   return (
     <button onClick={onClick} title={collapsed ? item.label : undefined} style={{
       display: 'flex', alignItems: 'center', gap: 10, width: '100%',
-      padding: collapsed ? '12px 0' : '11px 20px',
+      padding: collapsed ? '11px 0' : '10px 14px',
       justifyContent: collapsed ? 'center' : 'flex-start',
-      background: active ? 'rgba(255,255,255,0.12)' : 'none',
-      border: 'none', borderLeft: active ? '3px solid var(--accent)' : '3px solid transparent',
-      cursor: 'pointer', color: active ? '#fff' : 'rgba(255,255,255,0.55)',
-      fontSize: 13, fontWeight: active ? 600 : 400, textAlign: 'left',
-      transition: 'background 0.15s, color 0.15s', whiteSpace: 'nowrap', overflow: 'hidden',
+      background: active ? 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)' : 'none',
+      border: 'none', borderRadius: 10,
+      cursor: 'pointer',
+      color: active ? '#fff' : 'rgba(27,42,107,0.70)',
+      fontSize: 13, fontWeight: active ? 600 : 500, textAlign: 'left',
+      transition: 'background 0.15s, color 0.15s, box-shadow 0.15s',
+      whiteSpace: 'nowrap', overflow: 'hidden',
+      boxShadow: active ? '0 4px 14px rgba(27,42,107,0.30)' : 'none',
+      marginBottom: 2,
     }}
-      onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
-      onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'none'; }}
+      onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'rgba(27,42,107,0.07)'; (e.currentTarget as HTMLElement).style.color = '#1B2A6B'; } }}
+      onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'none'; (e.currentTarget as HTMLElement).style.color = 'rgba(27,42,107,0.70)'; } }}
     >
-      <span style={{ flexShrink: 0 }}>{item.icon}</span>
+      <span style={{ flexShrink: 0, color: active ? '#fff' : 'rgba(27,42,107,0.55)' }}>{item.icon}</span>
       {!collapsed && <span>{item.label}</span>}
     </button>
   );
@@ -590,56 +595,68 @@ function OfficerForm({ editData, onSuccess, onCancel }: {
     } finally { setSaving(false); }
   }
 
+  const sectionHdr: React.CSSProperties = { backgroundColor: '#EEF2FF', borderLeft: '4px solid #1B2A6B', padding: '8px 14px', marginBottom: 14, borderRadius: '0 6px 6px 0' };
+  const lbl: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4 };
+  const fld: React.CSSProperties = { width: '100%', padding: '8px 10px', border: '1.5px solid #D1D5DB', borderRadius: 6, backgroundColor: '#FFFFFF', color: '#1F2937', fontSize: 14, outline: 'none', boxSizing: 'border-box' };
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 12, overflow: 'hidden' }}>
+    <div>
+      <div style={{ backgroundColor: '#fff', borderRadius: 12, boxShadow: '0 1px 6px rgba(0,0,0,0.08)', padding: 28 }}>
 
         {error && (
-          <div style={{ margin: '20px 24px 0', backgroundColor: '#FEE2E2', border: '1px solid #FECACA', borderRadius: 7, padding: '10px 14px', color: '#DC2626', fontSize: 13 }}>{error}</div>
+          <div style={{ backgroundColor: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, padding: '10px 16px', marginBottom: 20, color: '#DC2626', fontSize: 14 }}>
+            {error}
+          </div>
         )}
 
-        {/* Basic Details */}
-        <SectionHeader title="Basic Details" icon={<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>} />
-        <div style={{ padding: '18px 20px', borderBottom: '1px solid #E5E7EB' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <div><FormLabel text="Full Name" required /><input value={form.name} onChange={e => set('name', e.target.value)} placeholder="Officer full name" style={inp} /></div>
-            <div><FormLabel text="Designation" required /><input value={form.designation} onChange={e => set('designation', e.target.value)} placeholder="e.g. Inspection Officer" style={inp} /></div>
-            <div><FormLabel text="Qualification" required /><input value={form.qualification} onChange={e => set('qualification', e.target.value)} placeholder="e.g. B.Tech, M.Sc" style={inp} /></div>
-            <div>
-              <FormLabel text="Gender" />
-              <select value={form.gender} onChange={e => set('gender', e.target.value)} style={inp}>
-                <option value="MALE">Male</option>
-                <option value="FEMALE">Female</option>
-                <option value="OTHER">Other</option>
-              </select>
-            </div>
+        <div style={sectionHdr}><span style={{ fontWeight: 700, color: '#1B2A6B', fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Personal Information</span></div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px 20px', marginBottom: 24 }}>
+          <div style={{ gridColumn: '1 / 3' }}>
+            <label style={lbl}>Full Name *</label>
+            <input style={fld} value={form.name} onChange={e => set('name', e.target.value)} placeholder="Officer full name" />
+          </div>
+          <div>
+            <label style={lbl}>Gender</label>
+            <select style={{ ...fld, cursor: 'pointer' }} value={form.gender} onChange={e => set('gender', e.target.value)}>
+              <option value="MALE">Male</option>
+              <option value="FEMALE">Female</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+          <div>
+            <label style={lbl}>Qualification *</label>
+            <input style={fld} value={form.qualification} onChange={e => set('qualification', e.target.value)} placeholder="e.g. B.Sc., M.Tech" />
+          </div>
+          <div style={{ gridColumn: '2 / 4' }}>
+            <label style={lbl}>Designation *</label>
+            <input style={fld} value={form.designation} onChange={e => set('designation', e.target.value)} placeholder="e.g. Inspection Officer" />
           </div>
         </div>
 
-        {/* Contact */}
-        <SectionHeader title="Contact" icon={<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>} />
-        <div style={{ padding: '18px 20px', borderBottom: '1px solid #E5E7EB' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <div><FormLabel text="Mobile" /><input value={form.mobile} onChange={e => set('mobile', e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10-digit mobile number" maxLength={10} style={inp} /></div>
-            <div><FormLabel text="Email (for login)" /><input value={form.email} onChange={e => set('email', e.target.value)} type="email" placeholder="officer@example.gov.in" style={inp} /></div>
+        <div style={sectionHdr}><span style={{ fontWeight: 700, color: '#1B2A6B', fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Contact Details</span></div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 20px', marginBottom: 24 }}>
+          <div>
+            <label style={lbl}>Mobile</label>
+            <input style={fld} value={form.mobile} onChange={e => set('mobile', e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10-digit mobile number" maxLength={10} />
+          </div>
+          <div>
+            <label style={lbl}>Email (for login)</label>
+            <input style={fld} type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="officer@example.gov.in" />
           </div>
         </div>
 
-        {/* Login Access */}
-        <SectionHeader title="Login Access" icon={<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>} />
-        <div style={{ padding: '14px 20px', borderBottom: '1px solid #E5E7EB' }}>
-          <div style={{ padding: '10px 14px', borderRadius: 8, backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', fontSize: 12, color: '#1D4ED8', display: 'flex', alignItems: 'center', gap: 8, maxWidth: 480 }}>
-            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            {isEdit ? 'Update email above to change login address. Use Reset Login to regenerate password.' : 'If an email is provided, login credentials will be auto-generated and displayed after creation.'}
-          </div>
+        <div style={{ padding: '10px 14px', borderRadius: 8, backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', fontSize: 12, color: '#1D4ED8', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24 }}>
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          {isEdit ? 'Update email to change login address. Use Reset Login from the ⋮ menu to regenerate password.' : 'If email is provided, login credentials will be auto-generated and shown after creation.'}
         </div>
 
-        {/* Footer */}
-        <div style={{ padding: '14px 20px', borderTop: '1px solid #E5E7EB', backgroundColor: '#F9FAFB', display: 'flex', gap: 10 }}>
-          <button onClick={handleSubmit} disabled={saving} style={{ padding: '9px 24px', borderRadius: 8, fontSize: 13, fontWeight: 600, backgroundColor: saving ? '#94A3B8' : '#1B2A6B', color: '#fff', border: 'none', cursor: saving ? 'default' : 'pointer' }}>
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+          <button onClick={onCancel} style={{ backgroundColor: '#F3F4F6', color: '#374151', border: '1px solid #D1D5DB', borderRadius: 8, padding: '9px 22px', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+            Cancel
+          </button>
+          <button onClick={handleSubmit} disabled={saving} style={{ backgroundColor: '#1B2A6B', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 28px', fontWeight: 600, fontSize: 14, cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.7 : 1 }}>
             {saving ? 'Saving…' : isEdit ? 'Update Officer' : 'Create Officer'}
           </button>
-          <button onClick={onCancel} style={{ padding: '9px 24px', borderRadius: 8, fontSize: 13, fontWeight: 600, backgroundColor: '#fff', color: '#374151', border: '1.5px solid #D1D5DB', cursor: 'pointer' }}>Cancel</button>
         </div>
       </div>
     </div>
@@ -657,6 +674,14 @@ function OfficerManagementSection() {
   const [creds, setCreds] = useState<Credentials | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [assigning, setAssigning] = useState(false);
+  const [openDrop, setOpenDrop] = useState<{ id: string; top: number; right: number } | null>(null);
+
+  useEffect(() => {
+    if (!openDrop) return;
+    function close() { setOpenDrop(null); }
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, [openDrop]);
 
   const { data: officers = [], isLoading } = useQuery<OfficerFull[]>({
     queryKey: ['portal-officers'],
@@ -755,101 +780,199 @@ function OfficerManagementSection() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {creds && <CredentialsModal creds={creds} onClose={() => setCreds(null)} />}
       {confirmId && <ConfirmModal message="Delete this officer? This cannot be undone." onConfirm={() => handleDelete(confirmId)} onCancel={() => setConfirmId(null)} />}
 
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end' }}>
-        <button onClick={() => setView('create')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600, backgroundColor: '#1B2A6B', color: '#fff', border: 'none', cursor: 'pointer' }}>
-          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
-          Add Officer
-        </button>
+      {/* Header bar */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, gap: 12, flexWrap: 'wrap' }}>
+        <div>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Officer Management</h2>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '2px 0 0' }}>Manage inspection officers and their assignments</p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative' }}>
+            <svg width="14" height="14" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              style={{ padding: '8px 10px 8px 32px', border: '1.5px solid #D1D5DB', borderRadius: 6, backgroundColor: '#FFFFFF', color: '#1F2937', fontSize: 14, outline: 'none', width: 260 }}
+              placeholder="Search by name or designation…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+          <button onClick={() => setView('create')} style={{
+            background: 'linear-gradient(135deg, var(--grad-from), var(--grad-to))', color: '#fff', border: 'none',
+            borderRadius: 8, padding: '9px 20px', fontWeight: 600, fontSize: 13, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
+            boxShadow: '0 2px 8px rgba(27,42,107,0.30)',
+          }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
+          >
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+            Add Officer
+          </button>
+        </div>
       </div>
 
-      <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-        <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-subtle)' }}>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search officers…" style={{ ...inp, width: 280 }} />
-        </div>
+      {/* Table */}
+      <div style={{ backgroundColor: '#ffffff', border: '1px solid #E8EDF5', borderRadius: 14, overflow: 'hidden', boxShadow: '0 2px 8px rgba(27,42,107,0.07)' }}>
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 700 }}>
+            <colgroup>
+              <col style={{ minWidth: 160 }} />
+              <col style={{ minWidth: 110 }} />
+              <col style={{ minWidth: 130 }} />
+              <col style={{ minWidth: 110 }} />
+              <col style={{ minWidth: 76 }} />
+              <col style={{ minWidth: 200 }} />
+              <col style={{ width: 44 }} />
+            </colgroup>
             <thead>
-              <tr style={{ backgroundColor: 'var(--card-overlay)' }}>
-                {['Name', 'Qualification', 'Designation', 'Mobile', 'Gender', 'Status', 'Actions'].map(h => (
-                  <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#1B2A6B', fontSize: 12, whiteSpace: 'nowrap', borderBottom: '2px solid var(--border-subtle)' }}>{h}</th>
+              <tr style={{ background: 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)' }}>
+                {['OFFICER NAME', 'QUALIFICATION', 'DESIGNATION', 'MOBILE', 'STATUS', 'ACTIONS'].map(col => (
+                  <th key={col} style={{ padding: '10px 12px', textAlign: 'left', whiteSpace: 'nowrap' }}>
+                    <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 10, fontWeight: 700, letterSpacing: '0.09em', textTransform: 'uppercase' }}>{col}</span>
+                  </th>
                 ))}
+                <th style={{ padding: 0, position: 'sticky', right: 0, zIndex: 3, backgroundColor: '#1B2A6B', borderLeft: '1px solid rgba(255,255,255,0.08)', width: 44 }} />
               </tr>
             </thead>
             <tbody>
-              {isLoading ? [...Array(4)].map((_, i) => (
-                <tr key={i}>{[...Array(7)].map((__, j) => <td key={j} style={{ padding: '10px 14px' }}><div style={{ height: 14, borderRadius: 4, backgroundColor: 'var(--card-overlay)', width: j === 0 ? 120 : 60 }} /></td>)}</tr>
-              )) : filtered.length === 0 ? (
-                <tr><td colSpan={7} style={{ padding: '48px 20px', textAlign: 'center' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                    <svg width="36" height="36" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                    <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: 0 }}>No officers yet</p>
-                    <button onClick={() => setView('create')} style={{ marginTop: 4, padding: '6px 14px', borderRadius: 6, fontSize: 12, backgroundColor: '#1B2A6B', color: '#fff', border: 'none', cursor: 'pointer' }}>Add first officer</button>
-                  </div>
-                </td></tr>
-              ) : filtered.map((o, i) => (
-                <tr key={o.id} style={{ borderBottom: '1px solid var(--border-subtle)', backgroundColor: i % 2 === 0 ? 'transparent' : 'var(--card-overlay)' }}>
-                  <td style={{ padding: '10px 14px', fontWeight: 600, color: '#1B2A6B' }}>{o.name}</td>
-                  <td style={{ padding: '10px 14px', color: '#374151' }}>{o.qualification}</td>
-                  <td style={{ padding: '10px 14px', color: '#374151' }}>{o.designation}</td>
-                  <td style={{ padding: '10px 14px', color: '#374151' }}>{o.mobile || '—'}</td>
-                  <td style={{ padding: '10px 14px' }}>
-                    {(() => {
-                      const g = o.gender === 'MALE' ? { bg: '#DBEAFE', color: '#1E40AF', label: 'Male' } : o.gender === 'FEMALE' ? { bg: '#FCE7F3', color: '#9D174D', label: 'Female' } : { bg: '#F3F4F6', color: '#374151', label: 'Other' };
-                      return <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 600, backgroundColor: g.bg, color: g.color }}>{g.label}</span>;
-                    })()}
-                  </td>
-                  <td style={{ padding: '10px 14px' }}>
-                    <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600, backgroundColor: o.isActive ? '#DCFCE7' : '#FEE2E2', color: o.isActive ? '#166534' : '#991B1B' }}>
-                      {o.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td style={{ padding: '10px 14px' }}>
-                    <div style={{ display: 'flex', gap: 5, alignItems: 'center', flexWrap: 'wrap' }}>
-                      {/* Edit */}
-                      <button onClick={() => { setEditOfficer(o); setView('edit'); }} style={{ display: 'flex', alignItems: 'center', gap: 5, backgroundColor: '#EEF2FF', color: '#1B2A6B', border: '1px solid #C7D2FE', borderRadius: 6, padding: '5px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                        Edit
-                      </button>
-                      {/* Assign Offices */}
-                      <button onClick={() => openAssignOffices(o)} style={{ display: 'flex', alignItems: 'center', gap: 5, backgroundColor: '#F0F9FF', color: '#0369A1', border: '1px solid #BAE6FD', borderRadius: 6, padding: '5px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-                        Assign Offices
-                      </button>
-                      {/* Assign Products */}
-                      <button onClick={() => openAssignProducts(o)} style={{ display: 'flex', alignItems: 'center', gap: 5, backgroundColor: '#FFF7ED', color: '#C2410C', border: '1px solid #FED7AA', borderRadius: 6, padding: '5px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
-                        Assign Products
-                      </button>
-                      {/* Login */}
-                      <button onClick={() => handleResetLogin(o.id)} style={{ display: 'flex', alignItems: 'center', gap: 5, backgroundColor: '#F0F9FF', color: '#0369A1', border: '1px solid #BAE6FD', borderRadius: 6, padding: '5px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
-                        Login
-                      </button>
-                      {/* Deactivate / Activate */}
-                      <button onClick={async () => { await api.put(`/portal/officers/${o.id}`, { isActive: !o.isActive }); qc.invalidateQueries({ queryKey: ['portal-officers'] }); }} style={{ display: 'flex', alignItems: 'center', gap: 5, backgroundColor: o.isActive ? '#FEF2F2' : '#F0FDF4', color: o.isActive ? '#DC2626' : '#16A34A', border: `1px solid ${o.isActive ? '#FECACA' : '#BBF7D0'}`, borderRadius: 6, padding: '5px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                        {o.isActive
-                          ? <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
-                          : <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        }
-                        {o.isActive ? 'Deactivate' : 'Activate'}
-                      </button>
-                      {/* Delete */}
-                      <button onClick={() => setConfirmId(o.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, borderRadius: 5, color: '#DC2626', display: 'flex' }}
-                        onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#FEE2E2')} onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}>
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                      </button>
+              {isLoading ? (
+                [...Array(4)].map((_, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid #F0F4FF' }}>
+                    {[...Array(7)].map((__, j) => (
+                      <td key={j} style={{ padding: '9px 12px' }}>
+                        <div style={{ height: 13, borderRadius: 4, backgroundColor: '#F1F5F9', width: j === 0 ? 130 : 70 }} />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={7} style={{ padding: '36px 20px', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                      <svg width="36" height="36" fill="none" stroke="var(--text-muted)" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                      <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>No officers found</span>
+                      {officers.length === 0 && <button onClick={() => setView('create')} style={{ marginTop: 4, padding: '6px 14px', borderRadius: 6, fontSize: 12, backgroundColor: '#1B2A6B', color: '#fff', border: 'none', cursor: 'pointer' }}>Add first officer</button>}
                     </div>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filtered.map(o => (
+                  <tr key={o.id}
+                    style={{ borderBottom: '1px solid #F0F4FF', transition: 'background 0.12s' }}
+                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F8FAFF')}
+                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  >
+                    <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
+                      <span style={{ fontWeight: 600, color: '#1B2A6B', fontSize: 13 }}>{o.name}</span>
+                    </td>
+                    <td style={{ padding: '9px 12px', color: 'var(--text-primary)', fontSize: 12, whiteSpace: 'nowrap' }}>{o.qualification}</td>
+                    <td style={{ padding: '9px 12px', color: 'var(--text-muted)', fontSize: 12, whiteSpace: 'nowrap' }}>{o.designation}</td>
+                    <td style={{ padding: '9px 12px', color: 'var(--text-muted)', fontSize: 12, whiteSpace: 'nowrap' }}>{o.mobile || '—'}</td>
+                    <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
+                      <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600, backgroundColor: o.isActive ? '#DCFCE7' : '#FEE2E2', color: o.isActive ? '#166534' : '#991B1B' }}>
+                        {o.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                        <button onClick={() => { setEditOfficer(o); setView('edit'); }} style={{
+                          display: 'flex', alignItems: 'center', gap: 4,
+                          padding: '4px 10px', borderRadius: 6, border: '1px solid #E2E8F0',
+                          backgroundColor: '#F8FAFF', color: '#374151',
+                          fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                        }}>
+                          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                          Edit
+                        </button>
+                        <button
+                          onClick={async () => { await api.put(`/portal/officers/${o.id}`, { isActive: !o.isActive }); qc.invalidateQueries({ queryKey: ['portal-officers'] }); }}
+                          style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 6, border: `1px solid ${o.isActive ? '#FECACA' : '#BBF7D0'}`, backgroundColor: o.isActive ? '#FEF2F2' : '#F0FDF4', color: o.isActive ? '#DC2626' : '#16A34A', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}
+                          onMouseEnter={e => (e.currentTarget.style.backgroundColor = o.isActive ? '#FECACA' : '#DCFCE7')}
+                          onMouseLeave={e => (e.currentTarget.style.backgroundColor = o.isActive ? '#FEF2F2' : '#F0FDF4')}>
+                          {o.isActive
+                            ? <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                            : <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                          }
+                          {o.isActive ? 'Deactivate' : 'Activate'}
+                        </button>
+                      </div>
+                    </td>
+                    {/* Sticky ⋮ column */}
+                    <td style={{ padding: '4px 6px', whiteSpace: 'nowrap', position: 'sticky', right: 0, backgroundColor: '#ffffff', borderLeft: '1px solid #E8EDF5', zIndex: 1, textAlign: 'center' }}
+                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F8FAFF')}
+                      onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#ffffff')}>
+                      <button
+                        onClick={e => {
+                          e.stopPropagation();
+                          if (openDrop?.id === o.id) { setOpenDrop(null); return; }
+                          const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                          setOpenDrop({ id: o.id, top: rect.bottom + 4, right: window.innerWidth - rect.right });
+                        }}
+                        title="More actions"
+                        style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid #BFDBFE', backgroundColor: openDrop?.id === o.id ? '#1B2A6B' : '#EFF6FF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: openDrop?.id === o.id ? '#fff' : '#1D4ED8', transition: 'background 0.15s' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = '#1B2A6B'; (e.currentTarget as HTMLElement).style.color = '#fff'; (e.currentTarget as HTMLElement).style.borderColor = '#1B2A6B'; }}
+                        onMouseLeave={e => { if (openDrop?.id !== o.id) { (e.currentTarget as HTMLElement).style.backgroundColor = '#EFF6FF'; (e.currentTarget as HTMLElement).style.color = '#1D4ED8'; (e.currentTarget as HTMLElement).style.borderColor = '#BFDBFE'; } }}
+                      >
+                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                          <circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/>
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Fixed ⋮ dropdown */}
+      {openDrop && (
+        <div
+          onClick={e => e.stopPropagation()}
+          style={{ position: 'fixed', top: openDrop.top, right: openDrop.right, backgroundColor: '#fff', border: '1px solid #E5E7EB', borderRadius: 10, boxShadow: '0 8px 28px rgba(0,0,0,0.15)', zIndex: 9999, minWidth: 175, overflow: 'hidden' }}
+        >
+          {filtered.filter(o => o.id === openDrop.id).map(o => (
+            <div key={o.id}>
+              <button onClick={() => { setOpenDrop(null); openAssignOffices(o); }}
+                style={{ display: 'flex', alignItems: 'center', gap: 9, width: '100%', padding: '9px 14px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 500, color: '#1D4ED8', textAlign: 'left' }}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#EFF6FF')}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}>
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                Assign Offices
+              </button>
+              <button onClick={() => { setOpenDrop(null); openAssignProducts(o); }}
+                style={{ display: 'flex', alignItems: 'center', gap: 9, width: '100%', padding: '9px 14px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 500, color: '#C2410C', textAlign: 'left' }}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#FFF7ED')}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}>
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+                Assign Products
+              </button>
+              <button onClick={() => { setOpenDrop(null); handleResetLogin(o.id); }}
+                style={{ display: 'flex', alignItems: 'center', gap: 9, width: '100%', padding: '9px 14px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 500, color: '#0369A1', textAlign: 'left' }}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F0F9FF')}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}>
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
+                Reset Login
+              </button>
+              <div style={{ height: 1, backgroundColor: '#F3F4F6', margin: '2px 0' }} />
+              <button onClick={() => { setOpenDrop(null); setConfirmId(o.id); }}
+                style={{ display: 'flex', alignItems: 'center', gap: 9, width: '100%', padding: '9px 14px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 500, color: '#DC2626', textAlign: 'left' }}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#FEF2F2')}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}>
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                Delete
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -887,64 +1010,147 @@ export default function OfficePortal() {
     return null;
   }
 
-  return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-page)' }}>
-      <Header user={user} onLogout={handleLogout} />
+  const pageTitle = nav.find(n => n.key === activeNav)?.label ?? 'Dashboard';
 
-      <div style={{ flex: 1, display: 'flex' }}>
-        {/* Sidebar */}
-        <aside style={{ width: collapsed ? 60 : 240, backgroundColor: 'var(--bg-nav)', display: 'flex', flexDirection: 'column', flexShrink: 0, transition: 'width 0.2s ease', position: 'relative', borderRight: '1px solid rgba(255,255,255,0.07)' }}>
-          <button onClick={() => setCollapsed(c => !c)} style={{ position: 'absolute', top: 16, right: -12, width: 24, height: 24, borderRadius: '50%', backgroundColor: 'var(--bg-nav)', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, fontSize: 10 }}>
+  return (
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-page)', overflow: 'hidden' }}>
+      <Header user={user} onLogout={handleLogout} hideNav sidebarCollapsed={collapsed} pageTitle={pageTitle} />
+
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
+
+        {/* ── Sidebar ── */}
+        <aside style={{
+          width: collapsed ? 64 : 260,
+          backgroundColor: '#ffffff',
+          display: 'flex', flexDirection: 'column', flexShrink: 0,
+          transition: 'width 0.22s cubic-bezier(.4,0,.2,1)',
+          position: 'relative', height: '100%', overflow: 'visible',
+          boxShadow: '4px 0 24px rgba(27,42,107,0.10)', zIndex: 10,
+        }}>
+
+          {/* Collapse toggle */}
+          <button onClick={() => setCollapsed(c => !c)} style={{
+            position: 'absolute', top: 20, right: -14,
+            width: 28, height: 28, borderRadius: '50%',
+            background: 'linear-gradient(135deg, var(--grad-from), var(--grad-to))',
+            border: '2px solid #fff', color: '#fff', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 50, fontSize: 11, fontWeight: 700,
+            boxShadow: '0 2px 10px rgba(27,42,107,0.30)', transition: 'transform 0.15s',
+          }}
+            onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.12)')}
+            onMouseLeave={e => (e.currentTarget.style.transform = 'none')}
+          >
             {collapsed ? '›' : '‹'}
           </button>
 
           {/* Brand */}
-          <div style={{ padding: collapsed ? '14px 0' : '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 10, overflow: 'hidden', justifyContent: collapsed ? 'center' : 'flex-start' }}>
-            <div style={{ width: 34, height: 34, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <svg width="18" height="18" fill="none" stroke="rgba(255,255,255,0.85)" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+          <div style={{
+            padding: collapsed ? '13px 0' : '11px 14px 12px',
+            borderBottom: '1px solid var(--nav-border)',
+            display: 'flex', alignItems: 'center', gap: 10,
+            overflow: 'hidden', justifyContent: collapsed ? 'center' : 'flex-start', flexShrink: 0,
+          }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: 9,
+              background: 'linear-gradient(135deg, var(--grad-to) 0%, var(--grad-from) 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              boxShadow: '0 2px 8px rgba(37,99,235,0.35)',
+            }}>
+              <span style={{ color: '#fff', fontSize: 13, fontWeight: 800, letterSpacing: '0.04em' }}>EIA</span>
             </div>
             {!collapsed && (
-              <div style={{ overflow: 'hidden' }}>
-                <p style={{ color: '#fff', fontSize: 12, fontWeight: 700, margin: 0, lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {isLoading ? 'Loading…' : office?.name ?? user?.name}
-                </p>
-                <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, margin: '2px 0 0' }}>{roleLabel}</p>
+              <div style={{ overflow: 'hidden', minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                  <span style={{ color: '#1B2A6B', fontSize: 14, fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1, whiteSpace: 'nowrap' }}>e-Services</span>
+                  <span style={{ color: 'rgba(27,42,107,0.45)', fontSize: 10, fontWeight: 500 }}>PORTAL</span>
+                </div>
+                <p style={{ color: 'rgba(27,42,107,0.55)', fontSize: 10, margin: '3px 0 0', fontWeight: 400, letterSpacing: '0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Export Inspection Council</p>
               </div>
             )}
           </div>
 
           {/* Nav */}
-          <nav style={{ flex: 1, padding: '10px 0' }}>
+          <nav style={{ flex: 1, padding: '10px 8px', overflowY: 'auto', overflowX: 'hidden' }}>
             {nav.map(item => (
               <SidebarBtn key={item.key} item={item} active={activeNav === item.key} collapsed={collapsed} onClick={() => setActiveNav(item.key as NavKey)} />
             ))}
           </nav>
 
-          {/* User info */}
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', padding: '12px 16px' }}>
-            {!collapsed && (
-              <div style={{ marginBottom: 8 }}>
-                <p style={{ color: '#fff', fontSize: 12, fontWeight: 600, margin: 0 }}>{user?.name}</p>
-                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, margin: '2px 0 0' }}>{user?.email}</p>
-              </div>
-            )}
-            <button onClick={handleLogout} title="Logout" style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: collapsed ? '8px 0' : '8px 4px', justifyContent: collapsed ? 'center' : 'flex-start', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.5)', fontSize: 12 }}
-              onMouseEnter={e => (e.currentTarget.style.color = '#fff')} onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}>
-              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-              {!collapsed && <span>Logout</span>}
+          {/* Bottom actions */}
+          <div style={{ borderTop: '1px solid rgba(27,42,107,0.08)', padding: '8px 8px' }}>
+            <button onClick={handleLogout} title={collapsed ? 'Logout' : undefined} style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              width: '100%', padding: collapsed ? '10px 0' : '9px 14px',
+              justifyContent: collapsed ? 'center' : 'flex-start',
+              background: 'none', border: 'none', borderRadius: 8, cursor: 'pointer',
+              color: '#DC2626', fontSize: 13, fontWeight: 500,
+              whiteSpace: 'nowrap', overflow: 'hidden', transition: 'color 0.15s, background 0.15s',
+            }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#B91C1C'; (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.07)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#DC2626'; (e.currentTarget as HTMLElement).style.background = 'none'; }}
+            >
+              <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              {!collapsed && 'Logout'}
             </button>
           </div>
         </aside>
 
-        {/* Main content */}
+        {/* ── Main content ── */}
         <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          {/* Page header bar */}
-          <div style={{ padding: '16px 28px', borderBottom: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-card)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <h1 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: 'var(--text-primary)' }}>
-                {nav.find(n => n.key === activeNav)?.label}
-              </h1>
-              {office && <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--text-muted)' }}>{office.code} · {roleLabel}</p>}
+
+          {/* Breadcrumb bar */}
+          <div style={{
+            padding: '6px 24px', borderBottom: '1px solid #d1d5db',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            backgroundColor: '#ffffff', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', flexShrink: 0,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 11, color: '#94a3b8' }}>EIA Portal</span>
+              <svg width="12" height="12" fill="none" stroke="#cbd5e1" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#1B2A6B' }}>{pageTitle}</span>
+              {office && (
+                <>
+                  <svg width="12" height="12" fill="none" stroke="#cbd5e1" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                  <span style={{ fontSize: 11, color: '#64748b', fontWeight: 500 }}>{office.code}</span>
+                </>
+              )}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button style={{
+                width: 26, height: 26, borderRadius: '5px',
+                border: '1px solid #d1d5db',
+                backgroundColor: '#fff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', color: '#6b7280', fontSize: '11px', fontWeight: 700,
+                boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+              }}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#fff')}
+                title="Help">
+                ?
+              </button>
+              <button style={{
+                width: 26, height: 26, borderRadius: '5px',
+                border: '1px solid #d1d5db',
+                backgroundColor: '#fff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', color: '#6b7280',
+                position: 'relative',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+              }}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#fff')}
+                title="Notifications">
+                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+              </button>
+              <PaletteButton variant="light" />
+              {user && <UserMenu user={user} onLogout={handleLogout} variant="light" />}
             </div>
           </div>
 
@@ -952,6 +1158,12 @@ export default function OfficePortal() {
             {renderSection()}
           </div>
         </main>
+      </div>
+
+      {/* ── Sticky footer bar ── */}
+      <div style={{ flexShrink: 0, padding: '7px 24px', background: 'linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11 }}>© 2026 Export Inspection Council. All Rights Reserved.</span>
+        <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11 }}>EIA Portal &nbsp;|&nbsp; <span style={{ color: '#ffffff', fontWeight: 600 }}>{office?.name ?? 'EIA Office'}</span></span>
       </div>
     </div>
   );

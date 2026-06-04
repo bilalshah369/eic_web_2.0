@@ -5,7 +5,8 @@ import Header, { UserMenu } from '../components/Header';
 import PaletteButton from '../components/PaletteButton';
 import ChangePasswordModal from '../components/ChangePasswordModal';
 import PIAApplicationForm from './pia/PIAApplicationForm';
-import { piaApi, PIAApplicationSummary, PIASubType } from '../services/pia.service';
+import PIAApplicationView from './pia/PIAApplicationView';
+import { piaApi, PIAApplicationSummary, PIAApplicationFull, PIASubType, PIAFeeConfigItem } from '../services/pia.service';
 
 type NavKey = 'home' | 'establishment' | 'pia-applications' | 'pia-fees' | 'pia-nc';
 
@@ -449,7 +450,7 @@ export default function Dashboard() {
             {activeNav === 'home' && <DashboardHome onNavigate={handleSetNav} />}
             {activeNav === 'establishment' && <EstablishmentApproval />}
             {activeNav === 'pia-applications' && <PIAApplicationsSection />}
-            {activeNav === 'pia-fees' && <PIAEmptySection title="Pending Fees" desc="No pending fee payments at this time." icon="fees" />}
+            {activeNav === 'pia-fees' && <PIAPendingFeesSection />}
             {activeNav === 'pia-nc' && <PIAEmptySection title="Non-Conformities" desc="No non-conformities raised for your agency." icon="nc" />}
           </div>
         </main>
@@ -806,14 +807,22 @@ function StatusBadge({ status }: { status: string }) {
 function PIAApplicationsSection() {
   const { user } = useAuth();
   const [tab, setTab] = useState('all');
-  const [view, setView] = useState<'list' | 'form'>('list');
+  const [view, setView] = useState<'list' | 'form' | 'view'>('list');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [apps, setApps] = useState<PIAApplicationSummary[]>([]);
   const [loadingList, setLoadingList] = useState(true);
-  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
   const [createModal, setCreateModal] = useState(false);
+  const [pendingSubType, setPendingSubType] = useState<PIASubType | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PIAApplicationSummary | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [paymentTarget, setPaymentTarget] = useState<PIAApplicationSummary | null>(null);
+  const [fullPaymentApp, setFullPaymentApp] = useState<PIAApplicationFull | null>(null);
+  const [paymentRef, setPaymentRef] = useState('');
+  const [isPayingRef, setIsPayingRef] = useState(false);
+  const [paymentDone, setPaymentDone] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
+  const [feeConfig, setFeeConfig] = useState<PIAFeeConfigItem[]>([]);
 
   // Load list
   const loadApps = () => {
@@ -821,6 +830,20 @@ function PIAApplicationsSection() {
     piaApi.list().then(data => { setApps(data); setLoadingList(false); }).catch(() => setLoadingList(false));
   };
   useState(() => { loadApps(); });
+
+  const openPaymentModal = (app: PIAApplicationSummary) => {
+    setPaymentTarget(app); setFullPaymentApp(null);
+    setPaymentRef(''); setPaymentDone(false); setPaymentError('');
+    if (feeConfig.length === 0) {
+      piaApi.getMasterFeeConfig().then(cfg => setFeeConfig(cfg)).catch(() => {});
+    }
+    piaApi.getById(app.id).then(full => setFullPaymentApp(full)).catch(() => {});
+  };
+
+  const closePaymentModal = () => {
+    setPaymentTarget(null); setFullPaymentApp(null);
+    if (paymentDone) loadApps();
+  };
 
   const handleDeleteConfirm = () => {
     if (!deleteTarget) return;
@@ -842,32 +865,32 @@ function PIAApplicationsSection() {
 
   const closeCreateModal = () => {
     setCreateModal(false);
+    setCreateError(null);
   };
 
-  const handleCreateNew = async (subType: PIASubType) => {
-    const agencyName = user?.orgName ?? user?.name ?? '';
-    setCreating(true);
-    try {
-      const app = await piaApi.createDraft(agencyName, subType);
-      setApps(prev => [app as any, ...prev]);
-      closeCreateModal();
-      setEditingId(app.id);
-      setView('form');
-    } catch {
-      // silently fail — user can retry
-    } finally {
-      setCreating(false);
-    }
+  const handleCreateNew = (subType: PIASubType) => {
+    setPendingSubType(subType);
+    closeCreateModal();
+    setEditingId(null);
+    setView('form');
   };
 
-  // ── Form view ──
-  if (view === 'form' && editingId) {
-    const backToList = () => { setView('list'); setEditingId(null); loadApps(); };
+  // ── Read-only view ──
+  if (view === 'view' && editingId) {
+    const backToList = () => { setView('list'); setEditingId(null); };
+    return <PIAApplicationView applicationId={editingId} onBack={backToList} />;
+  }
+
+  // ── Edit form view ──
+  if (view === 'form') {
+    const backToList = () => { setView('list'); setEditingId(null); setPendingSubType(null); loadApps(); };
     return (
       <PIAApplicationForm
         applicationId={editingId}
+        newSubType={pendingSubType ?? undefined}
+        newAgencyName={user?.orgName ?? user?.name ?? undefined}
         onBack={backToList}
-        onSaved={() => {}}
+        onSaved={() => loadApps()}
       />
     );
   }
@@ -1020,6 +1043,7 @@ function PIAApplicationsSection() {
           {filtered.map(app => {
             const subCfg = SUBTYPE_CFG[app.piaApplication?.subType ?? ''] ?? SUBTYPE_CFG['NEW_RECOGNITION'];
             const isDraft = app.status === 'DRAFT';
+            const needsPayment = app.piaApplication?.piaStatus === 'SUBMITTED';
             const updatedDate = new Date(app.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
             return (
               <div key={app.id} style={{
@@ -1110,8 +1134,28 @@ function PIAApplicationsSection() {
                       Continue
                     </button>
                   )}
+                  {needsPayment && (
+                    <button
+                      onClick={() => openPaymentModal(app)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '5px',
+                        padding: '7px 16px', borderRadius: '8px',
+                        background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)', border: 'none',
+                        color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
+                        boxShadow: '0 4px 12px rgba(5,150,105,0.30)',
+                        transition: 'box-shadow 0.15s, transform 0.15s',
+                      }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 18px rgba(5,150,105,0.42)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 12px rgba(5,150,105,0.30)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
+                    >
+                      <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                      </svg>
+                      Make Payment
+                    </button>
+                  )}
                   <button
-                    onClick={() => { setEditingId(app.id); setView('form'); }}
+                    onClick={() => { setEditingId(app.id); setView(isDraft ? 'form' : 'view'); }}
                     style={{
                       display: 'flex', alignItems: 'center', gap: '5px',
                       padding: '7px 14px', borderRadius: '8px',
@@ -1150,6 +1194,182 @@ function PIAApplicationsSection() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* ── Payment Modal ── */}
+      {paymentTarget && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(15,23,42,0.60)', backdropFilter: 'blur(4px)' }}
+          onClick={e => { if (e.target === e.currentTarget && !isPayingRef) closePaymentModal(); }}>
+          <div style={{ width: 500, maxWidth: '95vw', maxHeight: '92vh', backgroundColor: '#fff', borderRadius: 18, boxShadow: '0 28px 80px rgba(0,0,0,0.25)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            {/* Header */}
+            <div style={{ background: 'linear-gradient(135deg, #1B2A6B 0%, #1E40AF 60%, #2563EB 100%)', padding: '22px 26px', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="20" height="20" fill="none" stroke="#fff" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                  </div>
+                  <div>
+                    <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#fff' }}>Application Fee Payment</p>
+                    <p style={{ margin: '2px 0 0', fontSize: 11, color: 'rgba(255,255,255,0.65)', fontFamily: 'monospace' }}>{paymentTarget.appNo}</p>
+                  </div>
+                </div>
+                {!isPayingRef && (
+                  <button onClick={closePaymentModal} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.65)', padding: 4, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div style={{ padding: '22px 26px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {!paymentDone ? (
+                <>
+                  {/* Fee amount */}
+                  {(() => {
+                    const appFeeConf  = feeConfig.find(f => f.feeType === 'APPLICATION_FEE');
+                    const portFeeConf = feeConfig.find(f => f.feeType === 'ADDITIONAL_PORT_FEE');
+                    const appAmt  = appFeeConf  ? Number(appFeeConf.amount)  : 0;
+                    const portAmt = portFeeConf ? Number(portFeeConf.amount) : 0;
+                    const totalPorts = fullPaymentApp?.piaApplication?.ports?.length ?? 0;
+                    const extraPorts = Math.max(0, totalPorts - 1);
+                    const portTotal  = portAmt * extraPorts;
+                    const total      = appAmt + portTotal;
+                    const fmtA = (n: number) => `Rs. ${n.toLocaleString('en-IN')}.00`;
+                    const subType = paymentTarget.piaApplication?.subType;
+                    const subNote = subType === 'NEW_RECOGNITION' ? 'New Recognition' : subType === 'RENEWAL' ? 'Renewal' : 'Modification';
+                    return appAmt > 0 ? (
+                      <div style={{ borderRadius: 10, border: '1px solid #E0E8FF', overflow: 'hidden' }}>
+                        <div style={{ padding: '12px 18px', backgroundColor: '#F8FAFF', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div>
+                            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#1B2A6B' }}>{appFeeConf?.label ?? 'Application Processing Fee'}</p>
+                            <p style={{ margin: '2px 0 0', fontSize: 11, color: '#6B7280' }}>Non-refundable · {subNote}</p>
+                          </div>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: '#1D4ED8' }}>{fmtA(appAmt)}</span>
+                        </div>
+                        {extraPorts > 0 && portAmt > 0 && (
+                          <div style={{ padding: '10px 18px', backgroundColor: '#fff', borderTop: '1px solid #E0E8FF', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div>
+                              <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: '#374151' }}>{portFeeConf?.label ?? 'Additional Port Fee'}</p>
+                              <p style={{ margin: '2px 0 0', fontSize: 11, color: '#6B7280' }}>{extraPorts} extra port{extraPorts > 1 ? 's' : ''} × {fmtA(portAmt)}</p>
+                            </div>
+                            <span style={{ fontSize: 14, fontWeight: 700, color: '#1D4ED8' }}>{fmtA(portTotal)}</span>
+                          </div>
+                        )}
+                        {(extraPorts > 0 && portAmt > 0) || !fullPaymentApp ? (
+                          <div style={{ padding: '10px 18px', backgroundColor: 'rgba(29,78,216,0.06)', borderTop: '2px solid rgba(29,78,216,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: '#1e3a8a' }}>Total Amount Due</span>
+                            {fullPaymentApp
+                              ? <span style={{ fontSize: 18, fontWeight: 800, color: '#1D4ED8' }}>{fmtA(total)}</span>
+                              : <span style={{ fontSize: 11, color: '#6B7280' }}>Calculating…</span>}
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <div style={{ padding: '12px 16px', borderRadius: 10, backgroundColor: '#FEF3C7', border: '1px solid #FDE68A', fontSize: 12, color: '#92400E', fontWeight: 600 }}>
+                        Fee amount not configured. Contact administrator.
+                      </div>
+                    );
+                  })()}
+
+                  {/* Option 1 — UTR */}
+                  <div style={{ borderRadius: 12, border: '1.5px solid #E5E7EB', overflow: 'hidden' }}>
+                    <div style={{ padding: '11px 16px', backgroundColor: '#F8FAFF', borderBottom: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 26, height: 26, borderRadius: 7, background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="13" height="13" fill="none" stroke="#fff" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                      </div>
+                      <div>
+                        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#1B2A6B' }}>Bank Transfer / NEFT / DD</p>
+                        <p style={{ margin: '1px 0 0', fontSize: 11, color: '#6B7280' }}>Enter your UTR / transaction / DD reference after payment</p>
+                      </div>
+                    </div>
+                    <div style={{ padding: '14px 16px' }}>
+                      <div style={{ padding: '9px 13px', borderRadius: 8, backgroundColor: '#FFFBEB', border: '1px solid #FDE68A', marginBottom: 10, fontSize: 11, color: '#92400E', lineHeight: 1.5 }}>
+                        <strong>Bank Details:</strong> EIC A/c No. 1234567890 · IFSC: SBIN0012345 · State Bank of India, Kolkata
+                      </div>
+                      <input
+                        type="text"
+                        value={paymentRef}
+                        onChange={e => { setPaymentRef(e.target.value); setPaymentError(''); }}
+                        placeholder="e.g. UTR123456789012 or DD No."
+                        style={{ width: '100%', padding: '10px 13px', borderRadius: 8, fontSize: 13, fontWeight: 500, border: `1.5px solid ${paymentRef ? '#3B82F6' : '#D1D5DB'}`, backgroundColor: '#fff', outline: 'none', boxSizing: 'border-box', marginBottom: 10 }}
+                      />
+                      {paymentError && <p style={{ margin: '0 0 8px', fontSize: 12, color: '#DC2626', fontWeight: 600 }}>{paymentError}</p>}
+                      <button
+                        type="button"
+                        disabled={isPayingRef || !paymentRef.trim()}
+                        onClick={async () => {
+                          if (!paymentRef.trim()) { setPaymentError('Please enter the transaction reference number.'); return; }
+                          setIsPayingRef(true); setPaymentError('');
+                          try {
+                            await piaApi.recordPayment(paymentTarget.id, paymentRef.trim());
+                            setPaymentDone(true);
+                          } catch (err: any) {
+                            setPaymentError(err?.response?.data?.message ?? 'Failed to record payment. Please try again.');
+                          } finally { setIsPayingRef(false); }
+                        }}
+                        style={{ width: '100%', padding: '10px 0', borderRadius: 8, border: 'none', background: (!paymentRef.trim() || isPayingRef) ? '#E5E7EB' : 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', color: (!paymentRef.trim() || isPayingRef) ? '#9CA3AF' : '#fff', fontSize: 13, fontWeight: 700, cursor: (!paymentRef.trim() || isPayingRef) ? 'not-allowed' : 'pointer' }}
+                      >
+                        {isPayingRef ? 'Recording Payment…' : 'Confirm Payment'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ flex: 1, height: 1, backgroundColor: '#E5E7EB' }} />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>or</span>
+                    <div style={{ flex: 1, height: 1, backgroundColor: '#E5E7EB' }} />
+                  </div>
+
+                  {/* Option 2 — Online */}
+                  <button
+                    type="button"
+                    onClick={() => window.open(`https://pay.eic.gov.in/?ref=${paymentTarget.appNo}`, '_blank')}
+                    style={{ width: '100%', padding: '11px 0', borderRadius: 10, border: '1.5px solid #BBF7D0', background: '#F0FDF4', color: '#065F46', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
+                  >
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                    Proceed to Online Payment Gateway
+                  </button>
+                  <p style={{ margin: '-8px 0 0', fontSize: 11, color: '#9CA3AF', textAlign: 'center' }}>After paying online, return here and enter your UTR reference above.</p>
+                </>
+              ) : (
+                /* ── Success ── */
+                <>
+                  <div style={{ padding: '18px 20px', borderRadius: 12, backgroundColor: '#ECFDF5', border: '1px solid #6EE7B7', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                    <div style={{ width: 38, height: 38, borderRadius: '50%', backgroundColor: '#D1FAE5', border: '2px solid #6EE7B7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg width="18" height="18" fill="none" stroke="#059669" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                    </div>
+                    <div>
+                      <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: '#065F46' }}>Payment Recorded Successfully</p>
+                      <p style={{ margin: '4px 0 0', fontSize: 12, color: '#059669', lineHeight: 1.5 }}>Your payment reference has been recorded. The EIA office will review your application.</p>
+                    </div>
+                  </div>
+                  <div style={{ borderRadius: 10, border: '1px solid #E5E7EB', overflow: 'hidden' }}>
+                    <div style={{ padding: '10px 16px', backgroundColor: '#F8FAFF', borderBottom: '1px solid #E5E7EB' }}>
+                      <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#1B2A6B', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Receipt</p>
+                    </div>
+                    <div style={{ padding: '14px 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 20px' }}>
+                      {[
+                        { label: 'Application No.', value: paymentTarget.appNo, mono: true },
+                        { label: 'Organisation',    value: paymentTarget.organisation },
+                        { label: 'Reference No.',   value: paymentRef, mono: true },
+                        { label: 'Date',            value: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) },
+                      ].map(f => (
+                        <div key={f.label} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{f.label}</span>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: '#111827', fontFamily: f.mono ? 'monospace' : undefined }}>{f.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <button type="button" onClick={closePaymentModal} style={{ width: '100%', padding: '11px 0', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                    Close
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -1200,7 +1420,7 @@ function PIAApplicationsSection() {
             padding: '28px',
           }}>
             {/* Application Type Selection */}
-            {!creating && (
+            <>
               <>
                 <h3 style={{ color: '#0f172a', fontSize: '16px', fontWeight: 700, margin: '0 0 4px' }}>PIA Application</h3>
                 <p style={{ color: '#64748b', fontSize: '12px', margin: '0 0 20px' }}>
@@ -1285,6 +1505,14 @@ function PIAApplicationsSection() {
                     </button>
                   ))}
                 </div>
+                {createError && (
+                  <div style={{ marginTop: '14px', padding: '10px 14px', borderRadius: '8px', backgroundColor: '#FEF2F2', border: '1px solid #FECACA', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                    <svg width="14" height="14" fill="none" stroke="#DC2626" viewBox="0 0 24 24" style={{ flexShrink: 0, marginTop: 1 }}>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span style={{ fontSize: '12px', color: '#DC2626', fontWeight: 500 }}>{createError}</span>
+                  </div>
+                )}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
                   <button onClick={closeCreateModal} style={{
                     padding: '8px 18px', borderRadius: '7px',
@@ -1294,14 +1522,305 @@ function PIAApplicationsSection() {
                   }}>Cancel</button>
                 </div>
               </>
-            )}
+            </>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
-            {creating && (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', gap: '12px' }}>
-                <div style={{ width: 18, height: 18, border: '2px solid rgba(27,42,107,0.2)', borderTopColor: '#1B2A6B', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-                <span style={{ fontSize: '13px', color: '#64748b' }}>Creating application…</span>
+// ─── Pending Fees Section ─────────────────────────────────────────────────────
+
+function PIAPendingFeesSection() {
+  const [apps, setApps]           = useState<PIAApplicationSummary[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [feeConfig, setFeeConfig] = useState<PIAFeeConfigItem[]>([]);
+  const [paymentTarget, setPaymentTarget] = useState<PIAApplicationSummary | null>(null);
+  const [fullPaymentApp, setFullPaymentApp] = useState<PIAApplicationFull | null>(null);
+  const [paymentRef, setPaymentRef]       = useState('');
+  const [isPayingRef, setIsPayingRef]     = useState(false);
+  const [paymentDone, setPaymentDone]     = useState(false);
+  const [paymentError, setPaymentError]   = useState('');
+
+  const load = () => {
+    setLoading(true);
+    Promise.all([piaApi.list(), piaApi.getMasterFeeConfig()])
+      .then(([list, cfg]) => {
+        setApps(list.filter(a => a.piaApplication?.piaStatus === 'SUBMITTED'));
+        setFeeConfig(cfg);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  };
+
+  useState(() => { load(); });
+
+  const openModal = (app: PIAApplicationSummary) => {
+    setPaymentTarget(app); setFullPaymentApp(null);
+    setPaymentRef(''); setPaymentDone(false); setPaymentError('');
+    piaApi.getById(app.id).then(full => setFullPaymentApp(full)).catch(() => {});
+  };
+  const closeModal = () => { setPaymentTarget(null); setFullPaymentApp(null); if (paymentDone) load(); };
+
+  const appFeeAmt = (() => {
+    const cfg = feeConfig.find(f => f.feeType === 'APPLICATION_FEE');
+    return cfg ? Number(cfg.amount) : null;
+  })();
+
+  const fmtAmt = (n: number | null) => n ? `Rs. ${n.toLocaleString('en-IN')}.00` : '—';
+
+  return (
+    <div>
+      {/* Header */}
+      <div style={{ marginBottom: 20 }}>
+        <h2 style={{ color: '#1B2A6B', fontSize: 18, fontWeight: 700, margin: 0, letterSpacing: '-0.01em' }}>Pending Fee Payments</h2>
+        <p style={{ color: '#6B7280', fontSize: 13, margin: '3px 0 0' }}>Applications submitted and awaiting application fee payment</p>
+      </div>
+
+      {loading ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {[1, 2].map(i => <div key={i} style={{ height: 96, borderRadius: 14, backgroundColor: '#F1F5F9', animation: 'pulse 1.5s ease-in-out infinite' }} />)}
+        </div>
+      ) : apps.length === 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 20px', gap: 14 }}>
+          <div style={{ width: 64, height: 64, borderRadius: 18, background: 'linear-gradient(135deg, #D1FAE5, #A7F3D0)', border: '1.5px solid #6EE7B7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="30" height="30" fill="none" stroke="#059669" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ color: '#111827', fontSize: 15, fontWeight: 600, margin: 0 }}>All payments up to date</p>
+            <p style={{ color: '#6B7280', fontSize: 12, margin: '5px 0 0' }}>No applications are awaiting fee payment at this time.</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Summary bar */}
+          <div style={{ display: 'flex', gap: 10, marginBottom: 18, flexWrap: 'wrap' }}>
+            {[
+              { label: 'Pending Payments', value: apps.length, color: '#D97706', bg: '#FEF3C7', accent: '#D97706' },
+              { label: 'Total Due', value: appFeeAmt ? fmtAmt(appFeeAmt * apps.length) : `${apps.length} app${apps.length > 1 ? 's' : ''}`, color: '#DC2626', bg: '#FEE2E2', accent: '#DC2626', wide: true },
+            ].map(s => (
+              <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderRadius: 12, backgroundColor: '#fff', border: '1px solid #E8EDF5', boxShadow: '0 2px 8px rgba(27,42,107,0.06)' }}>
+                <div style={{ width: 42, height: 42, borderRadius: 10, background: `linear-gradient(135deg, ${s.bg}, ${s.accent}18)`, border: `1.5px solid ${s.accent}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <span style={{ fontSize: 15, fontWeight: 800, color: s.accent }}>{typeof s.value === 'number' ? s.value : ''}</span>
+                  {typeof s.value === 'string' && <span style={{ fontSize: 11, fontWeight: 800, color: s.accent }}>{s.value}</span>}
+                </div>
+                <span style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>{s.label}</span>
               </div>
-            )}
+            ))}
+          </div>
+
+          {/* Notice */}
+          <div style={{ padding: '12px 16px', borderRadius: 10, backgroundColor: '#FEF3C7', border: '1px solid #FDE68A', marginBottom: 18, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+            <svg width="16" height="16" fill="none" stroke="#D97706" viewBox="0 0 24 24" style={{ flexShrink: 0, marginTop: 1 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            <p style={{ margin: 0, fontSize: 12, color: '#92400E', lineHeight: 1.5 }}>
+              The following applications have been submitted but the application fee has not been paid yet. Your application will not be reviewed by EIA until the fee is received.
+            </p>
+          </div>
+
+          {/* App cards */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {apps.map(app => {
+              const subType = app.piaApplication?.subType ?? 'NEW_RECOGNITION';
+              const subCfg  = SUBTYPE_CFG[subType] ?? SUBTYPE_CFG['NEW_RECOGNITION'];
+              const subLabel = subType === 'NEW_RECOGNITION' ? 'New Recognition' : subType === 'RENEWAL' ? 'Renewal' : 'Modification';
+              const submittedDate = app.updatedAt ? new Date(app.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+              return (
+                <div key={app.id} style={{ display: 'flex', alignItems: 'stretch', borderRadius: 14, border: '1.5px solid #FDE68A', backgroundColor: '#fff', boxShadow: '0 2px 10px rgba(217,119,6,0.08)', overflow: 'hidden' }}>
+                  {/* Accent */}
+                  <div style={{ width: 5, backgroundColor: '#F59E0B', flexShrink: 0 }} />
+
+                  {/* Content */}
+                  <div style={{ flex: 1, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16, minWidth: 0 }}>
+                    <div style={{ width: 46, height: 46, borderRadius: 12, background: 'linear-gradient(135deg, #FEF3C7, #FDE68A)', border: '1.5px solid #FCD34D', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg width="22" height="22" fill="none" stroke="#D97706" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 5 }}>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: '#1B2A6B' }}>{app.organisation}</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, fontFamily: 'monospace', padding: '2px 8px', borderRadius: 5, backgroundColor: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE', letterSpacing: '0.04em' }}>{app.appNo}</span>
+                        <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4, color: subCfg.color, backgroundColor: subCfg.bg, border: `1px solid ${subCfg.accent}20` }}>{subLabel}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 20, backgroundColor: '#FEF3C7', color: '#92400E', border: '1px solid #FDE68A' }}>
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#F59E0B' }} /> Payment Pending
+                        </span>
+                        <span style={{ fontSize: 11, color: '#9CA3AF', display: 'flex', alignItems: 'center', gap: 3 }}>
+                          <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                          Submitted {submittedDate}
+                        </span>
+                      </div>
+                    </div>
+                    {/* Amount due — shown as base fee; exact total visible in payment modal */}
+                    <div style={{ textAlign: 'right', flexShrink: 0, marginRight: 8 }}>
+                      <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Base Fee</p>
+                      <p style={{ margin: '3px 0 0', fontSize: 18, fontWeight: 800, color: appFeeAmt ? '#DC2626' : '#F59E0B' }}>{fmtAmt(appFeeAmt)}</p>
+                      <p style={{ margin: '1px 0 0', fontSize: 10, color: '#9CA3AF' }}>+ port fees if applicable</p>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div style={{ display: 'flex', alignItems: 'center', padding: '14px 18px', borderLeft: '1px solid #FDE68A', backgroundColor: '#FFFBEB', flexShrink: 0 }}>
+                    <button
+                      onClick={() => openModal(app)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 20px', borderRadius: 9, border: 'none', background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(5,150,105,0.30)', whiteSpace: 'nowrap' }}>
+                      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                      Pay Now
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {/* Payment Modal */}
+      {paymentTarget && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(15,23,42,0.60)', backdropFilter: 'blur(4px)' }}
+          onClick={e => { if (e.target === e.currentTarget && !isPayingRef) closeModal(); }}>
+          <div style={{ width: 500, maxWidth: '95vw', maxHeight: '92vh', backgroundColor: '#fff', borderRadius: 18, boxShadow: '0 28px 80px rgba(0,0,0,0.25)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            {/* Modal header */}
+            <div style={{ background: 'linear-gradient(135deg, #1B2A6B 0%, #1E40AF 60%, #2563EB 100%)', padding: '22px 26px', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="20" height="20" fill="none" stroke="#fff" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                  </div>
+                  <div>
+                    <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#fff' }}>Application Fee Payment</p>
+                    <p style={{ margin: '2px 0 0', fontSize: 11, color: 'rgba(255,255,255,0.65)' }}>{paymentTarget.organisation} · <span style={{ fontFamily: 'monospace' }}>{paymentTarget.appNo}</span></p>
+                  </div>
+                </div>
+                {!isPayingRef && <button onClick={closeModal} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.65)', padding: 4, borderRadius: 6, display: 'flex' }}><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>}
+              </div>
+            </div>
+
+            <div style={{ padding: '22px 26px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {!paymentDone ? (
+                <>
+                  {/* Amount */}
+                  {(() => {
+                    const portFeeConf = feeConfig.find(f => f.feeType === 'ADDITIONAL_PORT_FEE');
+                    const portAmt = portFeeConf ? Number(portFeeConf.amount) : 0;
+                    const totalPorts = fullPaymentApp?.piaApplication?.ports?.length ?? 0;
+                    const extraPorts = Math.max(0, totalPorts - 1);
+                    const portTotal  = portAmt * extraPorts;
+                    const total = (appFeeAmt ?? 0) + portTotal;
+                    const fmtA = (n: number) => `Rs. ${n.toLocaleString('en-IN')}.00`;
+                    const subType = paymentTarget.piaApplication?.subType;
+                    const subNote = subType === 'NEW_RECOGNITION' ? 'New Recognition' : subType === 'RENEWAL' ? 'Renewal' : 'Modification';
+                    return (
+                      <div style={{ borderRadius: 10, border: '1px solid #E0E8FF', overflow: 'hidden' }}>
+                        <div style={{ padding: '12px 18px', backgroundColor: '#F8FAFF', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div>
+                            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#1B2A6B' }}>Application Processing Fee</p>
+                            <p style={{ margin: '2px 0 0', fontSize: 11, color: '#6B7280' }}>Non-refundable · {subNote}</p>
+                          </div>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: appFeeAmt ? '#1D4ED8' : '#F59E0B' }}>{fmtAmt(appFeeAmt)}</span>
+                        </div>
+                        {extraPorts > 0 && portAmt > 0 && (
+                          <div style={{ padding: '10px 18px', backgroundColor: '#fff', borderTop: '1px solid #E0E8FF', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div>
+                              <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: '#374151' }}>{portFeeConf?.label ?? 'Additional Port Fee'}</p>
+                              <p style={{ margin: '2px 0 0', fontSize: 11, color: '#6B7280' }}>{extraPorts} extra port{extraPorts > 1 ? 's' : ''} × {fmtA(portAmt)}</p>
+                            </div>
+                            <span style={{ fontSize: 14, fontWeight: 700, color: '#1D4ED8' }}>{fmtA(portTotal)}</span>
+                          </div>
+                        )}
+                        <div style={{ padding: '10px 18px', backgroundColor: 'rgba(29,78,216,0.06)', borderTop: '2px solid rgba(29,78,216,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: '#1e3a8a' }}>Total Amount Due</span>
+                          {fullPaymentApp
+                            ? <span style={{ fontSize: 18, fontWeight: 800, color: '#1D4ED8' }}>{fmtA(total)}</span>
+                            : <span style={{ fontSize: 11, color: '#6B7280' }}>Calculating…</span>}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* UTR option */}
+                  <div style={{ borderRadius: 12, border: '1.5px solid #E5E7EB', overflow: 'hidden' }}>
+                    <div style={{ padding: '11px 16px', backgroundColor: '#F8FAFF', borderBottom: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 26, height: 26, borderRadius: 7, background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="13" height="13" fill="none" stroke="#fff" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                      </div>
+                      <div>
+                        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#1B2A6B' }}>Bank Transfer / NEFT / DD</p>
+                        <p style={{ margin: '1px 0 0', fontSize: 11, color: '#6B7280' }}>Enter your UTR / transaction / DD reference after payment</p>
+                      </div>
+                    </div>
+                    <div style={{ padding: '14px 16px' }}>
+                      <div style={{ padding: '9px 13px', borderRadius: 8, backgroundColor: '#FFFBEB', border: '1px solid #FDE68A', marginBottom: 10, fontSize: 11, color: '#92400E', lineHeight: 1.5 }}>
+                        <strong>Bank Details:</strong> EIC A/c No. 1234567890 · IFSC: SBIN0012345 · State Bank of India, Kolkata
+                      </div>
+                      <input type="text" value={paymentRef} onChange={e => { setPaymentRef(e.target.value); setPaymentError(''); }} placeholder="e.g. UTR123456789012 or DD No."
+                        style={{ width: '100%', padding: '10px 13px', borderRadius: 8, fontSize: 13, fontWeight: 500, border: `1.5px solid ${paymentRef ? '#3B82F6' : '#D1D5DB'}`, backgroundColor: '#fff', outline: 'none', boxSizing: 'border-box', marginBottom: 10 }} />
+                      {paymentError && <p style={{ margin: '0 0 8px', fontSize: 12, color: '#DC2626', fontWeight: 600 }}>{paymentError}</p>}
+                      <button type="button" disabled={isPayingRef || !paymentRef.trim()}
+                        onClick={async () => {
+                          if (!paymentRef.trim()) { setPaymentError('Please enter the transaction reference number.'); return; }
+                          setIsPayingRef(true); setPaymentError('');
+                          try {
+                            await piaApi.recordPayment(paymentTarget.id, paymentRef.trim());
+                            setPaymentDone(true);
+                          } catch (err: any) {
+                            setPaymentError(err?.response?.data?.message ?? 'Failed to record payment. Please try again.');
+                          } finally { setIsPayingRef(false); }
+                        }}
+                        style={{ width: '100%', padding: '10px 0', borderRadius: 8, border: 'none', background: (!paymentRef.trim() || isPayingRef) ? '#E5E7EB' : 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', color: (!paymentRef.trim() || isPayingRef) ? '#9CA3AF' : '#fff', fontSize: 13, fontWeight: 700, cursor: (!paymentRef.trim() || isPayingRef) ? 'not-allowed' : 'pointer' }}>
+                        {isPayingRef ? 'Recording Payment…' : 'Confirm Payment'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ flex: 1, height: 1, backgroundColor: '#E5E7EB' }} /><span style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>or</span><div style={{ flex: 1, height: 1, backgroundColor: '#E5E7EB' }} />
+                  </div>
+
+                  {/* Online payment */}
+                  <button type="button" onClick={() => window.open(`https://pay.eic.gov.in/?ref=${paymentTarget.appNo}`, '_blank')}
+                    style={{ width: '100%', padding: '11px 0', borderRadius: 10, border: '1.5px solid #BBF7D0', background: '#F0FDF4', color: '#065F46', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                    Proceed to Online Payment Gateway
+                  </button>
+                  <p style={{ margin: '-8px 0 0', fontSize: 11, color: '#9CA3AF', textAlign: 'center' }}>After paying online, enter your UTR reference above to confirm.</p>
+                </>
+              ) : (
+                <>
+                  <div style={{ padding: '18px 20px', borderRadius: 12, backgroundColor: '#ECFDF5', border: '1px solid #6EE7B7', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                    <div style={{ width: 38, height: 38, borderRadius: '50%', backgroundColor: '#D1FAE5', border: '2px solid #6EE7B7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg width="18" height="18" fill="none" stroke="#059669" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                    </div>
+                    <div>
+                      <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: '#065F46' }}>Payment Recorded Successfully</p>
+                      <p style={{ margin: '4px 0 0', fontSize: 12, color: '#059669', lineHeight: 1.5 }}>Your payment reference has been recorded. The EIA office will review your application shortly.</p>
+                    </div>
+                  </div>
+                  <div style={{ borderRadius: 10, border: '1px solid #E5E7EB', overflow: 'hidden' }}>
+                    <div style={{ padding: '10px 16px', backgroundColor: '#F8FAFF', borderBottom: '1px solid #E5E7EB' }}>
+                      <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#1B2A6B', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Receipt</p>
+                    </div>
+                    <div style={{ padding: '14px 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 20px' }}>
+                      {[
+                        { label: 'Application No.', value: paymentTarget.appNo, mono: true },
+                        { label: 'Organisation',    value: paymentTarget.organisation },
+                        { label: 'Reference No.',   value: paymentRef, mono: true },
+                        { label: 'Date',            value: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) },
+                      ].map(f => (
+                        <div key={f.label} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{f.label}</span>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: '#111827', fontFamily: f.mono ? 'monospace' : undefined }}>{f.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <button type="button" onClick={closeModal} style={{ width: '100%', padding: '11px 0', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #1B2A6B 0%, #2563EB 100%)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                    Close
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}

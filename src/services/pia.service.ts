@@ -212,6 +212,14 @@ export const piaApi = {
   deleteDocument: async (appId: string, docId: string) => {
     await api.delete(`/pia/applications/${appId}/documents/${docId}`);
   },
+  submit: async (id: string) => {
+    const { data } = await api.post(`/pia/applications/${id}/submit`);
+    return data.data as PIAApplicationFull;
+  },
+  recordPayment: async (id: string, transactionId: string) => {
+    const { data } = await api.post(`/pia/applications/${id}/payment`, { transactionId });
+    return data.data as PIAApplicationFull;
+  },
   deleteApplication: async (id: string) => {
     await api.delete(`/pia/applications/${id}`);
   },

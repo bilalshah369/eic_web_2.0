@@ -7,6 +7,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import OfficePortal from './pages/OfficePortal';
+import HQPortal from './pages/HQPortal';
 import OfficerPortal from './pages/OfficerPortal';
 import DbSchemaPage from './pages/DbSchemaPage';
 
@@ -15,6 +16,7 @@ const queryClient = new QueryClient();
 export function roleHome(role: UserRole | undefined): string {
   if (!role) return '/';
   if (role === 'ADMIN' || role === 'SUPER_ADMIN') return '/admin/home';
+  if (role === 'HQ_ADMIN') return '/hq-portal/dashboard';
   if (role === 'EIA_ADMIN' || role === 'SUB_EIA_ADMIN') return '/office-portal';
   if (role === 'OFFICER') return '/officer-portal';
   return '/dashboard';
@@ -55,6 +57,12 @@ export default function App() {
           <Route path="/office-portal/:section" element={
             <RoleRoute roles={['EIA_ADMIN', 'SUB_EIA_ADMIN']}>
               <OfficePortal />
+            </RoleRoute>
+          } />
+          <Route path="/hq-portal" element={<Navigate to="/hq-portal/dashboard" replace />} />
+          <Route path="/hq-portal/:section" element={
+            <RoleRoute roles={['HQ_ADMIN']}>
+              <HQPortal />
             </RoleRoute>
           } />
           <Route path="/officer-portal" element={
